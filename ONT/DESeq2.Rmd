@@ -1,0 +1,24 @@
+---
+title: "DESeq2"
+author: "Xueyi Dong"
+date: "26/04/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(DESeq2)
+```
+
+```{r}
+fc <- readRDS("counts_ONT.RDS")
+dds <- DESeqDataSetFromMatrix(countData=  fc$counts[,1:6], 
+                              colData = data.frame(
+                                group = rep(c("H1975", "HCC827"), c(3,3))
+                              ),
+                              design = ~group)
+```
+

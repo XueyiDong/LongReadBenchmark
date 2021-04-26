@@ -1,0 +1,132 @@
+---
+title: 'Long-read benchmark analysis: Illumina data DE analysis'
+author: "Xueyi Dong"
+date: "22/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(edgeR)
+library(limma)
+library(ggplot2)
+library(Homo.sapiens)
+```
+
+```{r}
+counts <- readRDS("counts.RDS")
+x <- DGEList(counts=counts$counts)
+x$samples$group <- rep(c("H1975", "HCC827"), c(3,4))
+```
+
+```{r}
+geneid <- strsplit2(rownames(x$counts), "\\.")[,1]
+genes <- select(Homo.sapiens, keys=geneid, columns=c("SYMBOL", "TXCHROM"), 
+                keytype="ENSEMBL")
+x$genes <- genes[match(geneid, genes$ENSEMBL),]
+```
+
+```{r}
+x$counts[, 6] <- x$counts[,5] + x$counts[,6]
+x$samples$lib.size[6] <- x$samples$lib.size[5] + x$samples$lib.size[6]
+x <- x[,-5]
+
+filter <- filterByExpr(x)
+x <- x[filter, ,keep.lib.sizes=FALSE]
+dim(x)
+human.gene <- grep("^ENSG", rownames(x))
+sequin.gene <- grep("^R", rownames(x))
+
+x <- calcNormFactors(x)
+cpm <- cpm(x, log=TRUE)
+plotMDS(cpm, col = rep(c("red", "blue"), c(3, 4)))
+```
+
+```{r}
+stat <- as.data.frame(t(counts$stat))
+colnames(stat) <- counts$stat[,1]
+stat <- stat[-1,]
+stat$sample <- rownames(stat)
+ggplot(stat, aes(x=sample, y=as.numeric(as.character(Assigned)))) + geom_bar(stat="identity") +
+  labs(y="number of counts") +
+  theme_bw() +  theme (axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+design <- model.matrix(~x$samples$group)
+v <- voom(x, design, plot=TRUE, save.plot = TRUE)
+fit <- lmFit(v, design)
+efit <- eBayes(fit)
+dt <- decideTests(efit)
+summary(dt)
+```
+```{r}
+# highlight sequins genes in voom plot
+sequins <- grepl("^R", rownames(x))
+
+plot(v$voom.xy$x, v$voom.xy$y, xlab = v$voom.xy$xlab, ylab = v$voom.xy$ylab,
+     pch = 16, cex = 0.25,
+     cex.lab = 1.5, cex.axis = 1.5)
+points(v$voom.xy$x[sequins], v$voom.xy$y[sequins], 
+       pch = 16, cex = 1,
+       col = "blue")
+lines(v$voom.line, col = "red")
+
+```
+
+```{r}
+plotMD(efit, status = dt[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="H1975 vs HCC227")
+```
+
+fit a separate model for sequins genes
+```{r}
+x.sequins <- x[sequin.gene,]
+x.sequins <- calcNormFactors(x.sequins)
+v.sequins <- voom(x.sequins, design = design, plot=TRUE)
+fit.sequins <- lmFit(v.sequins)
+efit.sequins <- eBayes(fit.sequins)
+dt.sequins <- decideTests(efit.sequins)
+summary(dt.sequins)
+```
+```{r}
+plotMD(efit.sequins, status = dt.sequins[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="Sequins genes")
+```
+
+```{r}
+tt.sequins <- topTable(efit.sequins, number = Inf)
+# anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
+# anno$logFC <- log(anno$MIX_B / anno$MIX_A)
+tt.sequins$logFC_expected <- anno$logFC[match(rownames(tt.sequins), anno$NAME)]
+tt.sequins$LENGTH <- anno$LENGTH[match(rownames(tt.sequins), anno$NAME)]
+cor(tt.sequins$logFC, tt.sequins$logFC_expected)
+lfc.lm2 <-lm(tt.sequins$logFC ~ tt.sequins$logFC_expected)
+tt.sequins$isDE <- tt.sequins$logFC_expected!=0
+ggplot(tt.sequins, aes(x=isDE, y=adj.P.Val)) +
+  geom_boxplot()
+
+# Test FDR
+table(tt.sequins$isDE, tt.sequins$adj.P.Val<0.05)
+```
+
+Fit a separate model for human genes
+
+```{r}
+x.human <- x[human.gene,]
+x.human <- calcNormFactors(x.human)
+v.human <- voom(x.human, design = design, plot=TRUE)
+fit.human <- lmFit(v.human)
+efit.human <- eBayes(fit.human)
+dt.human <- decideTests(efit.human)
+summary(dt.human)
+tt.human <- topTable(efit.human, number = Inf)
+plotMD(efit.human, status = dt.human[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="Human genes")
+```
+
+```{r}
+write.table(tt.human, "topTableHuman.tsv", sep="\t")
+write.table(tt.sequins, "topTableSequin.tsv", sep="\t")
+```
+
