@@ -20,5 +20,23 @@ dds <- DESeqDataSetFromMatrix(countData=  fc$counts[,1:6],
                                 group = rep(c("H1975", "HCC827"), c(3,3))
                               ),
                               design = ~group)
+keep <- rowSums(counts(dds)) > 1 & rowSums(counts(dds) >= 10) >= 3
+dds <- dds[keep,]
+nrow(dds)
+
+human.gene <- grep("^ENSG", rownames(dds))
+sequin.gene <- grep("^R", rownames(dds))
+dds.human <- dds[human.gene, ]
+dds.sequin <- dds[sequin.gene, ]
+
+dds <- DESeq(dds)
+res <- results(dds)
+```
+
+```{r}
+dds.human <- DESeq(dds.human)
+dds.sequin <- DESeq(dds.sequin)
+res.human <- results(dds.human)
+res.sequin <- results(dds.sequin)
 ```
 
