@@ -1,0 +1,37 @@
+---
+title: "EBSeq"
+author: "Xueyi Dong"
+date: "29/04/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(EBSeq)
+```
+DE analysis using EBSeq
+```{r}
+fc <- readRDS("counts_ONT.RDS")
+human.gene <- grep("^ENSG", rownames(fc$counts))
+sequin.gene <- grep("^R", rownames(fc$counts))
+Sizes.human = MedianNorm(fc$counts[human.gene, 1:6])
+Sizes.sequin = MedianNorm(fc$counts[sequin.gene, 1:6])
+Conditions = as.factor(rep(c("H1975", "HCC827"), c(3,3)))
+EBOut.human = EBTest(Data = fc$counts[human.gene,1:6], Conditions = Conditions, sizeFactors = Sizes.human, maxround = 5)
+EBOut.sequin = EBTest(Data = fc$counts[sequin.gene,1:6], Conditions = Conditions, sizeFactors = Sizes.sequin, maxround = 5)
+EBDERes.human=GetDEResults(EBOut.human, FDR=0.05)
+EBDERes.sequin=GetDEResults(EBOut.sequin, FDR=0.05)
+head(EBDERes.human$PPMat)
+head(EBDERes.sequin$PPMat)
+GeneFC.human = PostFC(EBOut.human)
+GeneFC.sequin = PostFC(EBOut.sequin)
+```
+
+Check Sequin genes FDR
+```{r}
+
+```
+
