@@ -17,7 +17,7 @@ library(ggplot2)
 library(Homo.sapiens)
 ```
 
-```{r}
+```{r featureCounts, eval=FALSE}
 dir_bam <- "/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/ONT_aligned/sam"
 bams <- list.files(dir_bam, ".sam$")
 fc <- featureCounts(file.path(dir_bam, bams),
@@ -100,50 +100,50 @@ plotMD(efit, status = dt[,2], column = 2, values = c(-1, 1), col = c("blue", "re
 
 ```{r}
 tt <- topTable(efit, number = Inf)
-tt.sequins <- tt[grepl("^R", rownames(tt)),]
+tt.sequin <- tt[grepl("^R", rownames(tt)),]
 anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
 anno$logFC <- log(anno$MIX_B / anno$MIX_A)
-tt.sequins$logFC_expected <- anno$logFC[match(rownames(tt.sequins), anno$NAME)]
-tt.sequins$LENGTH <- anno$LENGTH[match(rownames(tt.sequins), anno$NAME)]
-cor(tt.sequins$logFC, tt.sequins$logFC_expected)
-lfc.lm <-lm(tt.sequins$logFC ~ tt.sequins$logFC_expected)
-tt.sequins$isDE <- tt.sequins$logFC_expected!=0
-ggplot(tt.sequins, aes(x=isDE, y=adj.P.Val)) +
+tt.sequin$logFC_expected <- anno$logFC[match(rownames(tt.sequin), anno$NAME)]
+tt.sequin$LENGTH <- anno$LENGTH[match(rownames(tt.sequin), anno$NAME)]
+cor(tt.sequin$logFC, tt.sequin$logFC_expected)
+lfc.lm <-lm(tt.sequin$logFC ~ tt.sequin$logFC_expected)
+tt.sequin$isDE <- tt.sequin$logFC_expected!=0
+ggplot(tt.sequin, aes(x=isDE, y=adj.P.Val)) +
   geom_boxplot()
 
 # Test FDR
-table(tt.sequins$isDE, tt.sequins$adj.P.Val<0.05)
+table(tt.sequin$isDE, tt.sequins$adj.P.Val<0.05)
 ```
 
 fit a separate model for sequins genes
 
 ```{r}
-x.sequins <- x[sequin.gene,]
-x.sequins <- calcNormFactors(x.sequins)
-v.sequins <- voom(x.sequins, design = design, plot=TRUE)
-fit.sequins <- lmFit(v.sequins)
-efit.sequins <- eBayes(fit.sequins)
-dt.sequins <- decideTests(efit.sequins)
-summary(dt.sequins)
+x.sequin <- x[sequin.gene,]
+x.sequin <- calcNormFactors(x.sequins)
+v.sequin <- voom(x.sequin, design = design, plot=TRUE)
+fit.sequin <- lmFit(v.sequin)
+efit.sequin <- eBayes(fit.sequin)
+dt.sequin <- decideTests(efit.sequin)
+summary(dt.sequin)
 ```
 ```{r}
-plotMD(efit.sequins, status = dt.sequins[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="Sequins genes")
+plotMD(efit.sequin, status = dt.sequin[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="Sequin genes")
 ```
 
 ```{r}
-tt.sequins <- topTable(efit.sequins, number = Inf)
+tt.sequin <- topTable(efit.sequin, number = Inf)
 # anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
 # anno$logFC <- log(anno$MIX_B / anno$MIX_A)
-tt.sequins$logFC_expected <- anno$logFC[match(rownames(tt.sequins), anno$NAME)]
-tt.sequins$LENGTH <- anno$LENGTH[match(rownames(tt.sequins), anno$NAME)]
-cor(tt.sequins$logFC, tt.sequins$logFC_expected)
-lfc.lm2 <-lm(tt.sequins$logFC ~ tt.sequins$logFC_expected)
-tt.sequins$isDE <- tt.sequins$logFC_expected!=0
-ggplot(tt.sequins, aes(x=isDE, y=adj.P.Val)) +
+tt.sequin$logFC_expected <- anno$logFC[match(rownames(tt.sequin), anno$NAME)]
+tt.sequin$LENGTH <- anno$LENGTH[match(rownames(tt.sequin), anno$NAME)]
+cor(tt.sequin$logFC, tt.sequin$logFC_expected)
+lfc.lm2 <-lm(tt.sequin$logFC ~ tt.sequin$logFC_expected)
+tt.sequin$isDE <- tt.sequin$logFC_expected!=0
+ggplot(tt.sequin, aes(x=isDE, y=adj.P.Val)) +
   geom_boxplot()
 
 # Test FDR
-table(tt.sequins$isDE, tt.sequins$adj.P.Val<0.05)
+table(tt.sequin$isDE, tt.sequin$adj.P.Val<0.05)
 ```
 
 Fit a separate model for human genes
@@ -187,26 +187,26 @@ plotMD(res.human, status = decideTestsDGE(res.human), values = c(1, -1),
 Sequin genes
 
 ```{r}
-x.sequins <- estimateDisp(x.sequins, design)
-plotBCV(x.sequins)
-qlfit.sequins <- glmQLFit(x.sequins, design)
-plotQLDisp(qlfit.sequins)
-res.sequins <- glmQLFTest(qlfit.sequins)
+x.sequin <- estimateDisp(x.sequin, design)
+plotBCV(x.sequin)
+qlfit.sequin <- glmQLFit(x.sequin, design)
+plotQLDisp(qlfit.sequin)
+res.sequin <- glmQLFTest(qlfit.sequin)
 
-plotMD(res.sequins, status = decideTestsDGE(res.sequins), values = c(1, -1), 
+plotMD(res.sequin, status = decideTestsDGE(res.sequin), values = c(1, -1), 
        col = c("red", "blue"), legend = "topright")
 ```
 ```{r}
-ttag.sequins <- as.data.frame(topTags(res.sequins, n=Inf))
-ttag.sequins$logFC_expected <- anno$logFC[match(rownames(ttag.sequins), anno$NAME)]
-ttag.sequins$LENGTH <- anno$LENGTH[match(rownames(ttag.sequins), anno$NAME)]
-cor(ttag.sequins$logFC, ttag.sequins$logFC_expected)
+ttag.sequin <- as.data.frame(topTags(res.sequin, n=Inf))
+ttag.sequin$logFC_expected <- anno$logFC[match(rownames(ttag.sequin), anno$NAME)]
+ttag.sequin$LENGTH <- anno$LENGTH[match(rownames(ttag.sequin), anno$NAME)]
+cor(ttag.sequin$logFC, ttag.sequin$logFC_expected)
 
-ttag.sequins$isDE <- ttag.sequins$logFC_expected!=0
-ggplot(ttag.sequins, aes(x=isDE, y=FDR)) +
+ttag.sequin$isDE <- ttag.sequin$logFC_expected!=0
+ggplot(ttag.sequin, aes(x=isDE, y=FDR)) +
   geom_boxplot()
 
 # Test FDR
-table(ttag.sequins$isDE, ttag.sequins$FDR<0.05)
+table(ttag.sequin$isDE, ttag.sequin$FDR<0.05)
 ```
 

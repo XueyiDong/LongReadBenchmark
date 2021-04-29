@@ -32,6 +32,18 @@ GeneFC.sequin = PostFC(EBOut.sequin)
 
 Check Sequin genes FDR
 ```{r}
+anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
+anno$logFC <- log(anno$MIX_B / anno$MIX_A)
 
+res.sequin <- cbind(EBDERes.sequin$PPMat, GeneFC.sequin$PostFC)
+res.sequin <- as.data.frame(res.sequin)
+colnames(res.sequin)[3] = "PostFC"
+
+res.sequin$logFC_expected <- anno$logFC[match(rownames(res.sequin), anno$NAME)]
+res.sequin$LENGTH <- anno$LENGTH[match(rownames(res.sequin), anno$NAME)]
+cor(log(res.sequin$PostFC), res.sequin$logFC_expected)
+res.sequin$isDE <- res.sequin$logFC_expected!=0
+# # Test FDR
+table(res.sequin$isDE, res.sequin$PPEE<0.05)
 ```
 
