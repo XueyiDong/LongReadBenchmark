@@ -1,0 +1,49 @@
+---
+title: "NOISeq"
+author: "Xueyi Dong"
+date: "30/04/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(NOISeq)
+```
+
+```{r}
+mylength <- fc$annotation[,6, drop=FALSE]
+human.gene <- grep("^ENSG", rownames(fc$counts))
+sequin.gene <- grep("^R", rownames(fc$counts))
+rownames(mylength) <- fc$annotation$GeneID
+mydata.human <- readData(
+  data = fc$counts[human.gene,1:6],
+  length = mylength[human.gene,],
+  factors = data.frame(
+    group = rep(c("H1975", "HCC827"), c(3,3))
+  )
+)
+mydata.sequin <- readData(
+  data = fc$counts[sequin.gene,1:6],
+  length = mylength[sequin.gene,],
+  factors = data.frame(
+    group = rep(c("H1975", "HCC827"), c(3,3))
+  )
+)
+# QCreport(mydata, samples=NULL, factor="group", norm=FALSE)
+
+mynoiseqbio.human = noiseqbio(mydata.human,  norm="tmm", factor="group", )
+mynoiseqbio.sequin = noiseqbio(mydata.sequin,  norm="tmm", factor="group", )
+```
+
+The higher the probability, the more likely that the difference in expression is due to the change in the experimental condition and not to chance.
+When using NOISeqBIO, the probability of differential expression would be equivalent to 1 − FDR.
+```{r}
+res.human <- (mynoiseqbio.human@results[[1]])
+res.sequin <- (mynoiseqbio.sequin@results[[1]])
+# mynoiseqbio.deg <- degenes(mynoiseqbio, q=0.95)
+# DE.plot(mynoiseqbio, q = 0.95, graphic = "MD")
+```
+

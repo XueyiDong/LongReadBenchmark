@@ -18,8 +18,8 @@ library(Homo.sapiens)
 ```
 
 ```{r featureCounts, eval=FALSE}
-dir_bam <- "/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/ONT_aligned/sam"
-bams <- list.files(dir_bam, ".sam$")
+dir_bam <- "/stornext/Projects/promethion/promethion_access/lab_ritchie/transcr_bench/long_term/transcr_bench/guppy_4_rebasecall_Oct20_aligned_minimap2"
+bams <- list.files(dir_bam, ".bam$")
 fc <- featureCounts(file.path(dir_bam, bams),
                     annot.ext = "/wehisan/home/allstaff/d/dong.x/annotation/HumanSequins/gencode.v33.sequins.gtf",
                     isGTFAnnotationFile = TRUE,
@@ -119,7 +119,7 @@ fit a separate model for sequins genes
 
 ```{r}
 x.sequin <- x[sequin.gene,]
-x.sequin <- calcNormFactors(x.sequins)
+x.sequin <- calcNormFactors(x.sequin)
 v.sequin <- voom(x.sequin, design = design, plot=TRUE)
 fit.sequin <- lmFit(v.sequin)
 efit.sequin <- eBayes(fit.sequin)
@@ -132,8 +132,8 @@ plotMD(efit.sequin, status = dt.sequin[,2], column = 2, values = c(-1, 1), col =
 
 ```{r}
 tt.sequin <- topTable(efit.sequin, number = Inf)
-# anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
-# anno$logFC <- log(anno$MIX_B / anno$MIX_A)
+anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
+anno$logFC <- log(anno$MIX_B / anno$MIX_A)
 tt.sequin$logFC_expected <- anno$logFC[match(rownames(tt.sequin), anno$NAME)]
 tt.sequin$LENGTH <- anno$LENGTH[match(rownames(tt.sequin), anno$NAME)]
 cor(tt.sequin$logFC, tt.sequin$logFC_expected)
@@ -163,7 +163,7 @@ plotMD(efit.human, status = dt.human[,2], column = 2, values = c(-1, 1), col = c
 
 ```{r}
 write.table(tt.human, "topTableHuman.tsv", sep="\t")
-write.table(tt.sequins, "topTableSequin.tsv", sep="\t")
+write.table(tt.sequin, "topTableSequin.tsv", sep="\t")
 ```
 
 # DE analysis using edgeR
