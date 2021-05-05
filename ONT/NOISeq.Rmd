@@ -20,19 +20,18 @@ sequin.gene <- grep("^R", rownames(fc$counts))
 rownames(mylength) <- fc$annotation$GeneID
 mydata.human <- readData(
   data = fc$counts[human.gene,1:6],
-  length = mylength[human.gene,],
+  length = mylength[human.gene,, drop=FALSE],
   factors = data.frame(
     group = rep(c("H1975", "HCC827"), c(3,3))
   )
 )
 mydata.sequin <- readData(
   data = fc$counts[sequin.gene,1:6],
-  length = mylength[sequin.gene,],
+  length = mylength[sequin.gene,, drop=FALSE],
   factors = data.frame(
     group = rep(c("H1975", "HCC827"), c(3,3))
   )
 )
-# QCreport(mydata, samples=NULL, factor="group", norm=FALSE)
 
 mynoiseqbio.human = noiseqbio(mydata.human,  norm="tmm", factor="group", )
 mynoiseqbio.sequin = noiseqbio(mydata.sequin,  norm="tmm", factor="group", )
@@ -47,3 +46,14 @@ res.sequin <- (mynoiseqbio.sequin@results[[1]])
 # DE.plot(mynoiseqbio, q = 0.95, graphic = "MD")
 ```
 
+Check Sequin genes FDR
+```{r}
+anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
+anno$logFC <- log(anno$MIX_B / anno$MIX_A)
+
+res.sequin$logFC_expected <- anno$logFC[match(rownames(res.sequin), anno$NAME)]
+cor(res.sequin$log2FC, res.sequin$logFC_expected)
+res.sequin$isDE <- res.sequin$logFC_expected!=0
+# # Test FDR
+table(res.sequin$isDE, res.sequin$prob>0.95)
+```
