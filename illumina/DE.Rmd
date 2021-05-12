@@ -1,7 +1,7 @@
 ---
 title: 'Long-read benchmark analysis: Illumina data DE analysis'
 author: "Xueyi Dong"
-date: "22/07/2020"
+date: "12/05/2021"
 output: html_document
 ---
 
@@ -10,50 +10,73 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-library(edgeR)
 library(limma)
+library(edgeR)
 library(ggplot2)
-library(Homo.sapiens)
+library(DESeq2)
+library(EBSeq)
+library(NOISeq)
+```
+
+## Organize samples
+
+```{r}
+fc <- readRDS("counts.RDS")
+# combine topup sample
+fc$counts[, 6] <- fc$counts[, 5] + fc$counts[, 6]
+fc$counts <- fc$counts[, -5]
 ```
 
 ```{r}
-counts <- readRDS("counts.RDS")
-x <- DGEList(counts=counts$counts)
-x$samples$group <- rep(c("H1975", "HCC827"), c(3,4))
-```
-
-```{r}
-geneid <- strsplit2(rownames(x$counts), "\\.")[,1]
-genes <- select(Homo.sapiens, keys=geneid, columns=c("SYMBOL", "TXCHROM"), 
-                keytype="ENSEMBL")
-x$genes <- genes[match(geneid, genes$ENSEMBL),]
-```
-
-```{r}
-x$counts[, 6] <- x$counts[,5] + x$counts[,6]
-x$samples$lib.size[6] <- x$samples$lib.size[5] + x$samples$lib.size[6]
-x <- x[,-5]
-
-filter <- filterByExpr(x)
-x <- x[filter, ,keep.lib.sizes=FALSE]
-dim(x)
-human.gene <- grep("^ENSG", rownames(x))
-sequin.gene <- grep("^R", rownames(x))
-
-x <- calcNormFactors(x)
-cpm <- cpm(x, log=TRUE)
-plotMDS(cpm, col = rep(c("red", "blue"), c(3, 4)))
-```
-
-```{r}
-stat <- as.data.frame(t(counts$stat))
-colnames(stat) <- counts$stat[,1]
+stat <- as.data.frame(t(fc$stat))
+colnames(stat) <- fc$stat[,1]
 stat <- stat[-1,]
 stat$sample <- rownames(stat)
 ggplot(stat, aes(x=sample, y=as.numeric(as.character(Assigned)))) + geom_bar(stat="identity") +
   labs(y="number of counts") +
   theme_bw() +  theme (axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
+## DE analysis using limma
+
+```{r}
+x <- DGEList(counts = fc$counts)
+x <- x[,1:6]
+x$samples$group <- rep(c("H1975", "HCC827"), c(3,3))
+x$genes <- fc$annotation
+```
+
+```{r}
+filter <- filterByExpr(x)
+x <- x[filter, ,keep.lib.sizes=FALSE]
+dim(x)
+
+x <- calcNormFactors(x)
+cpm <- cpm(x, log=TRUE)
+plotMDS(cpm, col = rep(c("red", "blue"), c(3, 3)))
+
+x$samples
+
+human.gene <- grep("^ENSG", rownames(x))
+sequin.gene <- grep("^R", rownames(x))
+cpm.human <- cpm(x[human.gene, ], log=TRUE)
+cpm.sequin <- cpm(x[sequin.gene, ], log=TRUE)
+par(mfrow=c(1,2))
+plotMDS(cpm.human, col = rep(c("red", "blue"), c(3, 3)), main="Human genes")
+plotMDS(cpm.sequin, col = rep(c("red", "blue"), c(3, 3)), main = "Sequin genes")
+```
+
+```{r}
+stat <- as.data.frame(t(fc$stat))
+colnames(stat) <- fc$stat[,1]
+stat <- stat[-1,]
+stat$sample <- rownames(stat)
+ggplot(stat, aes(x=sample, y=as.numeric(as.character(Assigned)))) + geom_bar(stat="identity") +
+  labs(y="number of counts") +
+  theme_bw() +  theme (axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Fit the model to all genes together
 
 ```{r}
 design <- model.matrix(~x$samples$group)
@@ -63,55 +86,59 @@ efit <- eBayes(fit)
 dt <- decideTests(efit)
 summary(dt)
 ```
+
 ```{r}
 # highlight sequins genes in voom plot
-sequins <- grepl("^R", rownames(x))
-
 plot(v$voom.xy$x, v$voom.xy$y, xlab = v$voom.xy$xlab, ylab = v$voom.xy$ylab,
      pch = 16, cex = 0.25,
      cex.lab = 1.5, cex.axis = 1.5)
-points(v$voom.xy$x[sequins], v$voom.xy$y[sequins], 
+points(v$voom.xy$x[sequin.gene], v$voom.xy$y[sequin.gene], 
        pch = 16, cex = 1,
        col = "blue")
 lines(v$voom.line, col = "red")
 
 ```
 
+
 ```{r}
 plotMD(efit, status = dt[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="H1975 vs HCC227")
 ```
 
-fit a separate model for sequins genes
 ```{r}
-x.sequins <- x[sequin.gene,]
-x.sequins <- calcNormFactors(x.sequins)
-v.sequins <- voom(x.sequins, design = design, plot=TRUE)
-fit.sequins <- lmFit(v.sequins)
-efit.sequins <- eBayes(fit.sequins)
-dt.sequins <- decideTests(efit.sequins)
-summary(dt.sequins)
-```
-```{r}
-plotMD(efit.sequins, status = dt.sequins[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="Sequins genes")
-```
-
-```{r}
-tt.sequins <- topTable(efit.sequins, number = Inf)
-# anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
-# anno$logFC <- log(anno$MIX_B / anno$MIX_A)
-tt.sequins$logFC_expected <- anno$logFC[match(rownames(tt.sequins), anno$NAME)]
-tt.sequins$LENGTH <- anno$LENGTH[match(rownames(tt.sequins), anno$NAME)]
-cor(tt.sequins$logFC, tt.sequins$logFC_expected)
-lfc.lm2 <-lm(tt.sequins$logFC ~ tt.sequins$logFC_expected)
-tt.sequins$isDE <- tt.sequins$logFC_expected!=0
-ggplot(tt.sequins, aes(x=isDE, y=adj.P.Val)) +
+tt <- topTable(efit, number = Inf)
+tt.sequin <- tt[grepl("^R", rownames(tt)),]
+anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
+anno$logFC <- log(anno$MIX_B / anno$MIX_A)
+tt.sequin$logFC_expected <- anno$logFC[match(rownames(tt.sequin), anno$NAME)]
+tt.sequin$LENGTH <- anno$LENGTH[match(rownames(tt.sequin), anno$NAME)]
+cor(tt.sequin$logFC, tt.sequin$logFC_expected)
+lfc.lm <-lm(tt.sequin$logFC ~ tt.sequin$logFC_expected)
+tt.sequin$isDE <- tt.sequin$logFC_expected!=0
+ggplot(tt.sequin, aes(x=isDE, y=adj.P.Val)) +
   geom_boxplot()
 
 # Test FDR
-table(tt.sequins$isDE, tt.sequins$adj.P.Val<0.05)
+table(tt.sequin$isDE, tt.sequin$adj.P.Val<0.05)
 ```
 
-Fit a separate model for human genes
+### fit a separate model for sequins genes
+
+```{r}
+x.sequin <- x[sequin.gene,]
+x.sequin <- calcNormFactors(x.sequin)
+v.sequin <- voom(x.sequin, design = design, plot=TRUE)
+fit.sequin <- lmFit(v.sequin)
+efit.sequin <- eBayes(fit.sequin)
+dt.sequin <- decideTests(efit.sequin)
+summary(dt.sequin)
+tt.sequin <- topTable(efit.sequin, number = Inf)
+```
+```{r}
+plotMD(efit.sequin, status = dt.sequin[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="Sequin genes")
+```
+
+
+### Fit a separate model for human genes
 
 ```{r}
 x.human <- x[human.gene,]
@@ -125,8 +152,139 @@ tt.human <- topTable(efit.human, number = Inf)
 plotMD(efit.human, status = dt.human[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="Human genes")
 ```
 
+
 ```{r}
 write.table(tt.human, "topTableHuman.tsv", sep="\t")
-write.table(tt.sequins, "topTableSequin.tsv", sep="\t")
+write.table(tt.sequin, "topTableSequin.tsv", sep="\t")
+write.table(tt.human[,c("logFC", "adj.P.Val")], "DEres/resLimmaHuman.tsv", sep = "\t", row.names = TRUE)
+write.table(tt.sequin[,c("logFC", "adj.P.Val")], "DEres/resLimmaSequin.tsv", sep = "\t", row.names = TRUE)
 ```
 
+## DE analysis using edgeR
+
+### Human genes
+
+```{r}
+x.human <- estimateDisp(x.human, design)
+plotBCV(x.human)
+qlfit.human <- glmQLFit(x.human, design)
+plotQLDisp(qlfit.human)
+res.human <- glmQLFTest(qlfit.human)
+ttag.human <- as.data.frame(topTags(res.human, n=Inf))
+write.table(ttag.human[,c("logFC", "FDR")], "DEres/resEdgerHuman.tsv", sep="\t", row.names = TRUE)
+```
+
+```{r}
+plotMD(res.human, status = decideTestsDGE(res.human), values = c(1, -1), 
+       col = c("red", "blue"), legend = "topright")
+```
+
+### Sequin genes
+
+```{r}
+x.sequin <- estimateDisp(x.sequin, design)
+plotBCV(x.sequin)
+qlfit.sequin <- glmQLFit(x.sequin, design)
+plotQLDisp(qlfit.sequin)
+res.sequin <- glmQLFTest(qlfit.sequin)
+
+plotMD(res.sequin, status = decideTestsDGE(res.sequin), values = c(1, -1), 
+       col = c("red", "blue"), legend = "topright")
+```
+
+
+```{r}
+ttag.sequin <- as.data.frame(topTags(res.sequin, n=Inf))
+write.table(ttag.sequin[,c("logFC", "FDR")], "DEres/resEdgerSequin.tsv", sep="\t", row.names = TRUE)
+```
+
+## DE analysis using DESeq2
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=  fc$counts[,1:6], 
+                              colData = data.frame(
+                                group = rep(c("H1975", "HCC827"), c(3,3))
+                              ),
+                              design = ~group)
+keep <- rowSums(counts(dds)) > 1 & rowSums(counts(dds) >= 10) >= 3
+dds <- dds[keep,]
+nrow(dds)
+
+human.gene <- grep("^ENSG", rownames(dds))
+sequin.gene <- grep("^R", rownames(dds))
+dds.human <- dds[human.gene, ]
+dds.sequin <- dds[sequin.gene, ]
+
+dds.human <- DESeq(dds.human)
+dds.sequin <- DESeq(dds.sequin)
+res.human <- results(dds.human)
+res.sequin <- results(dds.sequin)
+
+write.table(res.human[,c("log2FoldChange", "padj")], "DEres/resDeseq2human.tsv", sep="\t", row.names = TRUE)
+write.table(res.sequin[,c("log2FoldChange", "padj")], "DEres/resDeseq2sequin.tsv", sep="\t", row.names = TRUE)
+
+```
+
+## DE analysis using EBSeq
+
+```{r}
+human.gene <- grep("^ENSG", rownames(fc$counts))
+sequin.gene <- grep("^R", rownames(fc$counts))
+Sizes.human = MedianNorm(fc$counts[human.gene, 1:6])
+Sizes.sequin = MedianNorm(fc$counts[sequin.gene, 1:6])
+Conditions = as.factor(rep(c("H1975", "HCC827"), c(3,3)))
+EBOut.human = EBTest(Data = fc$counts[human.gene,1:6], Conditions = Conditions, sizeFactors = Sizes.human, maxround = 5)
+EBOut.sequin = EBTest(Data = fc$counts[sequin.gene,1:6], Conditions = Conditions, sizeFactors = Sizes.sequin, maxround = 5)
+EBDERes.human=GetDEResults(EBOut.human, FDR=0.05)
+EBDERes.sequin=GetDEResults(EBOut.sequin, FDR=0.05)
+head(EBDERes.human$PPMat)
+head(EBDERes.sequin$PPMat)
+GeneFC.human = PostFC(EBOut.human)
+GeneFC.sequin = PostFC(EBOut.sequin)
+write.table(data.frame(
+  logFC=log2(GeneFC.human$PostFC),
+  PPEE=EBDERes.human$PPMat[match(names(GeneFC.human$PostFC), rownames(EBDERes.human$PPMat)),1],
+  row.names = names(GeneFC.human$PostFC)
+), "DEres/resEbseqHuman.tsv", sep="\t", row.names = TRUE)
+write.table(data.frame(
+  logFC=log2(GeneFC.sequin$PostFC),
+  PPEE=EBDERes.sequin$PPMat[match(names(GeneFC.sequin$PostFC), rownames(EBDERes.sequin$PPMat)),1],
+  row.names = names(GeneFC.sequin$PostFC)
+), "DEres/resEbseqSequin.tsv", sep="\t", row.names = TRUE)
+```
+
+
+## DE analysis using NOISeq
+
+```{r}
+mylength <- fc$annotation[,6, drop=FALSE]
+human.gene <- grep("^ENSG", rownames(fc$counts))
+sequin.gene <- grep("^R", rownames(fc$counts))
+rownames(mylength) <- fc$annotation$GeneID
+mydata.human <- readData(
+  data = fc$counts[human.gene,1:6],
+  length = mylength[human.gene,, drop=FALSE],
+  factors = data.frame(
+    group = rep(c("H1975", "HCC827"), c(3,3))
+  )
+)
+mydata.sequin <- readData(
+  data = fc$counts[sequin.gene,1:6],
+  length = mylength[sequin.gene,, drop=FALSE],
+  factors = data.frame(
+    group = rep(c("H1975", "HCC827"), c(3,3))
+  )
+)
+
+mynoiseqbio.human = noiseqbio(mydata.human,  norm="tmm", factor="group", )
+mynoiseqbio.sequin = noiseqbio(mydata.sequin,  norm="tmm", factor="group", )
+noires.human <- (mynoiseqbio.human@results[[1]])
+noires.sequin <- (mynoiseqbio.sequin@results[[1]])
+noires.human$FDR=1-noires.human$prob
+noires.sequin$FDR=1-noires.sequin$prob
+write.table(noires.human[,c("log2FC", "FDR")], "DEres/resNoiseqHuman.tsv", sep="\t", row.names = TRUE)
+write.table(noires.sequin[,c("log2FC", "FDR")], "DEres/resNoiseqSequin.tsv", sep="\t", row.names = TRUE)
+```
+```{r}
+sessionInfo()
+```

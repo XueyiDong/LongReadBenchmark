@@ -40,12 +40,13 @@ fc <- readRDS("counts_ONT.RDS")
 ```
 
 
-## limma
+## DE analysis using limma
 
 ```{r}
 x <- DGEList(counts = fc$counts)
 x <- x[,1:6]
 x$samples$group <- rep(c("H1975", "HCC827"), c(3,3))
+x$genes <- fc$annotation
 ```
 
 ```{r}
