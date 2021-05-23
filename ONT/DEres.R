@@ -9,6 +9,7 @@ res.human <-lapply(res.human,
                    function(x){
                      colnames(x)=c("logFC", "FDR")
                      return(na.omit(x))})
+saveRDS(res.human, file = "./DEres/res.human.RDS")
 DEgenes.human <- lapply(res.human,
                         function(x){
                           rownames(x)[x$FDR < 0.05]
@@ -30,6 +31,7 @@ res.sequin <-lapply(res.sequin,
                    function(x){
                      colnames(x)=c("logFC", "FDR")
                      return(na.omit(x))})
+saveRDS(res.sequin, file="./DEres/res.sequin.RDS")
 DEgenes.sequin <- lapply(res.sequin,
                         function(x){
                           rownames(x)[x$FDR < 0.05]

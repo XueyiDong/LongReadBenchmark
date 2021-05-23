@@ -2,7 +2,10 @@
 title: 'Long-read benchmark analysis: Illumina data DE analysis'
 author: "Xueyi Dong"
 date: "12/05/2021"
-output: html_document
+output: 
+  html_document: 
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -286,5 +289,6 @@ write.table(noires.human[,c("log2FC", "FDR")], "DEres/resNoiseqHuman.tsv", sep="
 write.table(noires.sequin[,c("log2FC", "FDR")], "DEres/resNoiseqSequin.tsv", sep="\t", row.names = TRUE)
 ```
 ```{r}
+save.image("DE.RData")
 sessionInfo()
 ```
