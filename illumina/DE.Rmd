@@ -159,8 +159,8 @@ plotMD(efit.human, status = dt.human[,2], column = 2, values = c(-1, 1), col = c
 ```{r}
 write.table(tt.human, "topTableHuman.tsv", sep="\t")
 write.table(tt.sequin, "topTableSequin.tsv", sep="\t")
-write.table(tt.human[,c("logFC", "adj.P.Val")], "DEres/resLimmaHuman.tsv", sep = "\t", row.names = TRUE)
-write.table(tt.sequin[,c("logFC", "adj.P.Val")], "DEres/resLimmaSequin.tsv", sep = "\t", row.names = TRUE)
+write.table(tt.human[,c("GeneID","logFC", "adj.P.Val")], "DEres/resLimmaHuman.tsv", sep = "\t", row.names = TRUE)
+write.table(tt.sequin[,c("GeneID","logFC", "adj.P.Val")], "DEres/resLimmaSequin.tsv", sep = "\t", row.names = TRUE)
 ```
 
 ## DE analysis using edgeR
@@ -174,7 +174,7 @@ qlfit.human <- glmQLFit(x.human, design)
 plotQLDisp(qlfit.human)
 res.human <- glmQLFTest(qlfit.human)
 ttag.human <- as.data.frame(topTags(res.human, n=Inf))
-write.table(ttag.human[,c("logFC", "FDR")], "DEres/resEdgerHuman.tsv", sep="\t", row.names = TRUE)
+write.table(ttag.human[,c("GeneID","logFC", "FDR")], "DEres/resEdgerHuman.tsv", sep="\t", row.names = TRUE)
 ```
 
 ```{r}
@@ -198,7 +198,7 @@ plotMD(res.sequin, status = decideTestsDGE(res.sequin), values = c(1, -1),
 
 ```{r}
 ttag.sequin <- as.data.frame(topTags(res.sequin, n=Inf))
-write.table(ttag.sequin[,c("logFC", "FDR")], "DEres/resEdgerSequin.tsv", sep="\t", row.names = TRUE)
+write.table(ttag.sequin[,c("GeneID","logFC", "FDR")], "DEres/resEdgerSequin.tsv", sep="\t", row.names = TRUE)
 ```
 
 ## DE analysis using DESeq2
@@ -222,9 +222,11 @@ dds.human <- DESeq(dds.human)
 dds.sequin <- DESeq(dds.sequin)
 res.human <- results(dds.human)
 res.sequin <- results(dds.sequin)
+res.human$gene <- rownames(res.human)
+res.sequin$gene <- rownames(res.sequin)
 
-write.table(res.human[,c("log2FoldChange", "padj")], "DEres/resDeseq2human.tsv", sep="\t", row.names = TRUE)
-write.table(res.sequin[,c("log2FoldChange", "padj")], "DEres/resDeseq2sequin.tsv", sep="\t", row.names = TRUE)
+write.table(res.human[,c("gene", "log2FoldChange", "padj")], "DEres/resDeseq2Human.tsv", sep="\t", row.names = TRUE)
+write.table(res.sequin[,c("gene", "log2FoldChange", "padj")], "DEres/resDeseq2Sequin.tsv", sep="\t", row.names = TRUE)
 
 ```
 
@@ -245,11 +247,13 @@ head(EBDERes.sequin$PPMat)
 GeneFC.human = PostFC(EBOut.human)
 GeneFC.sequin = PostFC(EBOut.sequin)
 write.table(data.frame(
+  gene = rownames(EBDERes.human$PPMat)[match(names(GeneFC.human$PostFC), rownames(EBDERes.human$PPMat))],
   logFC=log2(GeneFC.human$PostFC),
   PPEE=EBDERes.human$PPMat[match(names(GeneFC.human$PostFC), rownames(EBDERes.human$PPMat)),1],
   row.names = names(GeneFC.human$PostFC)
 ), "DEres/resEbseqHuman.tsv", sep="\t", row.names = TRUE)
 write.table(data.frame(
+  gene = rownames(EBDERes.sequin$PPMat)[match(names(GeneFC.sequin$PostFC), rownames(EBDERes.sequin$PPMat))],
   logFC=log2(GeneFC.sequin$PostFC),
   PPEE=EBDERes.sequin$PPMat[match(names(GeneFC.sequin$PostFC), rownames(EBDERes.sequin$PPMat)),1],
   row.names = names(GeneFC.sequin$PostFC)
@@ -285,8 +289,10 @@ noires.human <- (mynoiseqbio.human@results[[1]])
 noires.sequin <- (mynoiseqbio.sequin@results[[1]])
 noires.human$FDR=1-noires.human$prob
 noires.sequin$FDR=1-noires.sequin$prob
-write.table(noires.human[,c("log2FC", "FDR")], "DEres/resNoiseqHuman.tsv", sep="\t", row.names = TRUE)
-write.table(noires.sequin[,c("log2FC", "FDR")], "DEres/resNoiseqSequin.tsv", sep="\t", row.names = TRUE)
+noires.human$gene <- rownames(noires.human)
+noires.sequin$gene <- rownames(noires.sequin)
+write.table(noires.human[,c("gene", "log2FC", "FDR")], "DEres/resNoiseqHuman.tsv", sep="\t", row.names = TRUE)
+write.table(noires.sequin[,c("gene", "log2FC", "FDR")], "DEres/resNoiseqSequin.tsv", sep="\t", row.names = TRUE)
 ```
 ```{r}
 save.image("DE.RData")

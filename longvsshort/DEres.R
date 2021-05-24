@@ -23,12 +23,8 @@ res.human$method_dataset <- paste(res.human$method, res.human$dataset, sep="_")
 # Human DE genes upset plot
 DEgenes.human <- lapply(unique(res.human$method_dataset), function(x){
   res <- res.human[res.human$method_dataset==x, ]
-  DEgenes <- rownames(res)[res$FDR < 0.05]
+  DEgenes <- res$Gene[res$FDR < 0.05]
   return(DEgenes)
-})
-DEgenes.human <- lapply(DEgenes.human, function(x){
-  split <- strsplit2(x, split=".", fixed=TRUE)
-  return(split[,1])
 })
 names(DEgenes.human) <- unique(res.human$method_dataset)
 pdf("plots/humanDeUpset.pdf", height = 5)
@@ -49,25 +45,24 @@ res.sequin$dataset <- rep(c("ONT", "Illumina"),
                           c(sum(sapply(res.sequin.long, nrow, simplify=TRUE)), sum(sapply(res.sequin.short, nrow, simplify=TRUE))))
 res.sequin$method_dataset <- paste(res.sequin$method, res.sequin$dataset, sep="_")
 
-# Human DE genes upset plot
+# Sequin DE genes upset plot
 DEgenes.sequin <- lapply(unique(res.sequin$method_dataset), function(x){
   res <- res.sequin[res.sequin$method_dataset==x, ]
-  DEgenes <- rownames(res)[res$FDR < 0.05]
+  DEgenes <- res$Gene[res$FDR < 0.05]
   return(DEgenes)
-})
-DEgenes.sequin <- lapply(DEgenes.sequin, function(x){
-  if(nchar(x[[1]])==6){
-    return(sapply(x, function(y){
-      substr(y, 1, nchar(y)-1)
-    }, simplify=TRUE))}
-   else return(x)
 })
 names(DEgenes.sequin) <- unique(res.sequin$method_dataset)
 pdf("plots/sequinDeUpset.pdf", height = 5)
 upset(fromList(DEgenes.sequin), nsets=10, order.by = "freq")
 dev.off()
 
-# Compare long and short t-statistic
+# Sequin FDR and TPR
+anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
+anno$logFC <- log(anno$MIX_B / anno$MIX_A)
+res.sequin$logFC_expected <- anno$logFC[match(res.sequin$Gene, anno$NAME)]
+
+
+# Compare long and short human t-statistic
 tt.human.long <- read.delim("../ONT/topTableHuman.tsv", sep= "\t", stringsAsFactors = FALSE)
 tt.human.short <- read.delim("../illumina/topTableHuman.tsv", sep = "\t", stringsAsFactors = FALSE)
 m <- match(tt.human.long$GeneID, tt.human.short$GeneID)

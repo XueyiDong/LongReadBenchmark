@@ -7,18 +7,18 @@ res.human <- sapply(res.human,
                     simplify=FALSE)
 res.human <-lapply(res.human,
                    function(x){
-                     colnames(x)=c("logFC", "FDR")
+                     colnames(x)=c("Gene", "logFC", "FDR")
                      return(na.omit(x))})
 saveRDS(res.human, file = "./DEres/res.human.RDS")
 DEgenes.human <- lapply(res.human,
                         function(x){
-                          rownames(x)[x$FDR < 0.05]
+                          x$Gene[x$FDR < 0.05]
                         })
 names(DEgenes.human) <- gsub("res", "", names(DEgenes.human))
 names(DEgenes.human) <- gsub("Human.tsv", "", names(DEgenes.human))
 # Human De genes upset plot
 pdf("DEres/plots/humanDEupset.pdf", height = 5)
-upset(fromList(DEgenes.human), order.by = "degree")
+upset(fromList(DEgenes.human), order.by = "freq")
 dev.off()
 
 #-------------------sequin----------------------------
@@ -29,20 +29,20 @@ res.sequin <- sapply(res.sequin,
                     simplify=FALSE)
 res.sequin <-lapply(res.sequin,
                    function(x){
-                     colnames(x)=c("logFC", "FDR")
+                     colnames(x)=c("Gene", "logFC", "FDR")
                      return(na.omit(x))})
 saveRDS(res.sequin, file="./DEres/res.sequin.RDS")
 DEgenes.sequin <- lapply(res.sequin,
                         function(x){
-                          rownames(x)[x$FDR < 0.05]
+                          x$Gene[x$FDR < 0.05]
                         })
 # Sequin DE genes upset plot
-upset(fromList(DEgenes.sequin), order.by = "degree")
+upset(fromList(DEgenes.sequin), order.by = "freq")
 # Compare to annotation, calculate FDR and TPR
 anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
 anno$logFC <- log(anno$MIX_B / anno$MIX_A)
 res.sequin <- data.frame(
-  gene =  c(rownames(res.sequin[[1]]), rownames(res.sequin[[2]]), rownames(res.sequin[[3]]), rownames(res.sequin[[4]]), rownames(res.sequin[[5]])),
+  gene =  c(res.sequin[[1]]$Gene, res.sequin[[2]]$Gene, res.sequin[[3]]$Gene, res.sequin[[4]]$Gene, res.sequin[[5]]$Gene),
   logFC = c(res.sequin[[1]]$logFC, res.sequin[[2]]$logFC, res.sequin[[3]]$logFC, res.sequin[[4]]$logFC, res.sequin[[5]]$logFC),
   FDR = c(res.sequin[[1]]$FDR, res.sequin[[2]]$FDR, res.sequin[[3]]$FDR, res.sequin[[4]]$FDR, res.sequin[[5]]$FDR),
   method = rep(c("DESeq2", "EBSeq", "edgeR", "limma", "NOISeq"), c(nrow(res.sequin[[1]]), nrow(res.sequin[[2]]), nrow(res.sequin[[3]]), nrow(res.sequin[[4]]), nrow(res.sequin[[5]])))
