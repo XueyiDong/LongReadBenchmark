@@ -61,7 +61,6 @@ anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin
 anno$logFC <- log(anno$MIX_B / anno$MIX_A)
 res.sequin$logFC_expected <- anno$logFC[match(res.sequin$Gene, anno$NAME)]
 
-
 # Compare long and short human t-statistic
 tt.human.long <- read.delim("../ONT/topTableHuman.tsv", sep= "\t", stringsAsFactors = FALSE)
 tt.human.short <- read.delim("../illumina/topTableHuman.tsv", sep = "\t", stringsAsFactors = FALSE)
