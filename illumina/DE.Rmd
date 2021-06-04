@@ -35,9 +35,11 @@ stat <- as.data.frame(t(fc$stat))
 colnames(stat) <- fc$stat[,1]
 stat <- stat[-1,]
 stat$sample <- rownames(stat)
+pdf("numCounts.pdf", height = 5)
 ggplot(stat, aes(x=sample, y=as.numeric(as.character(Assigned)))) + geom_bar(stat="identity") +
   labs(y="number of counts") +
   theme_bw() +  theme (axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
 ```
 
 ## DE analysis using limma
@@ -162,6 +164,17 @@ write.table(tt.sequin, "topTableSequin.tsv", sep="\t")
 write.table(tt.human[,c("GeneID","logFC", "adj.P.Val")], "DEres/resLimmaHuman.tsv", sep = "\t", row.names = TRUE)
 write.table(tt.sequin[,c("GeneID","logFC", "adj.P.Val")], "DEres/resLimmaSequin.tsv", sep = "\t", row.names = TRUE)
 ```
+
+### QC plot: length vs expression
+
+```{r}
+tt <- rbind(tt.sequin, tt.human)
+cor(tt$Length, tt$AveExpr)
+pdf("lengthExp.pdf", height = 5)
+smoothScatter(log2(tt$Length), tt$AveExpr, xlab = "Log2 gene length", ylab="Average log2 CPM")
+dev.off()
+```
+
 
 ## DE analysis using edgeR
 

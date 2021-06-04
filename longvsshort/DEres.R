@@ -60,6 +60,40 @@ dev.off()
 anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
 anno$logFC <- log(anno$MIX_B / anno$MIX_A)
 res.sequin$logFC_expected <- anno$logFC[match(res.sequin$Gene, anno$NAME)]
+# FDR = false positive / predicted positive
+FDR <- as.data.frame(t(sapply(unique(res.sequin$method_dataset), function(x){
+  fdr = nrow(res.sequin[res.sequin$method_dataset == x & res.sequin$FDR < 0.05 & res.sequin$logFC_expected == 0,]) / nrow(res.sequin[res.sequin$method_dataset == x & res.sequin$FDR < 0.05,] )
+  return(c(x, fdr))
+}, simplify=TRUE)))
+colnames(FDR) <- c("Method_dataset", "False discovery rate")
+FDR$`False discovery rate` <- as.numeric(FDR$`False discovery rate`)
+pdf("plots/DEsequinFDR.pdf", height = 4)
+ggplot(FDR, aes(x=Method_dataset, y=`False discovery rate`, fill=Method_dataset)) +
+  geom_bar(stat="identity") +
+  theme_bw()+
+  scale_fill_brewer(palette = "Paired") +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
+# TPR = true positive / positive
+TPR <- as.data.frame(t(sapply(unique(res.sequin$method_dataset), function(x){
+  tpr = nrow(res.sequin[res.sequin$method_dataset == x & res.sequin$FDR < 0.05 & res.sequin$logFC_expected != 0,]) / nrow(res.sequin[res.sequin$method_dataset == x & res.sequin$logFC_expected != 0,] )
+  return(c(x, tpr))
+}, simplify=TRUE)))
+colnames(TPR) <- c("Method_dataset", "True positive rate")
+TPR$`True positive rate` <- as.numeric(TPR$`True positive rate`)
+pdf("plots/DEsequinTPR.pdf", height = 4)
+ggplot(TPR, aes(x=Method_dataset, y=`True positive rate`, fill=Method_dataset)) +
+  geom_bar(stat="identity") +
+  theme_bw() +
+  scale_fill_brewer(palette = "Paired") +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
+
+# check false positive/false negative genes
+FD <- res.sequin[res.sequin$FDR<0.05 & res.sequin$logFC_expected == 0, ]
+FN <- res.sequin[res.sequin$FDR >= 0.05 & res.sequin$logFC_expected != 0, ]
+# venn diagram 
+
 
 # Compare long and short human t-statistic
 tt.human.long <- read.delim("../ONT/topTableHuman.tsv", sep= "\t", stringsAsFactors = FALSE)

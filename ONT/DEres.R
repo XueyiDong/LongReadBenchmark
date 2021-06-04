@@ -1,15 +1,18 @@
 library(ggplot2)
 library(UpSetR)
 
-res.human <- list.files("./DEres", pattern="Human.tsv$", all.files = TRUE)
+# for easy change of dataset
+OUT="./DEres_0_1"
+
+res.human <- list.files(OUT, pattern="Human.tsv$", all.files = TRUE)
 res.human <- sapply(res.human, 
-                    function(x){read.table(file.path("./DEres", x), stringsAsFactors = FALSE, header=TRUE, sep="\t")},
+                    function(x){read.table(file.path(OUT, x), stringsAsFactors = FALSE, header=TRUE, sep="\t")},
                     simplify=FALSE)
 res.human <-lapply(res.human,
                    function(x){
                      colnames(x)=c("Gene", "logFC", "FDR")
                      return(na.omit(x))})
-saveRDS(res.human, file = "./DEres/res.human.RDS")
+saveRDS(res.human, file = dile.parth(OUT, "res.human.RDS"))
 DEgenes.human <- lapply(res.human,
                         function(x){
                           x$Gene[x$FDR < 0.05]
@@ -17,21 +20,21 @@ DEgenes.human <- lapply(res.human,
 names(DEgenes.human) <- gsub("res", "", names(DEgenes.human))
 names(DEgenes.human) <- gsub("Human.tsv", "", names(DEgenes.human))
 # Human De genes upset plot
-pdf("DEres/plots/humanDEupset.pdf", height = 5)
+pdf(file.path(OUT, "plots/humanDEupset.pdf"), height = 5)
 upset(fromList(DEgenes.human), order.by = "freq")
 dev.off()
 
 #-------------------sequin----------------------------
 
-res.sequin <- list.files("./DEres", pattern="Sequin.tsv$", all.files = TRUE)
+res.sequin <- list.files(OUT, pattern="Sequin.tsv$", all.files = TRUE)
 res.sequin <- sapply(res.sequin, 
-                    function(x){read.table(file.path("./DEres", x), stringsAsFactors = FALSE, header=TRUE, sep="\t")},
+                    function(x){read.table(file.path(OUT, x), stringsAsFactors = FALSE, header=TRUE, sep="\t")},
                     simplify=FALSE)
 res.sequin <-lapply(res.sequin,
                    function(x){
                      colnames(x)=c("Gene", "logFC", "FDR")
                      return(na.omit(x))})
-saveRDS(res.sequin, file="./DEres/res.sequin.RDS")
+saveRDS(res.sequin, file=file.path(OUT, "res.sequin.RDS"))
 DEgenes.sequin <- lapply(res.sequin,
                         function(x){
                           x$Gene[x$FDR < 0.05]
@@ -50,7 +53,7 @@ res.sequin <- data.frame(
 res.sequin$logFC[res.sequin$method %in% c("EBSeq", "NOISeq")] <- -res.sequin$logFC[res.sequin$method %in% c("EBSeq", "NOISeq")] 
 res.sequin$logFC_expected <- anno$logFC[match(res.sequin$gene, anno$NAME)]
 # sequin logFC expected vs estimated
-pdf("DEres/plots/sequinlogFC.pdf", height = 4)
+pdf(file.path(OUT, "plots/sequinlogFC.pdf"), height = 4)
 ggplot(res.sequin, aes(x=logFC_expected, y=logFC, colour=method))+
   geom_point() +
   geom_smooth(alpha=0.5) +
@@ -65,7 +68,7 @@ FDR <- as.data.frame(t(sapply(unique(res.sequin$method), function(x){
 }, simplify=TRUE)))
 colnames(FDR) <- c("Method", "False discovery rate")
 FDR$`False discovery rate` <- as.numeric(FDR$`False discovery rate`)
-pdf("DEres/plots/FDR.pdf", height = 4)
+pdf(file.path(OUT, "plots/FDR.pdf"), height = 4)
 ggplot(FDR, aes(x=Method, y=`False discovery rate`)) +
   geom_bar(stat="identity") +
   theme_bw()
@@ -77,8 +80,9 @@ TPR <- as.data.frame(t(sapply(unique(res.sequin$method), function(x){
 }, simplify=TRUE)))
 colnames(TPR) <- c("Method", "True positive rate")
 TPR$`True positive rate` <- as.numeric(TPR$`True positive rate`)
-pdf("DEres/plots/TPR.pdf", height = 4)
+pdf(file.path(OUT, "plots/TPR.pdf"), height = 4)
 ggplot(TPR, aes(x=Method, y=`True positive rate`)) +
   geom_bar(stat="identity") +
   theme_bw()
 dev.off()
+

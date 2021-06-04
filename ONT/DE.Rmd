@@ -39,6 +39,10 @@ saveRDS(fc, file="counts_ONT.RDS")
 fc <- readRDS("counts_ONT.RDS")
 ```
 
+```{r}
+# Set output folder
+OUT="./DEres_0_1"
+```
 
 ## DE analysis using limma
 
@@ -81,9 +85,11 @@ stat <- as.data.frame(t(fc$stat))
 colnames(stat) <- fc$stat[,1]
 stat <- stat[-1,]
 stat$sample <- rownames(stat)
-ggplot(stat, aes(x=sample, y=as.numeric(as.character(Assigned)))) + geom_bar(stat="identity") +
+pdf("numCountsONT.pdf", height = 5)
+ggplot(stat[1:6,], aes(x=sample, y=as.numeric(as.character(Assigned)))) + geom_bar(stat="identity") +
   labs(y="number of counts") +
   theme_bw() +  theme (axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
 ```
 
 ### Fit the model to all genes together
@@ -164,10 +170,20 @@ plotMD(efit.human, status = dt.human[,2], column = 2, values = c(-1, 1), col = c
 
 
 ```{r}
-write.table(tt.human, "topTableHuman.tsv", sep="\t")
-write.table(tt.sequin, "topTableSequin.tsv", sep="\t")
-write.table(tt.human[,c("GeneID","logFC", "adj.P.Val")], "DEres/resLimmaHuman.tsv", sep = "\t", row.names = TRUE)
-write.table(tt.sequin[,c("GeneID", "logFC", "adj.P.Val")], "DEres/resLimmaSequin.tsv", sep = "\t", row.names = TRUE)
+write.table(tt.human, file.path(OUT, "topTableHuman.tsv"), sep="\t")
+write.table(tt.sequin, file.path(OUT, "topTableSequin.tsv"), sep="\t")
+write.table(tt.human[,c("GeneID","logFC", "adj.P.Val")], file.path(OUT, "resLimmaHuman.tsv"), sep = "\t", row.names = TRUE)
+write.table(tt.sequin[,c("GeneID", "logFC", "adj.P.Val")], file.path(OUT, "resLimmaSequin.tsv"), sep = "\t", row.names = TRUE)
+```
+
+### QC plot: length vs expression
+
+```{r}
+tt <- rbind(tt.sequin, tt.human)
+cor(tt$Length, tt$AveExpr)
+pdf("lengthExp.pdf", height = 5)
+smoothScatter(log2(tt$Length), tt$AveExpr, xlab = "Log2 gene length", ylab="Average log2 CPM")
+dev.off()
 ```
 
 ## DE analysis using edgeR
@@ -181,7 +197,7 @@ qlfit.human <- glmQLFit(x.human, design)
 plotQLDisp(qlfit.human)
 res.human <- glmQLFTest(qlfit.human)
 ttag.human <- as.data.frame(topTags(res.human, n=Inf))
-write.table(ttag.human[,c("GeneID","logFC", "FDR")], "DEres/resEdgerHuman.tsv", sep="\t", row.names = TRUE)
+write.table(ttag.human[,c("GeneID","logFC", "FDR")], file.path(OUT, "resEdgerHuman.tsv"), sep="\t", row.names = TRUE)
 ```
 
 ```{r}
@@ -205,7 +221,7 @@ plotMD(res.sequin, status = decideTestsDGE(res.sequin), values = c(1, -1),
 
 ```{r}
 ttag.sequin <- as.data.frame(topTags(res.sequin, n=Inf))
-write.table(ttag.sequin[,c("GeneID","logFC", "FDR")], "DEres/resEdgerSequin.tsv", sep="\t", row.names = TRUE)
+write.table(ttag.sequin[,c("GeneID","logFC", "FDR")], file.path(OUT, "resEdgerSequin.tsv"), sep="\t", row.names = TRUE)
 ```
 
 ## DE analysis using DESeq2
@@ -232,8 +248,8 @@ res.sequin <- results(dds.sequin)
 res.human$gene <- rownames(res.human)
 res.sequin$gene <- rownames(res.sequin)
 
-write.table(res.human[,c("gene", "log2FoldChange", "padj")], "DEres/resDeseq2Human.tsv", sep="\t", row.names = TRUE)
-write.table(res.sequin[,c("gene", "log2FoldChange", "padj")], "DEres/resDeseq2Sequin.tsv", sep="\t", row.names = TRUE)
+write.table(res.human[,c("gene", "log2FoldChange", "padj")], file.path(OUT, "resDeseq2Human.tsv"), sep="\t", row.names = TRUE)
+write.table(res.sequin[,c("gene", "log2FoldChange", "padj")], file.path(OUT, "resDeseq2Sequin.tsv"), sep="\t", row.names = TRUE)
 
 ```
 
@@ -258,13 +274,13 @@ write.table(data.frame(
   logFC=log2(GeneFC.human$PostFC),
   PPEE=EBDERes.human$PPMat[match(names(GeneFC.human$PostFC), rownames(EBDERes.human$PPMat)),1],
   row.names = names(GeneFC.human$PostFC)
-), "DEres/resEbseqHuman.tsv", sep="\t", row.names = TRUE)
+), file.path(OUT, "resEbseqHuman.tsv"), sep="\t", row.names = TRUE)
 write.table(data.frame(
   gene = rownames(EBDERes.sequin$PPMat)[match(names(GeneFC.sequin$PostFC), rownames(EBDERes.sequin$PPMat))],
   logFC=log2(GeneFC.sequin$PostFC),
   PPEE=EBDERes.sequin$PPMat[match(names(GeneFC.sequin$PostFC), rownames(EBDERes.sequin$PPMat)),1],
   row.names = names(GeneFC.sequin$PostFC)
-), "DEres/resEbseqSequin.tsv", sep="\t", row.names = TRUE)
+), file.path(OUT, "resEbseqSequin.tsv"), sep="\t", row.names = TRUE)
 ```
 
 
@@ -298,8 +314,8 @@ noires.human$FDR=1-noires.human$prob
 noires.sequin$FDR=1-noires.sequin$prob
 noires.human$gene <- rownames(noires.human)
 noires.sequin$gene <- rownames(noires.sequin)
-write.table(noires.human[,c("gene", "log2FC", "FDR")], "DEres/resNoiseqHuman.tsv", sep="\t", row.names = TRUE)
-write.table(noires.sequin[,c("gene", "log2FC", "FDR")], "DEres/resNoiseqSequin.tsv", sep="\t", row.names = TRUE)
+write.table(noires.human[,c("gene", "log2FC", "FDR")], file.path(OUT, "resNoiseqHuman.tsv"), sep="\t", row.names = TRUE)
+write.table(noires.sequin[,c("gene", "log2FC", "FDR")], file.path(OUT, "resNoiseqSequin.tsv"), sep="\t", row.names = TRUE)
 ```
 ```{r}
 sessionInfo()
