@@ -12,7 +12,7 @@ res.human <-lapply(res.human,
                    function(x){
                      colnames(x)=c("Gene", "logFC", "FDR")
                      return(na.omit(x))})
-saveRDS(res.human, file = dile.parth(OUT, "res.human.RDS"))
+saveRDS(res.human, file = file.path(OUT, "res.human.RDS"))
 DEgenes.human <- lapply(res.human,
                         function(x){
                           x$Gene[x$FDR < 0.05]

@@ -1,0 +1,502 @@
+---
+title: "Pseudo mixture analysis"
+author: "Xueyi Dong"
+date: "14/06/2021"
+output: 
+  html_document: 
+    toc: yes
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(Rsubread)
+library(limma)
+library(edgeR)
+library(ggplot2)
+library(DESeq2)
+library(EBSeq)
+library(NOISeq)
+```
+
+```{r loadFC, echo=FALSE}
+fc <- readRDS("counts_ONT.RDS")
+fc2 <- readRDS("counts_ONT_mix.RDS")
+```
+
+```{r}
+# Set output folder
+OUT="./mix"
+```
+
+## DE analysis using limma
+
+```{r}
+x <- DGEList(counts = cbind(fc$counts[,1:6], fc2$counts))
+#HCC827 proportion
+x$samples$group <- rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+x$samples$mixprop <- rep(c(0, 1, 0.75, 0.5, 0.25), rep(3, 5))
+x$samples$pair <- rep(c(1, 2, 3), 5)
+x$genes <- fc$annotation
+```
+
+```{r}
+# geneid <- strsplit2(rownames(x$counts), "\\.")[,1]
+# genes <- select(Homo.sapiens, keys=geneid, columns=c("SYMBOL", "TXCHROM"), 
+#                 keytype="ENSEMBL")
+# x$genes <- genes[match(geneid, genes$ENSEMBL),]
+```
+
+```{r}
+filter <- filterByExpr(x)
+x <- x[filter, ,keep.lib.sizes=FALSE]
+dim(x)
+
+library(RColorBrewer)
+col <- brewer.pal(5, "Set1")
+
+x <- calcNormFactors(x)
+cpm <- cpm(x, log=TRUE)
+plotMDS(cpm, labels = x$samples$group, 
+        col = rep(col, rep(3, 5)))
+
+x$samples
+
+human.gene <- grep("^ENSG", rownames(x))
+sequin.gene <- grep("^R", rownames(x))
+cpm.human <- cpm(x[human.gene, ], log=TRUE)
+cpm.sequin <- cpm(x[sequin.gene, ], log=TRUE)
+par(mfrow=c(1,2))
+plotMDS(cpm.human, labels = x$samples$group, 
+        col = rep(col, rep(3, 5)), main="Human genes")
+plotMDS(cpm.sequin, labels = x$samples$group, 
+        col = rep(col, rep(3, 5)), main = "Sequin genes")
+```
+
+### Make design and contrast
+
+```{r}
+design <- model.matrix(~0+x$samples$group+x$samples$pair)
+colnames(design) <- gsub("x$samples$group", "g", colnames(design), fixed=TRUE)
+colnames(design) <- gsub("x$samples$pair", "pair", colnames(design), fixed=TRUE)
+design
+contr <- makeContrasts(
+  c100vs0=g100-g000,
+  c75vs25=g075-g025,
+  c50vs25=g050-g025,
+  c75vs50=g075-g050,
+  levels = colnames(design)
+)
+contr
+
+anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
+anno$logFC <- log(anno$MIX_B / anno$MIX_A)
+```
+
+### fit a separate model for sequins genes
+
+```{r}
+x.sequin <- x[sequin.gene,]
+x.sequin <- calcNormFactors(x.sequin)
+v.sequin <- voom(x.sequin, design = design, plot=TRUE)
+fit.sequin <- lmFit(v.sequin)
+fit.sequin <- contrasts.fit(fit.sequin, contrasts=contr)
+efit.sequin <- eBayes(fit.sequin)
+dt.sequin <- decideTests(efit.sequin)
+summary(dt.sequin)
+# tt.sequin <- topTable(efit.sequin, number = Inf)
+```
+```{r}
+par(mfrow=c(2,2))
+for(i in 1:4){
+  plotMD(efit.sequin, status = dt.sequin[,i], column = i, values = c(-1, 1), col = c("blue", "red"), main=colnames(contr)[i])
+}
+
+```
+
+
+### Fit a separate model for human genes
+
+```{r}
+x.human <- x[human.gene,]
+x.human <- calcNormFactors(x.human)
+v.human <- voom(x.human, design = design, plot=TRUE)
+fit.human <- lmFit(v.human)
+fit.human <- contrasts.fit(fit.human, contrasts=contr)
+efit.human <- eBayes(fit.human)
+dt.human <- decideTests(efit.human)
+summary(dt.human)
+# tt.human <- topTable(efit.human, number = Inf)
+# plotMD(efit.human, status = dt.human[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="Human genes")
+```
+
+Get DE genes
+
+```{r}
+DE.human.limma <- lapply(1:4, function(x){
+  rownames(dt.human)[dt.human[,x] != 0]
+})
+DE.sequin.limma <- lapply(1:4, function(x){
+  rownames(dt.sequin)[dt.sequin[,x] != 0]
+})
+```
+
+
+```{r}
+# write.table(tt.human, file.path(OUT, "topTableHuman.tsv"), sep="\t")
+# write.table(tt.sequin, file.path(OUT, "topTableSequin.tsv"), sep="\t")
+# write.table(tt.human[,c("GeneID","logFC", "adj.P.Val")], file.path(OUT, "resLimmaHuman.tsv"), sep = "\t", row.names = TRUE)
+# write.table(tt.sequin[,c("GeneID", "logFC", "adj.P.Val")], file.path(OUT, "resLimmaSequin.tsv"), sep = "\t", row.names = TRUE)
+```
+
+### Fit non-linear model for the mixture series
+
+```{r}
+mix.fit.human <- fitmixture(v.human$E, mixprop = x$samples$mixprop)
+```
+
+
+
+## DE analysis using edgeR
+
+### Human genes
+
+```{r}
+x.human <- estimateDisp(x.human, design)
+plotBCV(x.human)
+qlfit.human <- glmQLFit(x.human, design)
+plotQLDisp(qlfit.human)
+res.human <- lapply(colnames(contr), function(x){ glmQLFTest(qlfit.human, contrast=contr[,x])})
+ttag.human <- lapply(res.human, function(x){topTags(x, n=Inf)})
+# write.table(ttag.human[,c("GeneID","logFC", "FDR")], file.path(OUT, "resEdgerHuman.tsv"), sep="\t", row.names = TRUE)
+
+DE.human.edgeR <- lapply(ttag.human, function(x){
+  x$table$GeneID[x$table$FDR < 0.05]
+})
+```
+
+```{r}
+# plotMD(res.human, status = decideTestsDGE(res.human), values = c(1, -1), 
+       # col = c("red", "blue"), legend = "topright")
+```
+
+### Sequin genes
+
+```{r}
+x.sequin <- estimateDisp(x.sequin, design)
+plotBCV(x.sequin)
+qlfit.sequin <- glmQLFit(x.sequin, design)
+plotQLDisp(qlfit.sequin)
+res.sequin <- lapply(colnames(contr), function(x){ glmQLFTest(qlfit.sequin, contrast=contr[,x])})
+ttag.sequin <- lapply(res.sequin, function(x){topTags(x, n=Inf)})
+
+# plotMD(res.sequin, status = decideTestsDGE(res.sequin), values = c(1, -1), 
+       # col = c("red", "blue"), legend = "topright")
+# write.table(ttag.sequin[,c("GeneID","logFC", "FDR")], file.path(OUT, "resEdgerSequin.tsv"), sep="\t", row.names = TRUE)
+
+DE.sequin.edgeR <- lapply(ttag.sequin, function(x){
+  x$table$GeneID[x$table$FDR < 0.05]
+})
+```
+
+## DE analysis using DESeq2
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=  cbind(fc$counts[,1:6], fc2$counts), 
+                              colData = data.frame(
+                                group = rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+                              ),
+                              design = design)
+keep <- rowSums(counts(dds)) > 1 & rowSums(counts(dds) >= 10) >= 3
+dds <- dds[keep,]
+nrow(dds)
+
+human.gene <- grep("^ENSG", rownames(dds))
+sequin.gene <- grep("^R", rownames(dds))
+dds.human <- dds[human.gene, ]
+dds.sequin <- dds[sequin.gene, ]
+
+dds.human <- DESeq(dds.human)
+dds.sequin <- DESeq(dds.sequin)
+
+deres.human <- lapply(colnames(contr), function(x){results(dds.human, contrast = contr[,x])})
+deres.human <- lapply(deres.human, function(x){
+  x$genes <- rownames(x)
+  x})
+deres.sequin <- lapply(colnames(contr), function(x){results(dds.sequin, contrast = contr[,x])})
+deres.sequin <- lapply(deres.sequin, function(x){
+  x$genes <- rownames(x)
+  x
+})
+
+# write.table(res.human[,c("gene", "log2FoldChange", "padj")], file.path(OUT, "resDeseq2Human.tsv"), sep="\t", row.names = TRUE)
+# write.table(res.sequin[,c("gene", "log2FoldChange", "padj")], file.path(OUT, "resDeseq2Sequin.tsv"), sep="\t", row.names = TRUE)
+
+DE.human.DESeq2 <- lapply(deres.human, function(x){
+  x$genes[x$padj < 0.05]
+})
+DE.sequin.DESeq2 <- lapply(deres.sequin, function(x){
+  x$genes[x$padj < 0.05]
+})
+```
+
+## DE analysis using EBSeq
+
+```{r}
+human.gene <- grep("^ENSG", rownames(fc$counts))
+sequin.gene <- grep("^R", rownames(fc$counts))
+counts.human <- cbind(fc$counts[human.gene, 1:6], fc2$counts[human.gene,])
+counts.sequin <- cbind(fc$counts[sequin.gene, 1:6], fc2$counts[sequin.gene,])
+Sizes.human = MedianNorm(counts.human)
+Sizes.sequin = MedianNorm(counts.sequin)
+Conditions = as.factor(rep(c("000", "100", "075", "050", "025"), rep(3, 5)))
+comparisons = list(c("000", "100"), 
+                          c("025", "075"),
+                          c("025", "050"),
+                          c("050", "075"))
+EBOut.human = lapply(comparisons,
+                     function(x){
+                       sel = which(as.character(Conditions) %in% x)
+                       out = EBTest(Data=counts.human[,sel], 
+                                    Conditions = factor(Conditions[sel]),
+                                    sizeFactors = Sizes.human[sel],
+                                    maxround = 5)
+                       out})
+EBDERes.human = lapply(EBOut.human, function(x){GetDEResults(x, FDR = 0.05)})
+EBOut.sequin = lapply(comparisons,
+                     function(x){
+                       sel = which(as.character(Conditions) %in% x)
+                       out = EBTest(Data=counts.sequin[,sel], 
+                                    Conditions = factor(Conditions[sel]),
+                                    sizeFactors = Sizes.sequin[sel],
+                                    maxround = 5)
+                       out})
+EBDERes.sequin = lapply(EBOut.sequin, function(x){GetDEResults(x, FDR = 0.05)})
+
+GeneFC.human = lapply(EBOut.human, PostFC)
+GeneFC.sequin = lapply(EBOut.sequin, PostFC)
+# write.table(data.frame(
+#   gene = rownames(EBDERes.human$PPMat)[match(names(GeneFC.human$PostFC), rownames(EBDERes.human$PPMat))],
+#   logFC=log2(GeneFC.human$PostFC),
+#   PPEE=EBDERes.human$PPMat[match(names(GeneFC.human$PostFC), rownames(EBDERes.human$PPMat)),1],
+#   row.names = names(GeneFC.human$PostFC)
+# ), file.path(OUT, "resEbseqHuman.tsv"), sep="\t", row.names = TRUE)
+# write.table(data.frame(
+#   gene = rownames(EBDERes.sequin$PPMat)[match(names(GeneFC.sequin$PostFC), rownames(EBDERes.sequin$PPMat))],
+#   logFC=log2(GeneFC.sequin$PostFC),
+#   PPEE=EBDERes.sequin$PPMat[match(names(GeneFC.sequin$PostFC), rownames(EBDERes.sequin$PPMat)),1],
+#   row.names = names(GeneFC.sequin$PostFC)
+# ), file.path(OUT, "resEbseqSequin.tsv"), sep="\t", row.names = TRUE)
+
+DE.human.EBSeq <- lapply(EBDERes.human, function(x){x$DEfound})
+DE.sequin.EBSeq <- lapply(EBDERes.sequin, function(x){x$DEfound})
+```
+
+
+## DE analysis using NOISeq
+
+```{r}
+# mylength <- fc$annotation[,6, drop=FALSE]
+# human.gene <- grep("^ENSG", rownames(fc$counts))
+# sequin.gene <- grep("^R", rownames(fc$counts))
+# rownames(mylength) <- fc$annotation$GeneID
+myfilt.human = filtered.data(counts.human, factor = x$samples$group, norm=FALSE, method = 1)
+myfilt.sequin = filtered.data(counts.sequin, factor = x$samples$group, norm=FALSE, method = 1)
+mydata.human <- readData(
+  data = myfilt.human,
+  # length = mylength[human.gene,, drop=FALSE],
+  factors = data.frame(
+    group = rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+  )
+)
+mydata.sequin <- readData(
+  data = myfilt.sequin,
+  # length = mylength[sequin.gene,, drop=FALSE],
+  factors = data.frame(
+    group = rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+  )
+)
+
+mynoiseqbio.human = lapply(comparisons, function(x){
+  noiseqbio(mydata.human, norm = "tmm", factor = "group", conditions = x)
+})
+mynoiseqbio.sequin = lapply(comparisons, function(x){
+  noiseqbio(mydata.sequin, norm = "tmm", factor = "group", conditions = x)
+})
+
+noires.human <- lapply(mynoiseqbio.human, function(x){x@results[[1]]})
+noires.sequin <- lapply(mynoiseqbio.sequin, function(x){x@results[[1]]})
+noires.human <- lapply(noires.human, function(x){
+  x$FDR = 1 - x$prob
+  x$gene = rownames(x)
+  x})
+noires.sequin <- lapply(noires.sequin, function(x){
+  x$FDR = 1 - x$prob
+  x$gene <- rownames(x)
+  x})
+
+# # write.table(noires.human[,c("gene", "log2FC", "FDR")], file.path(OUT, "resNoiseqHuman.tsv"), sep="\t", row.names = TRUE)
+# write.table(noires.sequin[,c("gene", "log2FC", "FDR")], file.path(OUT, "resNoiseqSequin.tsv"), sep="\t", row.names = TRUE)
+DE.human.NOISeq <- lapply(noires.human, function(x){
+  x$gene[x$FDR < 0.05]
+})
+DE.sequin.NOISeq <- lapply(noires.sequin, function(x){
+  x$gene[x$FDR < 0.05]
+})
+```
+
+## Results
+
+### Calculate recovery rate
+
+```{r}
+calcRecovery <- function(DE){
+  tmp <- sapply(2:length(DE), function(x){
+    sum(DE[[1]] %in% DE[[x]])
+  }, simplify=TRUE)
+  c(length(DE[[1]]), tmp)/length(DE[[1]])
+}
+
+rec.human <- as.data.frame(sapply(list(DE.human.limma, DE.human.edgeR, DE.human.DESeq2, DE.human.EBSeq, DE.human.NOISeq),
+                    calcRecovery,
+                    simplify = TRUE))
+rownames(rec.human) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(rec.human) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
+library(data.table)
+rec.human <- melt(rec.human, variable.name = "Method", value.name = "Recovery rate")
+rec.human$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+
+pdf(file.path(OUT, "humanRecovery.pdf"), height = 4)
+ggplot(rec.human, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_color_brewer(palette="Dark2")
+dev.off()
+
+rec.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+                    calcRecovery,
+                    simplify = TRUE))
+rownames(rec.sequin) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(rec.sequin) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
+library(data.table)
+rec.sequin <- melt(rec.sequin, variable.name = "Method", value.name = "Recovery rate")
+rec.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+
+pdf(file.path(OUT, "sequinRecovery.pdf"), height = 4)
+ggplot(rec.sequin, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "solid", "dashed", "solid", "solid"), rep(4, 5))) +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_color_brewer(palette="Dark2")
+dev.off()
+```
+
+### Power (number of DE genes)
+
+```{r}
+power.human <- as.data.frame(sapply(list(DE.human.limma, DE.human.edgeR, DE.human.DESeq2, DE.human.EBSeq, DE.human.NOISeq),
+                    function(x){sapply(x, length, simplify = TRUE)},
+                    simplify = TRUE))
+rownames(power.human) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(power.human) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
+library(data.table)
+power.human <- melt(power.human, variable.name = "Method", value.name = "Number of DE genes")
+power.human$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+
+pdf(file.path(OUT, "humanPower.pdf"), height = 4)
+ggplot(power.human, aes(x=Comparison, y=`Number of DE genes`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_color_brewer(palette="Dark2")
+dev.off()
+```
+
+```{r}
+power.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+                    function(x){sapply(x, length, simplify = TRUE)},
+                    simplify = TRUE))
+rownames(power.sequin) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(power.sequin) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
+library(data.table)
+power.sequin <- melt(power.sequin, variable.name = "Method", value.name = "Number of DE genes")
+power.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+
+pdf(file.path(OUT, "sequinPower.pdf"), height = 4)
+ggplot(power.sequin, aes(x=Comparison, y=`Number of DE genes`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_color_brewer(palette="Dark2")
+dev.off()
+```
+
+### Sequin FDR
+
+```{r}
+trueDE <- anno$NAME[anno$logFC != 0]
+calcFDR <- function(DE){
+  sapply(DE, function(x){
+    FD = sum(!(x %in% trueDE))
+    FD / length(x)
+  }, simplify=TRUE)
+}
+                    
+FDR.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+                     calcFDR, 
+                     simplify = TRUE))
+
+rownames(FDR.sequin) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(FDR.sequin) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
+FDR.sequin <- melt(FDR.sequin, variable.name = "Method", value.name = "False discovery rate")
+FDR.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+
+pdf(file.path(OUT, "sequinFDR.pdf"), height = 4)
+ggplot(FDR.sequin, aes(x=Comparison, y=`False discovery rate`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "dashed", "solid", "longdash", "solid"), rep(4, 5))) +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_color_brewer(palette="Dark2")
+dev.off()
+```
+
+### Sequin TPR
+
+```{r}
+calcTPR <- function(DE){
+  sapply(DE, function(x){
+    TP = sum(x %in% trueDE)
+    TP / length(trueDE)
+  }, simplify=TRUE)
+}
+                    
+TPR.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+                     calcTPR, 
+                     simplify = TRUE))
+
+rownames(TPR.sequin) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(TPR.sequin) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
+TPR.sequin <- melt(TPR.sequin, variable.name = "Method", value.name = "True positive rate")
+TPR.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+
+pdf(file.path(OUT, "sequinTPR.pdf"), height = 4)
+ggplot(TPR.sequin, aes(x=Comparison, y=`True positive rate`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "dashed", "solid", "longdash", "solid"), rep(4, 5))) +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_color_brewer(palette="Dark2")
+dev.off()
+```
+
+
+## Session information
+
+```{r}
+sessionInfo()
+```
+
