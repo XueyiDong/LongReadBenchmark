@@ -130,7 +130,7 @@ qval.human <- perGeneQValue(dxr.human)
 # gene level result
 dxr.g.human <- data.frame(gene=names(qval.human), qval.human)
 # feature level
-dxr.human <- as.data.frame(dxr.human[,c("featureID", "groupID", "pvalue")])
+dxr.human <- as.data.frame(dxr.human[,c("featureID", "groupID", "pvalue", "padj")])
 ```
 
 ### sequin
@@ -150,7 +150,7 @@ qval.sequin <- perGeneQValue(dxr.sequin)
 # gene level result
 dxr.g.sequin <- data.frame(gene=names(qval.sequin), qval.sequin)
 # feature level
-dxr.sequin <- as.data.frame(dxr.sequin[,c("featureID", "groupID", "pvalue")])
+dxr.sequin <- as.data.frame(dxr.sequin[,c("featureID", "groupID", "pvalue", "padj")])
 ```
 
 ## limma
@@ -237,7 +237,7 @@ sumExp.human <- testDTU(object = sumExp.human, contrasts = contr)
 head(rowData(sumExp.human)[["fitDTUResult_BvsA"]])
 
 # Compute gene level q-values
-pvals.human <- rowData(sumExp.human)[["fitDTUResult_BvsA"]]$regular_FDR
+pvals.human <- rowData(sumExp.human)[["fitDTUResult_BvsA"]]$pval
 geneID <- factor(rowData(sumExp.human)$gene_id)
 geneSplit <- split(seq(along = geneID), geneID)
 pGene.human <- sapply(geneSplit, function(i) min(pvals.human[i]))
@@ -274,7 +274,7 @@ sumExp.sequin <- testDTU(object = sumExp.sequin, contrasts = contr)
 head(rowData(sumExp.sequin)[["fitDTUResult_BvsA"]])
 
 # Compute gene level q-values
-pvals.sequin <- rowData(sumExp.sequin)[["fitDTUResult_BvsA"]]$regular_FDR
+pvals.sequin <- rowData(sumExp.sequin)[["fitDTUResult_BvsA"]]$pval
 geneID <- factor(rowData(sumExp.sequin)$gene_id)
 geneSplit <- split(seq(along = geneID), geneID)
 pGene.sequin <- sapply(geneSplit, function(i) min(pvals.sequin[i]))
@@ -342,7 +342,7 @@ TPR.gene <-
 ```{r}
 DTU.transcripts <- list(
   DRIMSeq = drres.txp.sequin$feature_id[drres.txp.sequin$adj_pvalue < 0.05],
-  DEXSeq = dxr.sequin$featureID[dxr.sequin$pvalue < 0.05],
+  DEXSeq = dxr.sequin$featureID[dxr.sequin$padj < 0.05],
   limma = ts.sequin.tx$ExonID[ts.sequin.tx$FDR < 0.05],
   edgeR = tsdge.sequin.tx$ExonID[tsdge.sequin.tx$FDR < 0.05],
   satuRn = rownames(rowData(sumExp.sequin)[["fitDTUResult_BvsA"]])[rowData(sumExp.sequin)[["fitDTUResult_BvsA"]]$regular_FDR < 0.05]

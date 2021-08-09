@@ -2,7 +2,7 @@ library(ggplot2)
 library(UpSetR)
 
 # for easy change of dataset
-OUT="./DEres_0_1"
+OUT="./DEres"
 
 res.human <- list.files(OUT, pattern="Human.tsv$", all.files = TRUE)
 res.human <- sapply(res.human, 
