@@ -4,7 +4,7 @@ library(UpSetR)
 # for easy change of dataset
 OUT="./DEres"
 
-res.human <- list.files(OUT, pattern="Human.tsv$", all.files = TRUE)
+res.human <- list.files(OUT, pattern="res[A-Za-z0-9]+Human.tsv", all.files = TRUE)
 res.human <- sapply(res.human, 
                     function(x){read.table(file.path(OUT, x), stringsAsFactors = FALSE, header=TRUE, sep="\t")},
                     simplify=FALSE)
@@ -26,7 +26,7 @@ dev.off()
 
 #-------------------sequin----------------------------
 
-res.sequin <- list.files(OUT, pattern="Sequin.tsv$", all.files = TRUE)
+res.sequin <- list.files(OUT, pattern="res[A-Za-z0-9]+Sequin.tsv", all.files = TRUE)
 res.sequin <- sapply(res.sequin, 
                     function(x){read.table(file.path(OUT, x), stringsAsFactors = FALSE, header=TRUE, sep="\t")},
                     simplify=FALSE)

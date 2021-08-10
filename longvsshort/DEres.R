@@ -1,5 +1,6 @@
 library(ggplot2)
 library(UpSetR)
+library(viridis)
 
 res.human.long <- readRDS("../ONT/DEres/res.human.RDS")
 res.sequin.long <- readRDS("../ONT/DEres/res.sequin.RDS")
@@ -102,6 +103,30 @@ m <- match(tt.human.long$GeneID, tt.human.short$GeneID)
 cor(tt.human.long$t, tt.human.short$t[m], use = "complete.obs")
 pdf("plots/humant.pdf")
 smoothScatter(tt.human.long$t, tt.human.short$t[m], 
-              xlab = "long read t-statistics", ylab = "short read t-statistics")
-abline(coef = c(0,1))
+              xlab = "long read t-statistics", ylab = "short read t-statistics",
+              cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
+# abline(coef = c(0,1))
+dev.off()
+
+tt.sequin.long <- read.delim("../ONT/topTableSequin.tsv", sep= "\t", stringsAsFactors = FALSE)
+tt.sequin.short <- read.delim("../illumina/topTableSequin.tsv", sep= "\t", stringsAsFactors = FALSE)
+m2 <- match(tt.sequin.long$GeneID, tt.sequin.short$GeneID)
+t <- data.frame(
+  t.long = c(tt.human.long$t, tt.sequin.long$t),
+  t.short = c(tt.human.short$t[m], tt.sequin.short$t[m2]),
+  source = rep(c("human", "sequin"), c(nrow(tt.human.long), nrow(tt.sequin.long)))
+  
+)
+
+t.lm <- lm(t$t.short ~ t$t.long)
+summary(t.lm)
+pdf("plots/t.pdf", height = 5, width = 8)
+ggplot(t, aes(x=t.long, y=t.short)) +
+  stat_binhex() +
+  geom_smooth(method='lm', formula= y~x) +
+  theme_bw() +
+  labs(x="ONT t-statistic", y = "Illumina t-statistic", fill = "Density:\nnumber of \ngenes") +
+  annotate(geom="text", x=30, y=90, label="Adj R2 = 0.82\np-value < 2.2e-16", size=6) +
+  scale_fill_viridis(direction = -1, option="A", trans = "log10") +
+  theme(text=element_text(size = 20)) 
 dev.off()

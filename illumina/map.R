@@ -26,9 +26,12 @@ alignIllumina("HCC827-2_S13")
 alignIllumina("HCC827-2_S13_topup")
 alignIllumina("HCC827-5-repeat_S14")
 
-fc <- featureCounts(files = file.path(outdir, list.files(outdir, ".bam$")),
+files = file.path(outdir, list.files(outdir, ".bam$"))
+files <- files[c(1, 3, 5, 7, 10, 12, 14)]
+fc <- featureCounts(files = files,
                     annot.ext = "/wehisan/home/allstaff/d/dong.x/annotation/HumanSequins/gencode.v33.sequins.gtf",
                     isGTFAnnotationFile = TRUE,
-                    isPairedEnd = TRUE
+                    isPairedEnd = TRUE,
+                    nthreads = 8
                     )
 saveRDS(fc, file="counts.RDS")

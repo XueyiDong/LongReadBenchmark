@@ -281,16 +281,19 @@ mylength <- fc$annotation[,6, drop=FALSE]
 human.gene <- grep("^ENSG", rownames(fc$counts))
 sequin.gene <- grep("^R", rownames(fc$counts))
 rownames(mylength) <- fc$annotation$GeneID
+myfilt.human = filtered.data(fc$counts[human.gene,1:6], factor = x$samples$group, norm=FALSE, method = 1)
+myfilt.sequin = filtered.data(fc$counts[sequin.gene,1:6], factor = x$samples$group, norm=FALSE, method = 1)
+
 mydata.human <- readData(
-  data = fc$counts[human.gene,1:6],
-  length = mylength[human.gene,, drop=FALSE],
+  data = myfilt.human,
+  # length = mylength[human.gene,, drop=FALSE],
   factors = data.frame(
     group = rep(c("H1975", "HCC827"), c(3,3))
   )
 )
 mydata.sequin <- readData(
-  data = fc$counts[sequin.gene,1:6],
-  length = mylength[sequin.gene,, drop=FALSE],
+  data = myfilt.sequin,
+  # length = mylength[sequin.gene,, drop=FALSE],
   factors = data.frame(
     group = rep(c("H1975", "HCC827"), c(3,3))
   )
