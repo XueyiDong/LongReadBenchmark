@@ -21,6 +21,7 @@ library(ggplot2)
 library(DESeq2)
 library(EBSeq)
 library(NOISeq)
+library(wesanderson)
 ```
 
 ```{r loadFC, echo=FALSE}
@@ -378,12 +379,13 @@ library(data.table)
 rec.human <- melt(rec.human, variable.name = "Method", value.name = "Recovery rate")
 rec.human$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
-pdf(file.path(OUT, "humanRecovery.pdf"), height = 4)
+pdf(file.path(OUT, "humanRecovery.pdf"), height = 5, width = 8)
 ggplot(rec.human, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_color_brewer(palette="Dark2")
+  scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
+  theme(text = element_text(size = 20))
 dev.off()
 
 rec.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
@@ -395,12 +397,60 @@ library(data.table)
 rec.sequin <- melt(rec.sequin, variable.name = "Method", value.name = "Recovery rate")
 rec.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
-pdf(file.path(OUT, "sequinRecovery.pdf"), height = 4)
+pdf(file.path(OUT, "sequinRecovery.pdf"), height = 5, width = 8)
 ggplot(rec.sequin, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "solid", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw()  +
+  scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
+  theme(text = element_text(size = 20))
+dev.off()
+```
+
+### Calculate inconsistancy rate
+
+```{r}
+calcInconsistancy <- function(DE){
+  tmp <- sapply(1:length(DE), function(x){
+    sum(!(DE[[x]] %in% DE[[1]]))
+  }, simplify=TRUE)
+  tmp/length(DE[[1]])
+}
+
+inc.human <- as.data.frame(sapply(list(DE.human.limma, DE.human.edgeR, DE.human.DESeq2, DE.human.EBSeq, DE.human.NOISeq),
+                    calcInconsistancy,
+                    simplify = TRUE))
+rownames(inc.human) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(inc.human) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
+library(data.table)
+inc.human <- melt(inc.human, variable.name = "Method", value.name = "Inconsistancy rate")
+inc.human$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+
+pdf(file.path(OUT, "humanInconsistancy.pdf"), height = 5, width = 8)
+ggplot(inc.human, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "longdash", "solid", "solid", "dashed"), rep(4, 5))) +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_color_brewer(palette="Dark2")
+  scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+inc.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+                    calcInconsistancy,
+                    simplify = TRUE))
+rownames(inc.sequin) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(inc.sequin) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
+library(data.table)
+inc.sequin <- melt(inc.sequin, variable.name = "Method", value.name = "Inconsistancy rate")
+inc.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+
+pdf(file.path(OUT, "sequinInconsistancy.pdf"), height = 5, width = 8)
+ggplot(inc.sequin, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "solid", "longdash", "dashed", "solid"), rep(4, 5))) +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
+  theme(text = element_text(size = 20))
 dev.off()
 ```
 

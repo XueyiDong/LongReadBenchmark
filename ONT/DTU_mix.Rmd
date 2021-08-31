@@ -1,0 +1,543 @@
+---
+title: "DTU in-silico mixture analysis"
+author: "Xueyi Dong"
+date: "30/08/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(DRIMSeq)
+library(DEXSeq)
+library(limma)
+library(edgeR)
+library(satuRn)
+library(SummarizedExperiment)
+# library(IsoformSwitchAnalyzeR)
+```
+
+## Load salmon quantification
+
+```{r}
+# Load Salmon quant TPM data
+samples <-list.files("salmon_bs")
+quant <- file.path("./salmon_bs", samples, "quant.sf")
+library(tximport)
+txi <- tximport(quant, type="salmon", txOut=TRUE, countsFromAbundance = "scaledTPM")
+library(GenomicFeatures)
+gtf <- "/wehisan/home/allstaff/d/dong.x/annotation/HumanSequins/gencode.v33.sequins.gtf"
+txdb <- makeTxDbFromGFF(gtf)
+# saveRDS(txdb, "txdb.RDS")
+# txdb <- readRDS("txdb.RDS")
+txdf <- select(txdb, keys(txdb, "GENEID"), "TXNAME", "GENEID") 
+tab <- table(txdf$GENEID) 
+txdf$ntx <- tab[match(txdf$GENEID, names(tab))]
+
+```
+
+## DRIMSeq
+
+### human
+```{r}
+samples <- data.frame(
+  sample_id = samples,
+  group = rep(c("000", "100", "075", "050", "025"), rep(3, 5)),
+  stringsAsFactors = FALSE
+)
+samples$group <- as.factor(samples$group)
+counts <- as.data.frame(txi$counts, stringAsFactors = FALSE)
+# deal with gene names
+genes <- rownames(counts)
+genes <- strsplit2(genes, "|", fixed=TRUE)
+rownames(counts) <- genes[,1]
+counts <- counts[match(txdf$TXNAME, rownames(counts)),]
+counts <- cbind(txdf$GENEID, txdf$TXNAME, counts)
+colnames(counts)[3:ncol(counts)] <- make.names(colnames(counts)[3:ncol(counts)])
+colnames(counts) <- c("gene_id", "feature_id", samples$sample_id)
+
+comparison <- list(
+  c100vs0=c("100", "000"),
+  c75vs25=c("075", "025"),
+  c50vs25=c("050", "025"),
+  c75vs50=c("075", "050")
+)
+
+human.gene <- grep("^ENSG", counts$gene_id)
+sequin.gene <- grep("^R", counts$gene_id)
+
+# DRIMSeq analysis for human genes
+
+ddata.human <- dmDSdata(counts = counts[human.gene,], samples = samples)
+ddata.human <- dmFilter(ddata.human, min_samps_gene_expr = 15, min_samps_feature_expr = 3, 
+              min_gene_expr = 10, min_feature_expr = 10, 
+              min_samps_feature_prop = 3, min_feature_prop = 0.1,
+              run_gene_twice = T)
+
+d.human <- lapply(comparison, function(x){
+  # d.human <- dmDSdata(counts = counts[human.gene, samples$group %in% x], 
+  #                     samples = samples[, samples$group %in% x])
+  # d.human <- dmFilter(d.human, min_samps_gene_expr = 6, min_samps_feature_expr = 3, 
+  #                     min_gene_expr = 10, min_feature_expr = 10, 
+  #                     min_samps_feature_prop = 3, min_feature_prop = 0.1,
+  #                     run_gene_twice = T)
+  d.human <- ddata.human[, samples$group %in% x]
+  design <- model.matrix(~group, data=DRIMSeq::samples(d.human))
+  # colnames(design) <- sub("group", "", colnames(design))
+  # below not run
+  set.seed(1904)
+  register(MulticoreParam())
+  d.human <- dmPrecision(d.human, design, BPPARAM = BiocParallel::bpparam())
+  d.human <- dmFit(d.human, design = design, verbose=1, BPPARAM = BiocParallel::bpparam())
+  dmTest(d.human, coef = colnames(design)[ncol(design)])
+})
+
+
+# head(DRIMSeq::results(d))
+# head(DRIMSeq::results(d, level = "feature"))
+
+res <- lapply(d.human, DRIMSeq::results)
+res.txp <- lapply(d.human, 
+                  function(x){DRIMSeq::results(x, level = "feature")})
+```
+### sequin
+
+```{r}
+ddata.sequin <- dmDSdata(counts = counts[sequin.gene,], samples = samples)
+ddata.sequin <- dmFilter(ddata.sequin, min_samps_gene_expr = 15, min_samps_feature_expr = 3, 
+              min_gene_expr = 10, min_feature_expr = 10, 
+              min_samps_feature_prop = 3, min_feature_prop = 0.1,
+              run_gene_twice = T)
+
+d.sequin <- lapply(comparison, function(x){
+  d.sequin <- ddata.sequin[, samples$group %in% x]
+  design <- model.matrix(~group, data=DRIMSeq::samples(d.sequin))
+  # colnames(design) <- sub("group", "", colnames(design))
+  set.seed(1904)
+  register(MulticoreParam())
+  d.sequin <- dmPrecision(d.sequin, design, BPPARAM = BiocParallel::bpparam())
+  d.sequin <- dmFit(d.sequin, design = design, verbose=1, BPPARAM = BiocParallel::bpparam())
+  dmTest(d.sequin, coef = colnames(design)[ncol(design)])
+})
+
+drres.sequin <- lapply(d.sequin, DRIMSeq::results)
+drres.txp.sequin <- lapply(d.sequin, 
+                  function(x){DRIMSeq::results(x, level = "feature")})
+```
+
+
+## DEXSeq
+
+### human
+
+```{r}
+# human, using DRIMSeq filtered results
+dxd.human <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.human)[,-c(1:2)])),
+                     sampleData=samples,
+                     design=~sample+exon+group:exon,
+                     featureID=counts(ddata.human)$feature_id,
+                     groupID=counts(ddata.human)$gene_id)
+dxd.human <- estimateSizeFactors(dxd.human)
+dxd.human <- lapply(comparison, function(x){
+  dxd.human <- dxd.human[, samples$group %in% x]
+  dxd.human <- estimateDispersions(dxd.human)
+  dxd.human <- testForDEU(dxd.human, reducedModel = ~sample+exon)
+  dxd.human
+})
+
+dxr.human <- lapply(dxd.human, function(x){
+  DEXSeqResults(x, independentFiltering = FALSE)
+})
+
+# gene level result
+dxr.g.human <- lapply(dxr.human, function(x){
+  qval.human <- perGeneQValue(x)
+  data.frame(gene=names(qval.human), qval.human)
+})
+# feature level
+dxr.human <- lapply(dxr.human, function(x){
+  as.data.frame(x[,c("featureID", "groupID", "pvalue", "padj")])
+})
+```
+
+### sequin
+
+```{r}
+# sequin, using DRIMSeq filtered results
+dxd.sequin <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.sequin)[,-c(1:2)])),
+                     sampleData=samples,
+                     design=~sample+exon+group:exon,
+                     featureID=counts(ddata.sequin)$feature_id,
+                     groupID=counts(ddata.sequin)$gene_id)
+dxd.sequin <- estimateSizeFactors(dxd.sequin)
+dxd.sequin <- lapply(comparison, function(x){
+  dxd.sequin <- dxd.sequin[, samples$group %in% x]
+  dxd.sequin <- estimateDispersions(dxd.sequin)
+  dxd.sequin <- testForDEU(dxd.sequin, reducedModel = ~sample+exon)
+  dxd.sequin
+})
+
+dxr.sequin <- lapply(dxd.sequin, function(x){
+  DEXSeqResults(x, independentFiltering = FALSE)
+})
+
+# gene level result
+dxr.g.sequin <- lapply(dxr.sequin, function(x){
+  qval.sequin <- perGeneQValue(x)
+  data.frame(gene=names(qval.sequin), qval.sequin)
+})
+# feature level
+dxr.sequin <- lapply(dxr.sequin, function(x){
+  as.data.frame(x[,c("featureID", "groupID", "pvalue", "padj")])
+})
+```
+
+## limma
+
+### human
+
+```{r}
+# also using DRIMSeq filtered results
+x.human <- lapply(comparison, function(x){
+  data.counts <- counts(ddata.human)[,-c(1:2)]
+  x.human <- DGEList(counts = as.matrix(data.counts[, samples$group %in% x]),
+                     samples = samples[samples$group %in% x,])
+  rownames(x.human) <- counts(ddata.human)$feature_id
+  x.human <- calcNormFactors(x.human)
+  x.human
+})
+
+ex.human <- lapply(x.human, function(x){
+  design <- model.matrix(~group, x$samples)
+  v.human <- voom(x, design, plot=T)
+  fit.human <- lmFit(v.human)
+  efit.human <- eBayes(fit.human)
+  diffSplice(efit.human, geneid = counts(ddata.human)$gene_id, exonid=counts(ddata.human)$feature_id)
+})
+
+
+ts.human <- lapply(ex.human, function(x){
+  topSplice(x, number = Inf)
+})
+ts.human.tx <- lapply(ex.human, function(x){
+  topSplice(x, test = "t", number = Inf)
+})
+```
+
+### sequin
+
+```{r}
+# also using DRIMSeq filtered results
+x.sequin <- lapply(comparison, function(x){
+  data.counts <- counts(ddata.sequin)[,-c(1:2)]
+  x.sequin <- DGEList(counts = as.matrix(data.counts[, samples$group %in% x]),
+                     samples = samples[samples$group %in% x,])
+  rownames(x.sequin) <- counts(ddata.sequin)$feature_id
+  x.sequin <- calcNormFactors(x.sequin)
+  x.sequin
+})
+
+ex.sequin <- lapply(x.sequin, function(x){
+  design <- model.matrix(~group, x$samples)
+  v.sequin <- voom(x, design, plot=T)
+  fit.sequin <- lmFit(v.sequin)
+  efit.sequin <- eBayes(fit.sequin)
+  diffSplice(efit.sequin, geneid = counts(ddata.sequin)$gene_id, exonid=counts(ddata.sequin)$feature_id)
+})
+
+ts.sequin <- lapply(ex.sequin, function(x){
+  topSplice(x, number = Inf)
+})
+ts.sequin.tx <- lapply(ex.sequin, function(x){
+  topSplice(x, test = "t", number = Inf)
+})
+```
+
+## edgeR
+
+### human
+
+```{r}
+qlfit.human <- lapply(x.human, function(x){
+  design <- model.matrix(~group, x$samples)
+  x.human <- estimateDisp(x, design)
+  # plotBCV(x.human)
+  qlfit.human <- glmQLFit(x.human, design)
+  # plotQLDisp(qlfit.human)
+  qlfit.human
+})
+
+sp.human <- lapply(qlfit.human, function(x){
+  diffSpliceDGE(x, geneid = counts(ddata.human)$gene_id, exonid=counts(ddata.human)$feature_id)
+})
+
+tsdge.human <- lapply(sp.human, function(x){
+  topSpliceDGE(x, test = "simes", number = Inf)
+})
+tsdge.human.tx <- lapply(sp.human, function(x){
+  topSpliceDGE(x, test = "exon", number = Inf)
+})
+```
+### sequin
+
+```{r}
+qlfit.sequin <- lapply(x.sequin, function(x){
+  design <- model.matrix(~group, x$samples)
+  x.sequin <- estimateDisp(x, design)
+  # plotBCV(x.sequin)
+  qlfit.sequin <- glmQLFit(x.sequin, design)
+  # plotQLDisp(qlfit.sequin)
+  qlfit.sequin
+})
+
+sp.sequin <- lapply(qlfit.sequin, function(x){
+  diffSpliceDGE(x, geneid = counts(ddata.sequin)$gene_id, exonid=counts(ddata.sequin)$feature_id)
+})
+
+tsdge.sequin <- lapply(sp.sequin, function(x){
+  topSpliceDGE(x, test = "simes", number = Inf)
+})
+tsdge.sequin.tx <- lapply(sp.sequin, function(x){
+  topSpliceDGE(x, test = "exon", number = Inf)
+})
+```
+
+## satuRn
+
+### human
+
+```{r}
+counts.human <- counts(ddata.human)[,-c(1:2)]
+rownames(counts.human) <- counts(ddata.human)$feature_id
+
+sumExp.human <- lapply(comparison, function(x){
+  sumExp.human <- SummarizedExperiment(
+    assays = list(counts = counts.human[,samples$group %in% x]),
+    colData = samples[samples$group %in% x,],
+    rowData = data.frame(
+      gene_id = counts(ddata.human)$gene_id,
+      isoform_id = counts(ddata.human)$feature_id
+    )
+  )
+  colData(sumExp.human)$group <- factor(colData(sumExp.human)$group)
+  metadata(sumExp.human)$formula <- ~ as.factor(colData(sumExp.human)$group)
+  sumExp.human <- fitDTU(object = sumExp.human,
+                         formula=~0+group)
+  design <- model.matrix(~0+group, data=colData(sumExp.human))
+  contr <- paste("group", x[1], "-group", x[2], sep = "")
+  contr <- makeContrasts(contrasts=contr, levels=colnames(design))
+  sumExp.human <- testDTU(object = sumExp.human, contrasts = contr)
+  sumExp.human
+})
+
+# contr <- makeContrasts(BvsA=HCC827-H1975, levels=colnames(design))
+
+saturnres.human <- lapply(sumExp.human, function(x){
+  name <- names(rowData(x))[4]
+  rowData(x)[[name]]
+})
+
+# Compute gene level q-values
+qScreen.human <- lapply(sumExp.human, function(x){
+  name <- names(rowData(x))[4]
+  pvals.human <- rowData(x)[[name]]$pval
+  geneID <- factor(rowData(x)$gene_id)
+  geneSplit <- split(seq(along = geneID), geneID)
+  pGene.human <- sapply(geneSplit, function(i) min(pvals.human[i]))
+  pGene.human[is.na(pGene.human)] <- 1
+  theta <- unique(sort(pGene.human))
+  # gene-level significance testing
+  q.human <- DEXSeq:::perGeneQValueExact(pGene.human, theta, geneSplit) 
+  qScreen.human <- rep(NA_real_, length(pGene.human))
+  qScreen.human <- q.human[match(pGene.human, theta)]
+  qScreen.human <- pmin(1, qScreen.human)
+  names(qScreen.human) <- names(geneSplit)
+  return(qScreen.human)
+})
+
+
+```
+
+### sequin
+
+```{r}
+counts.sequin <- counts(ddata.sequin)[,-c(1:2)]
+rownames(counts.sequin) <- counts(ddata.sequin)$feature_id
+
+sumExp.sequin <- lapply(comparison, function(x){
+  sumExp.sequin <- SummarizedExperiment(
+    assays = list(counts = counts.sequin[,samples$group %in% x]),
+    colData = samples[samples$group %in% x,],
+    rowData = data.frame(
+      gene_id = counts(ddata.sequin)$gene_id,
+      isoform_id = counts(ddata.sequin)$feature_id
+    )
+  )
+  colData(sumExp.sequin)$group <- factor(colData(sumExp.sequin)$group)
+  metadata(sumExp.sequin)$formula <- ~ as.factor(colData(sumExp.sequin)$group)
+  sumExp.sequin <- fitDTU(object = sumExp.sequin,
+                         formula=~0+group)
+  design <- model.matrix(~0+group, data=colData(sumExp.sequin))
+  contr <- paste("group", x[1], "-group", x[2], sep = "")
+  contr <- makeContrasts(contrasts=contr, levels=colnames(design))
+  sumExp.sequin <- testDTU(object = sumExp.sequin, contrasts = contr)
+  sumExp.sequin
+})
+
+saturnres.sequin <- lapply(sumExp.sequin, function(x){
+  name <- names(rowData(x))[4]
+  rowData(x)[[name]]
+})
+
+# Compute gene level q-values
+qScreen.sequin <- lapply(sumExp.sequin, function(x){
+  name <- names(rowData(x))[4]
+  pvals.sequin <- rowData(x)[[name]]$pval
+  geneID <- factor(rowData(x)$gene_id)
+  geneSplit <- split(seq(along = geneID), geneID)
+  pGene.sequin <- sapply(geneSplit, function(i) min(pvals.sequin[i]))
+  pGene.sequin[is.na(pGene.sequin)] <- 1
+  theta <- unique(sort(pGene.sequin))
+  # gene-level significance testing
+  q.sequin <- DEXSeq:::perGeneQValueExact(pGene.sequin, theta, geneSplit) 
+  qScreen.sequin <- rep(NA_real_, length(pGene.sequin))
+  qScreen.sequin <- q.sequin[match(pGene.sequin, theta)]
+  qScreen.sequin <- pmin(1, qScreen.sequin)
+  names(qScreen.sequin) <- names(geneSplit)
+  return(qScreen.sequin)
+})
+
+
+```
+
+## Compare results
+
+### sequin
+
+```{r}
+annodir <- "/wehisan/home/allstaff/d/dong.x/annotation/sequins"
+anno <- read.delim(file.path(annodir, "rnasequin_isoforms_2.4.tsv"), sep = "\t", stringsAsFactors = FALSE)
+geneanno <- read.delim(file.path(annodir, "rnasequin_genes_2.4.tsv"), sep = "\t", stringsAsFactors = FALSE)
+# calculate annotate proportion
+proportion <- data.frame(txID = anno$NAME)
+tx2gene <- limma::strsplit2(proportion$txID, "_")
+tx2gene <-  paste(tx2gene[,1], tx2gene[,2], sep="_")
+proportion$geneID <- tx2gene
+m <- match(proportion$geneID, geneanno$NAME)
+proportion$MIX_A <- anno$MIX_A / geneanno$MIX_A[m]
+proportion$MIX_B <- anno$MIX_B / geneanno$MIX_B[m]
+proportion$FC <- proportion$MIX_A / proportion$MIX_B
+proportion$isChanges <- FALSE
+proportion$isChanges[abs(proportion$FC-1) > 0.001] <- TRUE
+saveRDS(proportion, file="proportion.RDS")
+
+trueDTU.gene <- unique(proportion$geneID[proportion$isChanges==TRUE])
+trueDTU.transcript <- proportion$txID[proportion$isChanges==TRUE]
+```
+
+#### FDR and TPR
+
+```{r}
+# extract DTU genes
+DTU.genes <- list(
+  DRIMSeq = drres.sequin$gene_id[drres.sequin$adj_pvalue < 0.05],
+  DEXSeq = dxr.g.sequin$gene[dxr.g.sequin$qval.sequin < 0.05],
+  limma = ts.sequin$GeneID[ts.sequin$FDR < 0.05],
+  edgeR = tsdge.sequin$GeneID[tsdge.sequin$FDR < 0.05],
+  satuRn = names(qScreen.sequin)[qScreen.sequin < 0.05]
+)
+
+FDR.gene <-
+  sapply(DTU.genes, function(x) {
+    FD = sum(!(x %in% trueDTU.gene))
+    FD / length(x)
+  }, simplify = TRUE)
+
+TPR.gene <-
+  sapply(DTU.genes, function(x){
+    TP = sum(x %in% trueDTU.gene)
+    TP / sum(trueDTU.gene %in% counts(d.sequin)$gene_id)
+  }, simplify=TRUE)
+
+```
+
+```{r}
+DTU.transcripts <- list(
+  DRIMSeq = drres.txp.sequin$feature_id[drres.txp.sequin$adj_pvalue < 0.05],
+  DEXSeq = dxr.sequin$featureID[dxr.sequin$padj < 0.05],
+  limma = ts.sequin.tx$ExonID[ts.sequin.tx$FDR < 0.05],
+  edgeR = tsdge.sequin.tx$ExonID[tsdge.sequin.tx$FDR < 0.05],
+  satuRn = rownames(rowData(sumExp.sequin)[["fitDTUResult_BvsA"]])[rowData(sumExp.sequin)[["fitDTUResult_BvsA"]]$regular_FDR < 0.05]
+)
+
+FDR.transcripts <-
+  sapply(DTU.transcripts, function(x) {
+    FD = sum(!(x %in% trueDTU.transcript))
+    FD / length(x)
+  }, simplify = TRUE)
+
+TPR.transcripts <-
+  sapply(DTU.transcripts, function(x){
+    TP = sum(x %in% trueDTU.transcript)
+    TP / sum(trueDTU.transcript %in% counts(d.sequin)$feature_id)
+  }, simplify=TRUE)
+
+```
+
+```{r}
+DTU.res <-data.frame(
+  FDR = c(FDR.gene, FDR.transcripts),
+  TPR = c(TPR.gene, TPR.transcripts),
+  Method = c(names(FDR.gene), names(FDR.transcripts)),
+  Test_level = rep(c("gene level", "transcript level"), c(length(FDR.gene), length(FDR.transcripts)))
+)
+pdf("DTUres/sequinFDRTPR.pdf", height = 4)
+ggplot(DTU.res, aes(x=FDR, y=TPR, colour=Method, shape=Test_level)) +
+  # geom_point(size = 5) +
+  geom_jitter(size = 5) +
+  # scale_shape_manual(values=c(3,4)) +
+  theme_bw()
+dev.off()
+```
+#### Overlap of DTU genes
+
+```{r}
+library(UpSetR)
+pdf("DTUres/sequinUpset.pdf", height = 4)
+upset(fromList(DTU.genes), order.by = "freq")
+upset(fromList(DTU.transcripts), order.by = "freq")
+dev.off()
+```
+
+### Human
+
+#### overlap of DTU genes
+
+```{r}
+# extract DTU genes
+DTU.genes.human <- list(
+  # DRIMSeq = drres.human$gene_id[drres.human$adj_pvalue < 0.05],
+  DEXSeq = dxr.g.human$gene[dxr.g.human$qval.human < 0.05],
+  limma = ts.human$GeneID[ts.human$FDR < 0.05],
+  edgeR = tsdge.human$GeneID[tsdge.human$FDR < 0.05],
+  satuRn = names(qScreen.human)[qScreen.human < 0.05]
+)
+
+
+upset(fromList(DTU.genes.human), order.by = "freq")
+```
+
+```{r}
+DTU.transcripts.human <- list(
+  # DRIMSeq = drres.txp.human$feature_id[drres.txp.human$adj_pvalue < 0.05],
+  DEXSeq = dxr.human$featureID[dxr.human$pvalue < 0.05],
+  limma = ts.human.tx$ExonID[ts.human.tx$FDR < 0.05],
+  edgeR = tsdge.human.tx$ExonID[tsdge.human.tx$FDR < 0.05],
+  satuRn = rownames(rowData(sumExp.human)[["fitDTUResult_BvsA"]])[rowData(sumExp.human)[["fitDTUResult_BvsA"]]$regular_FDR < 0.05]
+)
+
+upset(fromList(DTU.transcripts.human), order.by = "freq")
+```

@@ -1,6 +1,7 @@
 library(ggplot2)
 library(UpSetR)
 library(viridis)
+# library(wesanderson)
 
 res.human.long <- readRDS("../ONT/DEres/res.human.RDS")
 res.sequin.long <- readRDS("../ONT/DEres/res.sequin.RDS")
@@ -95,6 +96,18 @@ FD <- res.sequin[res.sequin$FDR<0.05 & res.sequin$logFC_expected == 0, ]
 FN <- res.sequin[res.sequin$FDR >= 0.05 & res.sequin$logFC_expected != 0, ]
 # venn diagram 
 
+# Plot FDR vs TPR
+FDR$`True positive rate` <- TPR$`True positive rate`
+FDR$Method <- strsplit2(FDR$Method_dataset, "_")[,1]
+FDR$Dataset <- strsplit2(FDR$Method_dataset, "_")[,2]
+FDR$Method <- factor(FDR$Method, levels = c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq"))
+pdf("plots/DEsequinFDRvsTPR.pdf", height = 5, width = 8)
+ggplot(FDR, aes(x=`False discovery rate`, y=`True positive rate`, colour=Method, shape=Dataset))+
+  geom_jitter(size=7, alpha = 0.9) +
+  scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
 
 # Compare long and short human t-statistic
 tt.human.long <- read.delim("../ONT/topTableHuman.tsv", sep= "\t", stringsAsFactors = FALSE)
