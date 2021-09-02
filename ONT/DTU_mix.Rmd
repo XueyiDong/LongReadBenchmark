@@ -78,13 +78,13 @@ ddata.human <- dmFilter(ddata.human, min_samps_gene_expr = 15, min_samps_feature
               run_gene_twice = T)
 
 d.human <- lapply(comparison, function(x){
-  # d.human <- dmDSdata(counts = counts[human.gene, samples$group %in% x], 
-  #                     samples = samples[, samples$group %in% x])
-  # d.human <- dmFilter(d.human, min_samps_gene_expr = 6, min_samps_feature_expr = 3, 
-  #                     min_gene_expr = 10, min_feature_expr = 10, 
-  #                     min_samps_feature_prop = 3, min_feature_prop = 0.1,
-  #                     run_gene_twice = T)
-  d.human <- ddata.human[, samples$group %in% x]
+  d.human <- dmDSdata(counts = counts[human.gene, samples$group %in% x],
+                      samples = samples[, samples$group %in% x])
+  d.human <- dmFilter(d.human, min_samps_gene_expr = 6, min_samps_feature_expr = 3,
+                      min_gene_expr = 10, min_feature_expr = 10,
+                      min_samps_feature_prop = 3, min_feature_prop = 0.1,
+                      run_gene_twice = T)
+  # d.human <- ddata.human[, samples$group %in% x]
   design <- model.matrix(~group, data=DRIMSeq::samples(d.human))
   # colnames(design) <- sub("group", "", colnames(design))
   # below not run
@@ -99,8 +99,8 @@ d.human <- lapply(comparison, function(x){
 # head(DRIMSeq::results(d))
 # head(DRIMSeq::results(d, level = "feature"))
 
-res <- lapply(d.human, DRIMSeq::results)
-res.txp <- lapply(d.human, 
+drres.human <- lapply(d.human, DRIMSeq::results)
+drres.txp.human <- lapply(d.human, 
                   function(x){DRIMSeq::results(x, level = "feature")})
 ```
 ### sequin
@@ -113,7 +113,13 @@ ddata.sequin <- dmFilter(ddata.sequin, min_samps_gene_expr = 15, min_samps_featu
               run_gene_twice = T)
 
 d.sequin <- lapply(comparison, function(x){
-  d.sequin <- ddata.sequin[, samples$group %in% x]
+  # d.sequin <- ddata.sequin[, samples$group %in% x]
+  d.sequin <- dmDSdata(counts = counts[sequin.gene, c(1, 2, which(samples$group %in% x)+2)],
+                      samples = samples[samples$group %in% x, ])
+  d.human <- dmFilter(d.sequin, min_samps_gene_expr = 6, min_samps_feature_expr = 3,
+                      min_gene_expr = 10, min_feature_expr = 10,
+                      min_samps_feature_prop = 3, min_feature_prop = 0.1,
+                      run_gene_twice = T)
   design <- model.matrix(~group, data=DRIMSeq::samples(d.sequin))
   # colnames(design) <- sub("group", "", colnames(design))
   set.seed(1904)
@@ -142,7 +148,7 @@ dxd.human <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.human)[,-c(1
                      groupID=counts(ddata.human)$gene_id)
 dxd.human <- estimateSizeFactors(dxd.human)
 dxd.human <- lapply(comparison, function(x){
-  dxd.human <- dxd.human[, samples$group %in% x]
+  # dxd.human <- dxd.human[, samples$group %in% x]
   dxd.human <- estimateDispersions(dxd.human)
   dxd.human <- testForDEU(dxd.human, reducedModel = ~sample+exon)
   dxd.human
