@@ -78,8 +78,8 @@ ddata.human <- dmFilter(ddata.human, min_samps_gene_expr = 15, min_samps_feature
               run_gene_twice = T)
 
 d.human <- lapply(comparison, function(x){
-  d.human <- dmDSdata(counts = counts[human.gene, samples$group %in% x],
-                      samples = samples[, samples$group %in% x])
+  d.human <- dmDSdata(counts = counts[human.gene, c(1, 2, which(samples$group %in% x)+2)],
+                      samples = samples[samples$group %in% x, ])
   d.human <- dmFilter(d.human, min_samps_gene_expr = 6, min_samps_feature_expr = 3,
                       min_gene_expr = 10, min_feature_expr = 10,
                       min_samps_feature_prop = 3, min_feature_prop = 0.1,
@@ -116,7 +116,7 @@ d.sequin <- lapply(comparison, function(x){
   # d.sequin <- ddata.sequin[, samples$group %in% x]
   d.sequin <- dmDSdata(counts = counts[sequin.gene, c(1, 2, which(samples$group %in% x)+2)],
                       samples = samples[samples$group %in% x, ])
-  d.human <- dmFilter(d.sequin, min_samps_gene_expr = 6, min_samps_feature_expr = 3,
+  d.sequin <- dmFilter(d.sequin, min_samps_gene_expr = 6, min_samps_feature_expr = 3,
                       min_gene_expr = 10, min_feature_expr = 10,
                       min_samps_feature_prop = 3, min_feature_prop = 0.1,
                       run_gene_twice = T)
@@ -141,17 +141,29 @@ drres.txp.sequin <- lapply(d.sequin,
 
 ```{r}
 # human, using DRIMSeq filtered results
-dxd.human <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.human)[,-c(1:2)])),
-                     sampleData=samples,
-                     design=~sample+exon+group:exon,
-                     featureID=counts(ddata.human)$feature_id,
-                     groupID=counts(ddata.human)$gene_id)
-dxd.human <- estimateSizeFactors(dxd.human)
-dxd.human <- lapply(comparison, function(x){
-  # dxd.human <- dxd.human[, samples$group %in% x]
+# dxd.human <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.human)[,-c(1:2)])),
+#                      sampleData=samples,
+#                      design=~sample+exon+group:exon,
+#                      featureID=counts(ddata.human)$feature_id,
+#                      groupID=counts(ddata.human)$gene_id)
+# dxd.human <- estimateSizeFactors(dxd.human)
+# dxd.human <- lapply(comparison, function(x){
+#   # dxd.human <- dxd.human[, samples$group %in% x]
+#   dxd.human <- estimateDispersions(dxd.human)
+#   dxd.human <- testForDEU(dxd.human, reducedModel = ~sample+exon)
+#   dxd.human
+# })
+
+dxd.human <- lapply(d.human, function(x){
+  dxd.human <- DEXSeqDataSet(countData = round(as.matrix(counts(x)[,-c(1:2)])),
+                             sampleData=x@samples,
+                             design=~sample+exon+group:exon,
+                             featureID=counts(x)$feature_id,
+                             groupID=counts(x)$gene_id)
+  dxd.human <- estimateSizeFactors(dxd.human)
   dxd.human <- estimateDispersions(dxd.human)
   dxd.human <- testForDEU(dxd.human, reducedModel = ~sample+exon)
-  dxd.human
+  return(dxd.human)
 })
 
 dxr.human <- lapply(dxd.human, function(x){
@@ -173,17 +185,28 @@ dxr.human <- lapply(dxr.human, function(x){
 
 ```{r}
 # sequin, using DRIMSeq filtered results
-dxd.sequin <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.sequin)[,-c(1:2)])),
-                     sampleData=samples,
-                     design=~sample+exon+group:exon,
-                     featureID=counts(ddata.sequin)$feature_id,
-                     groupID=counts(ddata.sequin)$gene_id)
-dxd.sequin <- estimateSizeFactors(dxd.sequin)
-dxd.sequin <- lapply(comparison, function(x){
-  dxd.sequin <- dxd.sequin[, samples$group %in% x]
+# dxd.sequin <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.sequin)[,-c(1:2)])),
+#                      sampleData=samples,
+#                      design=~sample+exon+group:exon,
+#                      featureID=counts(ddata.sequin)$feature_id,
+#                      groupID=counts(ddata.sequin)$gene_id)
+# dxd.sequin <- estimateSizeFactors(dxd.sequin)
+# dxd.sequin <- lapply(comparison, function(x){
+#   dxd.sequin <- dxd.sequin[, samples$group %in% x]
+#   dxd.sequin <- estimateDispersions(dxd.sequin)
+#   dxd.sequin <- testForDEU(dxd.sequin, reducedModel = ~sample+exon)
+#   dxd.sequin
+# })
+dxd.sequin <- lapply(d.sequin, function(x){
+  dxd.sequin <- DEXSeqDataSet(countData = round(as.matrix(counts(x)[,-c(1:2)])),
+                             sampleData=x@samples,
+                             design=~sample+exon+group:exon,
+                             featureID=counts(x)$feature_id,
+                             groupID=counts(x)$gene_id)
+  dxd.sequin <- estimateSizeFactors(dxd.sequin)
   dxd.sequin <- estimateDispersions(dxd.sequin)
   dxd.sequin <- testForDEU(dxd.sequin, reducedModel = ~sample+exon)
-  dxd.sequin
+  return(dxd.sequin)
 })
 
 dxr.sequin <- lapply(dxd.sequin, function(x){
@@ -206,12 +229,13 @@ dxr.sequin <- lapply(dxr.sequin, function(x){
 ### human
 
 ```{r}
-# also using DRIMSeq filtered results
-x.human <- lapply(comparison, function(x){
-  data.counts <- counts(ddata.human)[,-c(1:2)]
-  x.human <- DGEList(counts = as.matrix(data.counts[, samples$group %in% x]),
-                     samples = samples[samples$group %in% x,])
-  rownames(x.human) <- counts(ddata.human)$feature_id
+
+x.human <- lapply(d.human, function(x){
+  data.counts <- counts(x)[,-c(1:2)]
+  x.human <- DGEList(counts = as.matrix(counts(x)[,-c(1:2)]),
+                     samples = x@samples,
+                     genes = counts(x)[,c(1,2)])
+  rownames(x.human) <- counts(x)$feature_id
   x.human <- calcNormFactors(x.human)
   x.human
 })
@@ -221,7 +245,7 @@ ex.human <- lapply(x.human, function(x){
   v.human <- voom(x, design, plot=T)
   fit.human <- lmFit(v.human)
   efit.human <- eBayes(fit.human)
-  diffSplice(efit.human, geneid = counts(ddata.human)$gene_id, exonid=counts(ddata.human)$feature_id)
+  diffSplice(efit.human, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
 })
 
 
@@ -237,11 +261,12 @@ ts.human.tx <- lapply(ex.human, function(x){
 
 ```{r}
 # also using DRIMSeq filtered results
-x.sequin <- lapply(comparison, function(x){
-  data.counts <- counts(ddata.sequin)[,-c(1:2)]
-  x.sequin <- DGEList(counts = as.matrix(data.counts[, samples$group %in% x]),
-                     samples = samples[samples$group %in% x,])
-  rownames(x.sequin) <- counts(ddata.sequin)$feature_id
+x.sequin <- lapply(d.sequin, function(x){
+  data.counts <- counts(x)[,-c(1:2)]
+  x.sequin <- DGEList(counts = as.matrix(counts(x)[,-c(1:2)]),
+                     samples = x@samples,
+                     genes = counts(x)[,c(1,2)])
+  rownames(x.sequin) <- counts(x)$feature_id
   x.sequin <- calcNormFactors(x.sequin)
   x.sequin
 })
@@ -251,8 +276,9 @@ ex.sequin <- lapply(x.sequin, function(x){
   v.sequin <- voom(x, design, plot=T)
   fit.sequin <- lmFit(v.sequin)
   efit.sequin <- eBayes(fit.sequin)
-  diffSplice(efit.sequin, geneid = counts(ddata.sequin)$gene_id, exonid=counts(ddata.sequin)$feature_id)
+  diffSplice(efit.sequin, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
 })
+
 
 ts.sequin <- lapply(ex.sequin, function(x){
   topSplice(x, number = Inf)
@@ -277,7 +303,7 @@ qlfit.human <- lapply(x.human, function(x){
 })
 
 sp.human <- lapply(qlfit.human, function(x){
-  diffSpliceDGE(x, geneid = counts(ddata.human)$gene_id, exonid=counts(ddata.human)$feature_id)
+  diffSpliceDGE(x, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
 })
 
 tsdge.human <- lapply(sp.human, function(x){
@@ -300,7 +326,7 @@ qlfit.sequin <- lapply(x.sequin, function(x){
 })
 
 sp.sequin <- lapply(qlfit.sequin, function(x){
-  diffSpliceDGE(x, geneid = counts(ddata.sequin)$gene_id, exonid=counts(ddata.sequin)$feature_id)
+  diffSpliceDGE(x, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
 })
 
 tsdge.sequin <- lapply(sp.sequin, function(x){
@@ -316,24 +342,28 @@ tsdge.sequin.tx <- lapply(sp.sequin, function(x){
 ### human
 
 ```{r}
-counts.human <- counts(ddata.human)[,-c(1:2)]
-rownames(counts.human) <- counts(ddata.human)$feature_id
+# counts.human <- counts(ddata.human)[,-c(1:2)]
+# rownames(counts.human) <- counts(ddata.human)$feature_id
 
-sumExp.human <- lapply(comparison, function(x){
+sumExp.human <- lapply(d.human, function(x){
+  counts <- counts(x)[,-c(1,2)]
+  rownames(counts) <- counts(x)[,2]
   sumExp.human <- SummarizedExperiment(
-    assays = list(counts = counts.human[,samples$group %in% x]),
-    colData = samples[samples$group %in% x,],
+    assays = list(counts = counts),
+    colData = x@samples,
     rowData = data.frame(
-      gene_id = counts(ddata.human)$gene_id,
-      isoform_id = counts(ddata.human)$feature_id
+      gene_id = counts(x)[,1],
+      isoform_id = counts(x)[,2]
     )
   )
-  colData(sumExp.human)$group <- factor(colData(sumExp.human)$group)
+  # colData(sumExp.human)$group <- factor(colData(sumExp.human)$group)
   metadata(sumExp.human)$formula <- ~ as.factor(colData(sumExp.human)$group)
   sumExp.human <- fitDTU(object = sumExp.human,
                          formula=~0+group)
   design <- model.matrix(~0+group, data=colData(sumExp.human))
-  contr <- paste("group", x[1], "-group", x[2], sep = "")
+  # contr <- paste("group", x[1], "-group", x[2], sep = "")
+  levels <- as.character(unique(x@samples$group))
+  contr <- paste("group", levels[1], "-group", levels[2], sep = "")
   contr <- makeContrasts(contrasts=contr, levels=colnames(design))
   sumExp.human <- testDTU(object = sumExp.human, contrasts = contr)
   sumExp.human
@@ -370,28 +400,34 @@ qScreen.human <- lapply(sumExp.human, function(x){
 ### sequin
 
 ```{r}
-counts.sequin <- counts(ddata.sequin)[,-c(1:2)]
-rownames(counts.sequin) <- counts(ddata.sequin)$feature_id
+# counts.sequin <- counts(ddata.sequin)[,-c(1:2)]
+# rownames(counts.sequin) <- counts(ddata.sequin)$feature_id
 
-sumExp.sequin <- lapply(comparison, function(x){
+sumExp.sequin <- lapply(d.sequin, function(x){
+  counts <- counts(x)[,-c(1,2)]
+  rownames(counts) <- counts(x)[,2]
   sumExp.sequin <- SummarizedExperiment(
-    assays = list(counts = counts.sequin[,samples$group %in% x]),
-    colData = samples[samples$group %in% x,],
+    assays = list(counts = counts),
+    colData = x@samples,
     rowData = data.frame(
-      gene_id = counts(ddata.sequin)$gene_id,
-      isoform_id = counts(ddata.sequin)$feature_id
+      gene_id = counts(x)[,1],
+      isoform_id = counts(x)[,2]
     )
   )
-  colData(sumExp.sequin)$group <- factor(colData(sumExp.sequin)$group)
+  # colData(sumExp.sequin)$group <- factor(colData(sumExp.sequin)$group)
   metadata(sumExp.sequin)$formula <- ~ as.factor(colData(sumExp.sequin)$group)
   sumExp.sequin <- fitDTU(object = sumExp.sequin,
                          formula=~0+group)
   design <- model.matrix(~0+group, data=colData(sumExp.sequin))
-  contr <- paste("group", x[1], "-group", x[2], sep = "")
+  # contr <- paste("group", x[1], "-group", x[2], sep = "")
+  levels <- as.character(unique(x@samples$group))
+  contr <- paste("group", levels[1], "-group", levels[2], sep = "")
   contr <- makeContrasts(contrasts=contr, levels=colnames(design))
   sumExp.sequin <- testDTU(object = sumExp.sequin, contrasts = contr)
   sumExp.sequin
 })
+
+# contr <- makeContrasts(BvsA=HCC827-H1975, levels=colnames(design))
 
 saturnres.sequin <- lapply(sumExp.sequin, function(x){
   name <- names(rowData(x))[4]
