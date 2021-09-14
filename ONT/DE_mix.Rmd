@@ -1,5 +1,5 @@
 ---
-title: "Pseudo mixture analysis"
+title: "Pseudo mixture analysis for differential transcript expression analysis"
 author: "Xueyi Dong"
 date: "14/06/2021"
 output: 
@@ -25,24 +25,50 @@ library(wesanderson)
 ```
 
 ```{r loadFC, echo=FALSE}
-fc <- readRDS("counts_ONT.RDS")
-fc2 <- readRDS("counts_ONT_mix.RDS")
+# fc <- readRDS("counts_ONT.RDS")
+# fc2 <- readRDS("counts_ONT_mix.RDS")
 ```
 
 ```{r}
 # Set output folder
-OUT="./mix"
+OUT="./DTEmix"
 ```
+
+
+```{r}
+# Load Salmon quant TPM data
+samples <-list.files("salmon_bs")
+quant <- file.path("./salmon_bs", samples, "quant.sf")
+library(tximport)
+txi <- tximport(quant, type="salmon", txOut=TRUE, countsFromAbundance = "scaledTPM")
+counts <- as.data.frame(txi$counts, stringAsFactors = FALSE)
+colnames(counts) <- samples
+
+# deal with gene names
+genes <- rownames(counts)
+genes <- strsplit2(genes, "|", fixed=TRUE)
+rownames(counts) <- genes[,1]
+
+library(GenomicFeatures)
+gtf <- "/wehisan/home/allstaff/d/dong.x/annotation/HumanSequins/gencode.v33.sequins.gtf"
+txdb <- makeTxDbFromGFF(gtf)
+# saveRDS(txdb, "txdb.RDS")
+# txdb <- readRDS("txdb.RDS")
+txdf <- select(txdb, keys(txdb, "GENEID"), "TXNAME", "GENEID") 
+tab <- table(txdf$GENEID) 
+txdf$ntx <- tab[match(txdf$GENEID, names(tab))]
+```
+
 
 ## DE analysis using limma
 
 ```{r}
-x <- DGEList(counts = cbind(fc$counts[,1:6], fc2$counts))
+x <- DGEList(counts = counts)
 #HCC827 proportion
 x$samples$group <- rep(c("000", "100", "075", "050", "025"), rep(3, 5))
 x$samples$mixprop <- rep(c(0, 1, 0.75, 0.5, 0.25), rep(3, 5))
 x$samples$pair <- rep(c(1, 2, 3), 5)
-x$genes <- fc$annotation
+x$genes <- txdf
 ```
 
 ```{r}
@@ -67,19 +93,19 @@ plotMDS(cpm, labels = x$samples$group,
 
 x$samples
 
-human.gene <- grep("^ENSG", rownames(x))
+human.gene <- grep("^ENST", rownames(x))
 sequin.gene <- grep("^R", rownames(x))
 cpm.human <- cpm(x[human.gene, ], log=TRUE)
 cpm.sequin <- cpm(x[sequin.gene, ], log=TRUE)
 # par(mfrow=c(1,2))
-pdf("mix/mds_human.pdf", height = 5, width = 8)
+pdf(file.path(OUT, "mds_human.pdf"), height = 5, width = 8)
 plotMDS(cpm.human, pch = rep(c(1, 2), c(6, 9)),
         col = rep(col, rep(3, 5)), main="MDS plot for human genes",
         cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
 legend("topleft", c("0:100", "25:75", "50:50", "75:25", "100:0"), 
         text.col = col[c(1, 3, 4, 5, 2)], cex = 1.25, bty = "n")
 dev.off()
-pdf("mix/mds_sequin.pdf", height = 5, width = 8)
+pdf(file.path(OUT, "mds_sequin.pdf"), height = 5, width = 8)
 plotMDS(cpm.sequin, pch = rep(c(1, 2), c(6, 9)),
         col = rep(col, rep(3, 5)), main = "MDS plot for sequin genes",
         cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
