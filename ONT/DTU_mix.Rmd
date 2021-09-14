@@ -764,6 +764,33 @@ ggplot(power.sequin.tx, aes(x=Comparison, y=`Number of DTU`, colour=Method, grou
 dev.off()
 ```
 
+```{r}
+numDTU.gene <- rbind(power.human.gene, power.sequin.gene)
+numDTU.gene <- numDTU.gene[numDTU.gene$Comparison == "100vs000", ]
+numDTU.gene$Gene <- rep(c("Human", "Sequin"), c(5, 5))
+
+pdf(file.path(OUT, "numDTUgene.pdf"), height = 5, width = 8)
+ggplot(numDTU.gene, aes(x=Method, y=`Number of DTU`, fill=Gene))+
+  geom_bar(stat="identity") +
+  theme_bw() +
+  scale_fill_manual(values=c("#D39394", "#71838F")) +
+  theme(text = element_text(size = 20))
+dev.off()
+
+numDTU.tx <- rbind(power.human.tx, power.sequin.tx)
+numDTU.tx <- numDTU.tx[numDTU.tx$Comparison == "100vs000", ]
+numDTU.tx$Transcript <- rep(c("Human", "Sequin"), c(5, 5))
+
+pdf(file.path(OUT, "numDTUtranscript.pdf"), height = 5, width = 8)
+ggplot(numDTU.tx, aes(x=Method, y=`Number of DTU`, fill=Transcript))+
+  geom_bar(stat="identity") +
+  theme_bw() +
+  scale_fill_manual(values=c("#D39394", "#71838F")) +
+  theme(text = element_text(size = 20))
+dev.off()
+```
+
+
 ### sequin FDR and TPR
 
 ```{r}
