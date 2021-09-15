@@ -40,7 +40,7 @@ OUT="./DTEmix"
 samples <-list.files("salmon_bs")
 quant <- file.path("./salmon_bs", samples, "quant.sf")
 library(tximport)
-txi <- tximport(quant, type="salmon", txOut=TRUE, countsFromAbundance = "scaledTPM")
+txi <- tximport(quant, type="salmon", txOut=TRUE, countsFromAbundance = "no")
 counts <- as.data.frame(txi$counts, stringAsFactors = FALSE)
 colnames(counts) <- samples
 
