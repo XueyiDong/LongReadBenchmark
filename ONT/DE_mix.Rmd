@@ -241,7 +241,7 @@ DE.sequin.edgeR <- lapply(ttag.sequin, function(x){
 ## DE analysis using DESeq2
 
 ```{r}
-dds <- DESeqDataSetFromMatrix(countData=  counts, 
+dds <- DESeqDataSetFromMatrix(countData=  round(counts), 
                               colData = data.frame(
                                 group = rep(c("000", "100", "075", "050", "025"), rep(3, 5))
                               ),
@@ -250,7 +250,7 @@ keep <- rowSums(counts(dds)) > 1 & rowSums(counts(dds) >= 10) >= 3
 dds <- dds[keep,]
 nrow(dds)
 
-human.gene <- grep("^ENSG", rownames(dds))
+human.gene <- grep("^ENST", rownames(dds))
 sequin.gene <- grep("^R", rownames(dds))
 dds.human <- dds[human.gene, ]
 dds.sequin <- dds[sequin.gene, ]
@@ -282,10 +282,10 @@ DE.sequin.DESeq2 <- lapply(deres.sequin, function(x){
 ## DE analysis using EBSeq
 
 ```{r}
-human.gene <- grep("^ENSG", rownames(fc$counts))
-sequin.gene <- grep("^R", rownames(fc$counts))
-counts.human <- cbind(fc$counts[human.gene, 1:6], fc2$counts[human.gene,])
-counts.sequin <- cbind(fc$counts[sequin.gene, 1:6], fc2$counts[sequin.gene,])
+human.gene <- grep("^ENST", rownames(counts))
+sequin.gene <- grep("^R", rownames(counts))
+counts.human <- as.matrix(counts[human.gene, ])
+counts.sequin <- as.matrix(counts[sequin.gene, ])
 Sizes.human = MedianNorm(counts.human)
 Sizes.sequin = MedianNorm(counts.sequin)
 Conditions = as.factor(rep(c("000", "100", "075", "050", "025"), rep(3, 5)))
