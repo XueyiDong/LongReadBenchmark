@@ -241,7 +241,7 @@ DE.sequin.edgeR <- lapply(ttag.sequin, function(x){
 ## DE analysis using DESeq2
 
 ```{r}
-dds <- DESeqDataSetFromMatrix(countData=  cbind(fc$counts[,1:6], fc2$counts), 
+dds <- DESeqDataSetFromMatrix(countData=  counts, 
                               colData = data.frame(
                                 group = rep(c("000", "100", "075", "050", "025"), rep(3, 5))
                               ),

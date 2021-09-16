@@ -116,7 +116,33 @@ DTU.tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
 ```
 
 ```{r DRIMSeq2, echo=FALSE, eval=TRUE}
-d.human <- readRDS(d.human.RDS)
+samples <- data.frame(
+  sample_id = samples,
+  group = rep(c("000", "100", "075", "050", "025"), rep(3, 5)),
+  stringsAsFactors = FALSE
+)
+samples$group <- as.factor(samples$group)
+counts <- as.data.frame(txi$counts, stringAsFactors = FALSE)
+# deal with gene names
+genes <- rownames(counts)
+genes <- strsplit2(genes, "|", fixed=TRUE)
+rownames(counts) <- genes[,1]
+counts <- counts[match(txdf$TXNAME, rownames(counts)),]
+counts <- cbind(txdf$GENEID, txdf$TXNAME, counts)
+colnames(counts)[3:ncol(counts)] <- make.names(colnames(counts)[3:ncol(counts)])
+colnames(counts) <- c("gene_id", "feature_id", samples$sample_id)
+
+comparison <- list(
+  c100vs0=c("100", "000"),
+  c75vs25=c("075", "025"),
+  c50vs25=c("050", "025"),
+  c75vs50=c("075", "050")
+)
+
+human.gene <- grep("^ENSG", counts$gene_id)
+sequin.gene <- grep("^R", counts$gene_id)
+
+d.human <- readRDS("d.human.RDS")
 drres.human <- lapply(d.human, DRIMSeq::results)
 drres.txp.human <- lapply(d.human, 
                   function(x){DRIMSeq::results(x, level = "feature")})
@@ -291,8 +317,8 @@ ex.human <- lapply(x.human, function(x){
   design <- model.matrix(~group, x$samples)
   v.human <- voom(x, design, plot=T)
   fit.human <- lmFit(v.human)
-  efit.human <- eBayes(fit.human)
-  diffSplice(efit.human, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
+  # efit.human <- eBayes(fit.human)
+  diffSplice(fit.human, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
 })
 
 
@@ -329,8 +355,8 @@ ex.sequin <- lapply(x.sequin, function(x){
   design <- model.matrix(~group, x$samples)
   v.sequin <- voom(x, design, plot=T)
   fit.sequin <- lmFit(v.sequin)
-  efit.sequin <- eBayes(fit.sequin)
-  diffSplice(efit.sequin, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
+  # efit.sequin <- eBayes(fit.sequin)
+  diffSplice(fit.sequin, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
 })
 
 
@@ -918,72 +944,8 @@ dev.off()
 ```
 
 
-
 ```{r}
-# extract DTU genes
-DTU.genes <- list(
-  DRIMSeq = drres.sequin$gene_id[drres.sequin$adj_pvalue < 0.05],
-  DEXSeq = dxr.g.sequin$gene[dxr.g.sequin$qval.sequin < 0.05],
-  limma = ts.sequin$GeneID[ts.sequin$FDR < 0.05],
-  edgeR = tsdge.sequin$GeneID[tsdge.sequin$FDR < 0.05],
-  satuRn = names(qScreen.sequin)[qScreen.sequin < 0.05]
-)
-
-FDR.gene <-
-  sapply(DTU.genes, function(x) {
-    FD = sum(!(x %in% trueDTU.gene))
-    FD / length(x)
-  }, simplify = TRUE)
-
-TPR.gene <-
-  sapply(DTU.genes, function(x){
-    TP = sum(x %in% trueDTU.gene)
-    TP / sum(trueDTU.gene %in% counts(d.sequin)$gene_id)
-  }, simplify=TRUE)
-
-```
-
-```{r}
-DTU.transcripts <- list(
-  DRIMSeq = drres.txp.sequin$feature_id[drres.txp.sequin$adj_pvalue < 0.05],
-  DEXSeq = dxr.sequin$featureID[dxr.sequin$padj < 0.05],
-  limma = ts.sequin.tx$ExonID[ts.sequin.tx$FDR < 0.05],
-  edgeR = tsdge.sequin.tx$ExonID[tsdge.sequin.tx$FDR < 0.05],
-  satuRn = rownames(rowData(sumExp.sequin)[["fitDTUResult_BvsA"]])[rowData(sumExp.sequin)[["fitDTUResult_BvsA"]]$regular_FDR < 0.05]
-)
-
-FDR.transcripts <-
-  sapply(DTU.transcripts, function(x) {
-    FD = sum(!(x %in% trueDTU.transcript))
-    FD / length(x)
-  }, simplify = TRUE)
-
-TPR.transcripts <-
-  sapply(DTU.transcripts, function(x){
-    TP = sum(x %in% trueDTU.transcript)
-    TP / sum(trueDTU.transcript %in% counts(d.sequin)$feature_id)
-  }, simplify=TRUE)
-
-```
-
-```{r}
-DTU.res <-data.frame(
-  FDR = c(FDR.gene, FDR.transcripts),
-  TPR = c(TPR.gene, TPR.transcripts),
-  Method = c(names(FDR.gene), names(FDR.transcripts)),
-  Test_level = rep(c("gene level", "transcript level"), c(length(FDR.gene), length(FDR.transcripts)))
-)
-pdf("DTUres/sequinFDRTPR.pdf", height = 4)
-ggplot(DTU.res, aes(x=FDR, y=TPR, colour=Method, shape=Test_level)) +
-  # geom_point(size = 5) +
-  geom_jitter(size = 5) +
-  # scale_shape_manual(values=c(3,4)) +
-  theme_bw()
-dev.off()
-```
-
-```{r}
-save.image("DTU_mix.new.RData")
+save.image("DTU_mix.RData")
 sessionInfo()
 ```
 
