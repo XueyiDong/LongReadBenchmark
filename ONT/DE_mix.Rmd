@@ -462,7 +462,7 @@ library(data.table)
 power.human <- melt(power.human, variable.name = "Method", value.name = "Number of DE transcripts")
 power.human$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
-pdf(file.path(OUT, "humanPower.pdf"), height = 4)
+pdf(file.path(OUT, "humanPower.pdf"), height = 5, width = 8)
 ggplot(power.human, aes(x=Comparison, y=`Number of DE transcripts`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
@@ -482,7 +482,7 @@ library(data.table)
 power.sequin <- melt(power.sequin, variable.name = "Method", value.name = "Number of DE transcripts")
 power.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
-pdf(file.path(OUT, "sequinPower.pdf"), height = 4)
+pdf(file.path(OUT, "sequinPower.pdf"), height = 5, width = 8)
 ggplot(power.sequin, aes(x=Comparison, y=`Number of DE transcripts`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
@@ -512,7 +512,7 @@ colnames(FDR.sequin) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
 FDR.sequin <- melt(FDR.sequin, variable.name = "Method", value.name = "False discovery rate")
 FDR.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
-pdf(file.path(OUT, "sequinFDR.pdf"), height = 4)
+pdf(file.path(OUT, "sequinFDR.pdf"), height = 5, width = 8)
 ggplot(FDR.sequin, aes(x=Comparison, y=`False discovery rate`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "dashed", "solid", "longdash", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
@@ -541,7 +541,7 @@ colnames(TPR.sequin) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
 TPR.sequin <- melt(TPR.sequin, variable.name = "Method", value.name = "True positive rate")
 TPR.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
-pdf(file.path(OUT, "sequinTPR.pdf"), height = 4)
+pdf(file.path(OUT, "sequinTPR.pdf"), height = 5, width = 8)
 ggplot(TPR.sequin, aes(x=Comparison, y=`True positive rate`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "dashed", "solid", "longdash", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
