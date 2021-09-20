@@ -467,7 +467,8 @@ ggplot(power.human, aes(x=Comparison, y=`Number of DE transcripts`, colour=Metho
   geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_color_brewer(palette="Dark2")
+  scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
+  theme(text = element_text(size = 20))
 dev.off()
 ```
 
@@ -486,7 +487,8 @@ ggplot(power.sequin, aes(x=Comparison, y=`Number of DE transcripts`, colour=Meth
   geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_color_brewer(palette="Dark2")
+  scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
+  theme(text = element_text(size = 20))
 dev.off()
 ```
 
@@ -515,7 +517,8 @@ ggplot(FDR.sequin, aes(x=Comparison, y=`False discovery rate`, colour=Method, gr
   geom_line(linetype=rep(c("solid", "dashed", "solid", "longdash", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_color_brewer(palette="Dark2")
+  scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
+  theme(text = element_text(size = 20))
 dev.off()
 ```
 
@@ -543,7 +546,8 @@ ggplot(TPR.sequin, aes(x=Comparison, y=`True positive rate`, colour=Method, grou
   geom_line(linetype=rep(c("solid", "dashed", "solid", "longdash", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_color_brewer(palette="Dark2")
+  scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
+  theme(text = element_text(size = 20))
 dev.off()
 ```
 
