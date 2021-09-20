@@ -24,11 +24,6 @@ library(NOISeq)
 library(wesanderson)
 ```
 
-```{r loadFC, echo=FALSE}
-# fc <- readRDS("counts_ONT.RDS")
-# fc2 <- readRDS("counts_ONT_mix.RDS")
-```
-
 ```{r}
 # Set output folder
 OUT="./DTEmix"
@@ -65,10 +60,11 @@ txdf$ntx <- tab[match(txdf$GENEID, names(tab))]
 ```{r}
 x <- DGEList(counts = counts)
 #HCC827 proportion
-x$samples$group <- rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+group <- rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+x$samples$group <- group
 x$samples$mixprop <- rep(c(0, 1, 0.75, 0.5, 0.25), rep(3, 5))
 x$samples$pair <- rep(c(1, 2, 3), 5)
-x$genes <- txdf
+x$genes <- txdf[match(rownames(x), txdf$TXNAME),]
 ```
 
 ```{r}
@@ -115,18 +111,13 @@ dev.off()
 ### Make design and contrast
 
 ```{r}
-design <- model.matrix(~0+x$samples$group+x$samples$pair)
-colnames(design) <- gsub("x$samples$group", "g", colnames(design), fixed=TRUE)
-colnames(design) <- gsub("x$samples$pair", "pair", colnames(design), fixed=TRUE)
-design
-contr <- makeContrasts(
-  c100vs0=g100-g000,
-  c75vs25=g075-g025,
-  c50vs25=g050-g025,
-  c75vs50=g075-g050,
-  levels = colnames(design)
+comparison <- list(
+  c100vs0=c("100", "000"),
+  c75vs25=c("075", "025"),
+  c50vs25=c("050", "025"),
+  c75vs50=c("075", "050")
 )
-contr
+
 
 anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_isoforms_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
 anno$logFC <- log(anno$MIX_B / anno$MIX_A)
@@ -137,147 +128,143 @@ anno$logFC <- log(anno$MIX_B / anno$MIX_A)
 ```{r}
 x.sequin <- x[sequin.gene,]
 x.sequin <- calcNormFactors(x.sequin)
-v.sequin <- voom(x.sequin, design = design, plot=TRUE)
-fit.sequin <- lmFit(v.sequin)
-fit.sequin <- contrasts.fit(fit.sequin, contrasts=contr)
-efit.sequin <- eBayes(fit.sequin)
-dt.sequin <- decideTests(efit.sequin)
-summary(dt.sequin)
-# tt.sequin <- topTable(efit.sequin, number = Inf)
+tt.sequin <- lapply(comparison, function(x){
+  x.tmp <- x.sequin[, x.sequin$samples$group %in% x]
+  design <- model.matrix(~x.tmp$samples$group)
+  v.sequin <- voom(x.tmp, design = design, plot=TRUE)
+  fit.sequin <- lmFit(v.sequin)
+  # fit.sequin <- contrasts.fit(fit.sequin, contrasts=contr)
+  efit.sequin <- eBayes(fit.sequin)
+  # dt.sequin <- decideTests(efit.sequin)
+  topTable(efit.sequin, coef=ncol(design), n=Inf)
+})
 ```
-```{r}
-par(mfrow=c(2,2))
-for(i in 1:4){
-  plotMD(efit.sequin, status = dt.sequin[,i], column = i, values = c(-1, 1), col = c("blue", "red"), main=colnames(contr)[i])
-}
-
-```
-
-
 ### Fit a separate model for human genes
 
 ```{r}
 x.human <- x[human.gene,]
 x.human <- calcNormFactors(x.human)
-v.human <- voom(x.human, design = design, plot=TRUE)
-fit.human <- lmFit(v.human)
-fit.human <- contrasts.fit(fit.human, contrasts=contr)
-efit.human <- eBayes(fit.human)
-dt.human <- decideTests(efit.human)
-summary(dt.human)
-# tt.human <- topTable(efit.human, number = Inf)
-# plotMD(efit.human, status = dt.human[,2], column = 2, values = c(-1, 1), col = c("blue", "red"), main="Human genes")
+tt.human <- lapply(comparison, function(x){
+  x.tmp <- x.human[, x.human$samples$group %in% x]
+  design <- model.matrix(~x.tmp$samples$group)
+  v.human <- voom(x.tmp, design = design, plot=TRUE)
+  fit.human <- lmFit(v.human)
+  # fit.human <- contrasts.fit(fit.human, contrasts=contr)
+  efit.human <- eBayes(fit.human)
+  # dt.human <- decideTests(efit.human)
+  topTable(efit.human, coef=ncol(design), n=Inf)
+})
 ```
 
 Get DE genes
 
 ```{r}
-DE.human.limma <- lapply(1:4, function(x){
-  rownames(dt.human)[dt.human[,x] != 0]
+DE.human.limma <- lapply(tt.human, function(x){
+  rownames(x)[x$adj.P.Val < 0.05]
 })
-DE.sequin.limma <- lapply(1:4, function(x){
-  rownames(dt.sequin)[dt.sequin[,x] != 0]
+DE.sequin.limma <- lapply(tt.sequin, function(x){
+  rownames(x)[x$adj.P.Val < 0.05]
 })
 ```
 
 
 ```{r}
-# write.table(tt.human, file.path(OUT, "topTableHuman.tsv"), sep="\t")
-# write.table(tt.sequin, file.path(OUT, "topTableSequin.tsv"), sep="\t")
-# write.table(tt.human[,c("GeneID","logFC", "adj.P.Val")], file.path(OUT, "resLimmaHuman.tsv"), sep = "\t", row.names = TRUE)
-# write.table(tt.sequin[,c("GeneID", "logFC", "adj.P.Val")], file.path(OUT, "resLimmaSequin.tsv"), sep = "\t", row.names = TRUE)
-```
-
-### Fit non-linear model for the mixture series
-
-```{r}
-mix.fit.human <- fitmixture(v.human$E, mixprop = x$samples$mixprop)
+# mix.fit.human <- fitmixture(v.human$E, mixprop = x$samples$mixprop)
 ```
 
 
 
 ## DE analysis using edgeR
 
+
 ### Human genes
 
 ```{r}
-x.human <- estimateDisp(x.human, design)
-plotBCV(x.human)
-qlfit.human <- glmQLFit(x.human, design)
-plotQLDisp(qlfit.human)
-res.human <- lapply(colnames(contr), function(x){ glmQLFTest(qlfit.human, contrast=contr[,x])})
-ttag.human <- lapply(res.human, function(x){topTags(x, n=Inf)})
+ttag.human <- lapply(comparison, function(x){
+  x.tmp <- x.human[, x.human$samples$group %in% x]
+  design <- model.matrix(~x.tmp$samples$group)
+  x.tmp <- estimateDisp(x.tmp, design)
+  # plotBCV(x.human)
+  qlfit.human <- glmQLFit(x.tmp, design)
+  # plotQLDisp(qlfit.human)
+  # res.human <- lapply(colnames(contr), function(x){ glmQLFTest(qlfit.human, contrast=contr[,x])})
+  res.human <- glmQLFTest(qlfit.human)
+  as.data.frame(topTags(res.human, n=Inf))
+  # ttag.human <- ?lapply(res.human, function(x){topTags(x, n=Inf)})
+})
+
 # write.table(ttag.human[,c("GeneID","logFC", "FDR")], file.path(OUT, "resEdgerHuman.tsv"), sep="\t", row.names = TRUE)
 
 DE.human.edgeR <- lapply(ttag.human, function(x){
-  x$table$TXNAME[x$table$FDR < 0.05]
+  x$TXNAME[x$FDR < 0.05]
 })
 ```
 
-```{r}
-# plotMD(res.human, status = decideTestsDGE(res.human), values = c(1, -1), 
-       # col = c("red", "blue"), legend = "topright")
-```
 
 ### Sequin genes
 
 ```{r}
-x.sequin <- estimateDisp(x.sequin, design)
-plotBCV(x.sequin)
-qlfit.sequin <- glmQLFit(x.sequin, design)
-plotQLDisp(qlfit.sequin)
-res.sequin <- lapply(colnames(contr), function(x){ glmQLFTest(qlfit.sequin, contrast=contr[,x])})
-ttag.sequin <- lapply(res.sequin, function(x){topTags(x, n=Inf)})
+ttag.sequin <- lapply(comparison, function(x){
+  x.tmp <- x.sequin[, x.sequin$samples$group %in% x]
+  design <- model.matrix(~x.tmp$samples$group)
+  x.tmp <- estimateDisp(x.tmp, design)
+  # plotBCV(x.sequin)
+  qlfit.sequin <- glmQLFit(x.tmp, design)
+  # plotQLDisp(qlfit.sequin)
+  # res.sequin <- lapply(colnames(contr), function(x){ glmQLFTest(qlfit.sequin, contrast=contr[,x])})
+  res.sequin <- glmQLFTest(qlfit.sequin)
+  as.data.frame(topTags(res.sequin, n=Inf))
+  # ttag.sequin <- ?lapply(res.sequin, function(x){topTags(x, n=Inf)})
+})
 
-# plotMD(res.sequin, status = decideTestsDGE(res.sequin), values = c(1, -1), 
-       # col = c("red", "blue"), legend = "topright")
-# write.table(ttag.sequin[,c("GeneID","logFC", "FDR")], file.path(OUT, "resEdgerSequin.tsv"), sep="\t", row.names = TRUE)
+# write.table(ttag.sequin[,c("GeneID","logFC", "FDR")], file.path(OUT, "resEdgerHuman.tsv"), sep="\t", row.names = TRUE)
 
 DE.sequin.edgeR <- lapply(ttag.sequin, function(x){
-  x$table$TXNAME[x$table$FDR < 0.05]
+  x$TXNAME[x$FDR < 0.05]
 })
 ```
 
 ## DE analysis using DESeq2
-
 ```{r}
-dds <- DESeqDataSetFromMatrix(countData=  round(counts), 
+human.gene <- grep("^ENST", rownames(counts))
+sequin.gene <- grep("^R", rownames(counts))
+
+deres.human <- lapply(comparison, function(x){
+  sel = group %in% x
+  groups <- group[sel]
+  dds <- DESeqDataSetFromMatrix(countData=  round(counts[human.gene, sel]), 
                               colData = data.frame(
-                                group = rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+                                group = groups
                               ),
-                              design = design)
-keep <- rowSums(counts(dds)) > 1 & rowSums(counts(dds) >= 10) >= 3
-dds <- dds[keep,]
-nrow(dds)
+                              design = ~group)
+  keep <- rowSums(counts(dds)) > 1 & rowSums(counts(dds) >= 10) >= 3
+  dds <- dds[keep,]
+  dds <- DESeq(dds)
+  results(dds)
+  })
 
-human.gene <- grep("^ENST", rownames(dds))
-sequin.gene <- grep("^R", rownames(dds))
-dds.human <- dds[human.gene, ]
-dds.sequin <- dds[sequin.gene, ]
+deres.sequin <- lapply(comparison, function(x){
+  sel = group %in% x
+  groups <- group[sel]
+  dds <- DESeqDataSetFromMatrix(countData=  round(counts[sequin.gene, sel]), 
+                              colData = data.frame(
+                                group = groups
+                              ),
+                              design = ~group)
+  keep <- rowSums(counts(dds)) > 1 & rowSums(counts(dds) >= 10) >= 3
+  dds <- dds[keep,]
+  dds <- DESeq(dds)
+  results(dds)
+  })
 
-dds.human <- DESeq(dds.human)
-dds.sequin <- DESeq(dds.sequin)
-
-deres.human <- lapply(colnames(contr), function(x){results(dds.human, contrast = contr[,x])})
-deres.human <- lapply(deres.human, function(x){
-  x$genes <- rownames(x)
-  x})
-deres.sequin <- lapply(colnames(contr), function(x){results(dds.sequin, contrast = contr[,x])})
-deres.sequin <- lapply(deres.sequin, function(x){
-  x$genes <- rownames(x)
-  x
-})
-
-# write.table(res.human[,c("gene", "log2FoldChange", "padj")], file.path(OUT, "resDeseq2Human.tsv"), sep="\t", row.names = TRUE)
-# write.table(res.sequin[,c("gene", "log2FoldChange", "padj")], file.path(OUT, "resDeseq2Sequin.tsv"), sep="\t", row.names = TRUE)
 
 DE.human.DESeq2 <- lapply(deres.human, function(x){
   x <- na.omit(x)
-  x$genes[x$padj < 0.05]
+  rownames(x)[x$padj < 0.05]
 })
 DE.sequin.DESeq2 <- lapply(deres.sequin, function(x){
   x <- na.omit(x)
-  x$genes[x$padj < 0.05]
+  rownames(x)[x$padj < 0.05]
 })
 ```
 
@@ -316,18 +303,6 @@ EBDERes.sequin = lapply(EBOut.sequin, function(x){GetDEResults(x, FDR = 0.05)})
 
 GeneFC.human = lapply(EBOut.human, PostFC)
 GeneFC.sequin = lapply(EBOut.sequin, PostFC)
-# write.table(data.frame(
-#   gene = rownames(EBDERes.human$PPMat)[match(names(GeneFC.human$PostFC), rownames(EBDERes.human$PPMat))],
-#   logFC=log2(GeneFC.human$PostFC),
-#   PPEE=EBDERes.human$PPMat[match(names(GeneFC.human$PostFC), rownames(EBDERes.human$PPMat)),1],
-#   row.names = names(GeneFC.human$PostFC)
-# ), file.path(OUT, "resEbseqHuman.tsv"), sep="\t", row.names = TRUE)
-# write.table(data.frame(
-#   gene = rownames(EBDERes.sequin$PPMat)[match(names(GeneFC.sequin$PostFC), rownames(EBDERes.sequin$PPMat))],
-#   logFC=log2(GeneFC.sequin$PostFC),
-#   PPEE=EBDERes.sequin$PPMat[match(names(GeneFC.sequin$PostFC), rownames(EBDERes.sequin$PPMat)),1],
-#   row.names = names(GeneFC.sequin$PostFC)
-# ), file.path(OUT, "resEbseqSequin.tsv"), sep="\t", row.names = TRUE)
 
 DE.human.EBSeq <- lapply(EBDERes.human, function(x){x$DEfound})
 DE.sequin.EBSeq <- lapply(EBDERes.sequin, function(x){x$DEfound})
@@ -337,15 +312,10 @@ DE.sequin.EBSeq <- lapply(EBDERes.sequin, function(x){x$DEfound})
 ## DE analysis using NOISeq
 
 ```{r}
-# mylength <- fc$annotation[,6, drop=FALSE]
-# human.gene <- grep("^ENSG", rownames(fc$counts))
-# sequin.gene <- grep("^R", rownames(fc$counts))
-# rownames(mylength) <- fc$annotation$GeneID
 myfilt.human = filtered.data(counts.human, factor = x$samples$group, norm=FALSE, method = 1)
 myfilt.sequin = filtered.data(counts.sequin, factor = x$samples$group, norm=FALSE, method = 1)
 mydata.human <- readData(
   data = myfilt.human,
-  # length = mylength[human.gene,, drop=FALSE],
   factors = data.frame(
     group = rep(c("000", "100", "075", "050", "025"), rep(3, 5))
   )
@@ -358,31 +328,29 @@ mydata.sequin <- readData(
   )
 )
 
-mynoiseqbio.human = lapply(comparisons, function(x){
-  noiseqbio(mydata.human, norm = "tmm", factor = "group", conditions = x)
-})
-mynoiseqbio.sequin = lapply(comparisons, function(x){
-  noiseqbio(mydata.sequin, norm = "tmm", factor = "group", conditions = x)
+noires.human <- lapply(comparison, function(x){
+  mydata.human = mydata.human[, mydata.human$group %in% x]
+  mynoiseqbio.human = noiseqbio(mydata.human,  norm="tmm", factor="group", )
+  noires.human <- (mynoiseqbio.human@results[[1]])
+  noires.human$FDR=1-noires.human$prob
+  noires.human
 })
 
-noires.human <- lapply(mynoiseqbio.human, function(x){x@results[[1]]})
-noires.sequin <- lapply(mynoiseqbio.sequin, function(x){x@results[[1]]})
-noires.human <- lapply(noires.human, function(x){
-  x$FDR = 1 - x$prob
-  x$gene = rownames(x)
-  x})
-noires.sequin <- lapply(noires.sequin, function(x){
-  x$FDR = 1 - x$prob
-  x$gene <- rownames(x)
-  x})
+noires.sequin <- lapply(comparison, function(x){
+  mydata.sequin = mydata.sequin[, mydata.sequin$group %in% x]
+  mynoiseqbio.sequin = noiseqbio(mydata.sequin,  norm="tmm", factor="group", )
+  noires.sequin <- (mynoiseqbio.sequin@results[[1]])
+  noires.sequin$FDR=1-noires.sequin$prob
+  noires.sequin
+})
 
 # # write.table(noires.human[,c("gene", "log2FC", "FDR")], file.path(OUT, "resNoiseqHuman.tsv"), sep="\t", row.names = TRUE)
 # write.table(noires.sequin[,c("gene", "log2FC", "FDR")], file.path(OUT, "resNoiseqSequin.tsv"), sep="\t", row.names = TRUE)
 DE.human.NOISeq <- lapply(noires.human, function(x){
-  x$gene[x$FDR < 0.05]
+  rownames(x)[x$FDR < 0.05]
 })
 DE.sequin.NOISeq <- lapply(noires.sequin, function(x){
-  x$gene[x$FDR < 0.05]
+  rownames(x)[x$FDR < 0.05]
 })
 ```
 
