@@ -128,7 +128,7 @@ contr <- makeContrasts(
 )
 contr
 
-anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_genes_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
+anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_isoforms_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
 anno$logFC <- log(anno$MIX_B / anno$MIX_A)
 ```
 
@@ -210,7 +210,7 @@ ttag.human <- lapply(res.human, function(x){topTags(x, n=Inf)})
 # write.table(ttag.human[,c("GeneID","logFC", "FDR")], file.path(OUT, "resEdgerHuman.tsv"), sep="\t", row.names = TRUE)
 
 DE.human.edgeR <- lapply(ttag.human, function(x){
-  x$table$GeneID[x$table$FDR < 0.05]
+  x$table$TXNAME[x$table$FDR < 0.05]
 })
 ```
 
@@ -234,7 +234,7 @@ ttag.sequin <- lapply(res.sequin, function(x){topTags(x, n=Inf)})
 # write.table(ttag.sequin[,c("GeneID","logFC", "FDR")], file.path(OUT, "resEdgerSequin.tsv"), sep="\t", row.names = TRUE)
 
 DE.sequin.edgeR <- lapply(ttag.sequin, function(x){
-  x$table$GeneID[x$table$FDR < 0.05]
+  x$table$TXNAME[x$table$FDR < 0.05]
 })
 ```
 
@@ -272,9 +272,11 @@ deres.sequin <- lapply(deres.sequin, function(x){
 # write.table(res.sequin[,c("gene", "log2FoldChange", "padj")], file.path(OUT, "resDeseq2Sequin.tsv"), sep="\t", row.names = TRUE)
 
 DE.human.DESeq2 <- lapply(deres.human, function(x){
+  x <- na.omit(x)
   x$genes[x$padj < 0.05]
 })
 DE.sequin.DESeq2 <- lapply(deres.sequin, function(x){
+  x <- na.omit(x)
   x$genes[x$padj < 0.05]
 })
 ```
@@ -489,11 +491,11 @@ power.human <- as.data.frame(sapply(list(DE.human.limma, DE.human.edgeR, DE.huma
 rownames(power.human) <- c("100vs000", "075vs025", "050vs025", "075vs050")
 colnames(power.human) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
 library(data.table)
-power.human <- melt(power.human, variable.name = "Method", value.name = "Number of DE genes")
+power.human <- melt(power.human, variable.name = "Method", value.name = "Number of DE transcripts")
 power.human$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
 pdf(file.path(OUT, "humanPower.pdf"), height = 4)
-ggplot(power.human, aes(x=Comparison, y=`Number of DE genes`, colour=Method, group=Method)) +
+ggplot(power.human, aes(x=Comparison, y=`Number of DE transcripts`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
@@ -508,11 +510,11 @@ power.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.s
 rownames(power.sequin) <- c("100vs000", "075vs025", "050vs025", "075vs050")
 colnames(power.sequin) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
 library(data.table)
-power.sequin <- melt(power.sequin, variable.name = "Method", value.name = "Number of DE genes")
+power.sequin <- melt(power.sequin, variable.name = "Method", value.name = "Number of DE transcripts")
 power.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
 pdf(file.path(OUT, "sequinPower.pdf"), height = 4)
-ggplot(power.sequin, aes(x=Comparison, y=`Number of DE genes`, colour=Method, group=Method)) +
+ggplot(power.sequin, aes(x=Comparison, y=`Number of DE transcripts`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
