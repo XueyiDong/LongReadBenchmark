@@ -1,0 +1,959 @@
+---
+title: "DTU in-silico mixture analysis"
+author: "Xueyi Dong"
+date: "30/08/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(DRIMSeq)
+library(DEXSeq)
+library(limma)
+library(edgeR)
+library(satuRn)
+library(SummarizedExperiment)
+# library(IsoformSwitchAnalyzeR)
+
+OUT="./DTUmix"
+```
+
+## Load salmon quantification
+
+```{r loadQuan, echo=TRUE, eval=FALSE}
+# Load Salmon quant TPM data
+samples <-list.files("salmon_bs")
+quant <- file.path("./salmon_bs", samples, "quant.sf")
+library(tximport)
+txi <- tximport(quant, type="salmon", txOut=TRUE, countsFromAbundance = "no")
+saveRDS(txi, "txi.RDS")
+library(GenomicFeatures)
+gtf <- "/wehisan/home/allstaff/d/dong.x/annotation/HumanSequins/gencode.v33.sequins.gtf"
+txdb <- makeTxDbFromGFF(gtf)
+# saveRDS(txdb, "txdb.RDS")
+# txdb <- readRDS("txdb.RDS")
+txdf <- select(txdb, keys(txdb, "GENEID"), "TXNAME", "GENEID") 
+tab <- table(txdf$GENEID) 
+txdf$ntx <- tab[match(txdf$GENEID, names(tab))]
+saveRDS(txdf, "txdf.RDS")
+
+```
+
+```{r readload, echo=FALSE, eval=TRUE}
+samples <-list.files("salmon_bs")
+quant <- file.path("./salmon_bs", samples, "quant.sf")
+txi <- readRDS("txi.RDS")
+txdf <- readRDS("txdf.RDS")
+```
+
+
+## DRIMSeq
+
+### human
+```{r DRIMSeq, echo=TRUE, eval=TRUE, cache=TRUE}
+samples <- data.frame(
+  sample_id = samples,
+  group = rep(c("000", "100", "075", "050", "025"), rep(3, 5)),
+  stringsAsFactors = FALSE
+)
+samples$group <- as.factor(samples$group)
+counts <- as.data.frame(txi$counts, stringAsFactors = FALSE)
+# deal with gene names
+genes <- rownames(counts)
+genes <- strsplit2(genes, "|", fixed=TRUE)
+rownames(counts) <- genes[,1]
+counts <- counts[match(txdf$TXNAME, rownames(counts)),]
+counts <- cbind(txdf$GENEID, txdf$TXNAME, counts)
+colnames(counts)[3:ncol(counts)] <- make.names(colnames(counts)[3:ncol(counts)])
+colnames(counts) <- c("gene_id", "feature_id", samples$sample_id)
+
+comparison <- list(
+  c100vs0=c("100", "000"),
+  c75vs25=c("075", "025"),
+  c50vs25=c("050", "025"),
+  c75vs50=c("075", "050")
+)
+
+human.gene <- grep("^ENSG", counts$gene_id)
+sequin.gene <- grep("^R", counts$gene_id)
+
+# DRIMSeq analysis for human genes
+
+ddata.human <- dmDSdata(counts = counts[human.gene,], samples = samples)
+ddata.human <- dmFilter(ddata.human, min_samps_gene_expr = 15, min_samps_feature_expr = 3, 
+              min_gene_expr = 10, min_feature_expr = 10, 
+              min_samps_feature_prop = 3, min_feature_prop = 0.1,
+              run_gene_twice = T)
+
+d.human <- lapply(comparison, function(x){
+  d.human <- dmDSdata(counts = counts[human.gene, c(1, 2, which(samples$group %in% x)+2)],
+                      samples = samples[samples$group %in% x, ])
+  d.human <- dmFilter(d.human, min_samps_gene_expr = 6, min_samps_feature_expr = 3,
+                      min_gene_expr = 10, min_feature_expr = 10,
+                      min_samps_feature_prop = 3, min_feature_prop = 0.1,
+                      run_gene_twice = T)
+  # d.human <- ddata.human[, samples$group %in% x]
+  design <- model.matrix(~group, data=DRIMSeq::samples(d.human))
+  # colnames(design) <- sub("group", "", colnames(design))
+  # below not run
+  set.seed(1904)
+  register(MulticoreParam())
+  d.human <- dmPrecision(d.human, design, BPPARAM = BiocParallel::bpparam())
+  d.human <- dmFit(d.human, design = design, verbose=1, BPPARAM = BiocParallel::bpparam())
+  dmTest(d.human, coef = colnames(design)[ncol(design)])
+})
+
+
+# head(DRIMSeq::results(d))
+# head(DRIMSeq::results(d, level = "feature"))
+
+drres.human <- lapply(d.human, DRIMSeq::results)
+drres.txp.human <- lapply(d.human, 
+                  function(x){DRIMSeq::results(x, level = "feature")})
+
+DTU.gene.human.DRIMSeq <- lapply(drres.human, function(x){
+  x$gene_id[x$adj_pvalue < 0.05]
+})
+DTU.tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
+  x$feature_id[x$adj_pvalue < 0.05]
+})
+```
+
+```{r DRIMSeq2, echo=FALSE, eval=TRUE}
+# samples <- data.frame(
+#   sample_id = samples,
+#   group = rep(c("000", "100", "075", "050", "025"), rep(3, 5)),
+#   stringsAsFactors = FALSE
+# )
+# samples$group <- as.factor(samples$group)
+# counts <- as.data.frame(txi$counts, stringAsFactors = FALSE)
+# # deal with gene names
+# genes <- rownames(counts)
+# genes <- strsplit2(genes, "|", fixed=TRUE)
+# rownames(counts) <- genes[,1]
+# counts <- counts[match(txdf$TXNAME, rownames(counts)),]
+# counts <- cbind(txdf$GENEID, txdf$TXNAME, counts)
+# colnames(counts)[3:ncol(counts)] <- make.names(colnames(counts)[3:ncol(counts)])
+# colnames(counts) <- c("gene_id", "feature_id", samples$sample_id)
+# 
+# comparison <- list(
+#   c100vs0=c("100", "000"),
+#   c75vs25=c("075", "025"),
+#   c50vs25=c("050", "025"),
+#   c75vs50=c("075", "050")
+# )
+# 
+# human.gene <- grep("^ENSG", counts$gene_id)
+# sequin.gene <- grep("^R", counts$gene_id)
+# 
+# d.human <- readRDS("d.human.RDS")
+# drres.human <- lapply(d.human, DRIMSeq::results)
+# drres.txp.human <- lapply(d.human, 
+#                   function(x){DRIMSeq::results(x, level = "feature")})
+# 
+# DTU.gene.human.DRIMSeq <- lapply(drres.human, function(x){
+#   x$gene_id[x$adj_pvalue < 0.05]
+# })
+# DTU.tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
+#   x$feature_id[x$adj_pvalue < 0.05]
+# })
+```
+
+
+### sequin
+
+```{r drimsequin, cache=TRUE}
+ddata.sequin <- dmDSdata(counts = counts[sequin.gene,], samples = samples)
+ddata.sequin <- dmFilter(ddata.sequin, min_samps_gene_expr = 15, min_samps_feature_expr = 3, 
+              min_gene_expr = 10, min_feature_expr = 10, 
+              min_samps_feature_prop = 3, min_feature_prop = 0.1,
+              run_gene_twice = T)
+
+d.sequin <- lapply(comparison, function(x){
+  # d.sequin <- ddata.sequin[, samples$group %in% x]
+  d.sequin <- dmDSdata(counts = counts[sequin.gene, c(1, 2, which(samples$group %in% x)+2)],
+                      samples = samples[samples$group %in% x, ])
+  d.sequin <- dmFilter(d.sequin, min_samps_gene_expr = 6, min_samps_feature_expr = 3,
+                      min_gene_expr = 10, min_feature_expr = 10,
+                      min_samps_feature_prop = 3, min_feature_prop = 0.1,
+                      run_gene_twice = T)
+  design <- model.matrix(~group, data=DRIMSeq::samples(d.sequin))
+  # colnames(design) <- sub("group", "", colnames(design))
+  set.seed(1904)
+  register(MulticoreParam())
+  d.sequin <- dmPrecision(d.sequin, design, BPPARAM = BiocParallel::bpparam())
+  d.sequin <- dmFit(d.sequin, design = design, verbose=1, BPPARAM = BiocParallel::bpparam())
+  dmTest(d.sequin, coef = colnames(design)[ncol(design)])
+})
+
+drres.sequin <- lapply(d.sequin, DRIMSeq::results)
+drres.txp.sequin <- lapply(d.sequin, 
+                  function(x){DRIMSeq::results(x, level = "feature")})
+
+DTU.gene.sequin.DRIMSeq <- lapply(drres.sequin, function(x){
+  x$gene_id[x$adj_pvalue < 0.05]
+})
+DTU.tx.sequin.DRIMSeq <- lapply(drres.txp.sequin, function(x){
+  x$feature_id[x$adj_pvalue < 0.05]
+})
+```
+
+
+## DEXSeq
+
+### human
+
+```{r dexhuman, cache=TRUE}
+# human, using DRIMSeq filtered results
+# dxd.human <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.human)[,-c(1:2)])),
+#                      sampleData=samples,
+#                      design=~sample+exon+group:exon,
+#                      featureID=counts(ddata.human)$feature_id,
+#                      groupID=counts(ddata.human)$gene_id)
+# dxd.human <- estimateSizeFactors(dxd.human)
+# dxd.human <- lapply(comparison, function(x){
+#   # dxd.human <- dxd.human[, samples$group %in% x]
+#   dxd.human <- estimateDispersions(dxd.human)
+#   dxd.human <- testForDEU(dxd.human, reducedModel = ~sample+exon)
+#   dxd.human
+# })
+
+dxd.human <- lapply(d.human, function(x){
+  dxd.human <- DEXSeqDataSet(countData = round(as.matrix(counts(x)[,-c(1:2)])),
+                             sampleData=x@samples,
+                             design=~sample+exon+group:exon,
+                             featureID=counts(x)$feature_id,
+                             groupID=counts(x)$gene_id)
+  dxd.human <- estimateSizeFactors(dxd.human)
+  dxd.human <- estimateDispersions(dxd.human)
+  dxd.human <- testForDEU(dxd.human, reducedModel = ~sample+exon)
+  return(dxd.human)
+})
+
+dxr.human <- lapply(dxd.human, function(x){
+  DEXSeqResults(x, independentFiltering = FALSE)
+})
+
+# gene level result
+dxr.g.human <- lapply(dxr.human, function(x){
+  qval.human <- perGeneQValue(x)
+  data.frame(gene=names(qval.human), qval.human)
+})
+# feature level
+dxr.human <- lapply(dxr.human, function(x){
+  as.data.frame(x[,c("featureID", "groupID", "pvalue", "padj")])
+})
+
+DTU.gene.human.DEXSeq <- lapply(dxr.g.human, function(x){
+  x$gene[x$qval.human < 0.05]
+})
+DTU.tx.human.DEXSeq <- lapply(dxr.human, function(x){
+  x$featureID[x$padj < 0.05]
+})
+```
+
+### sequin
+
+```{r dexsequin, cache=TRUE}
+# sequin, using DRIMSeq filtered results
+# dxd.sequin <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.sequin)[,-c(1:2)])),
+#                      sampleData=samples,
+#                      design=~sample+exon+group:exon,
+#                      featureID=counts(ddata.sequin)$feature_id,
+#                      groupID=counts(ddata.sequin)$gene_id)
+# dxd.sequin <- estimateSizeFactors(dxd.sequin)
+# dxd.sequin <- lapply(comparison, function(x){
+#   dxd.sequin <- dxd.sequin[, samples$group %in% x]
+#   dxd.sequin <- estimateDispersions(dxd.sequin)
+#   dxd.sequin <- testForDEU(dxd.sequin, reducedModel = ~sample+exon)
+#   dxd.sequin
+# })
+dxd.sequin <- lapply(d.sequin, function(x){
+  dxd.sequin <- DEXSeqDataSet(countData = round(as.matrix(counts(x)[,-c(1:2)])),
+                             sampleData=x@samples,
+                             design=~sample+exon+group:exon,
+                             featureID=counts(x)$feature_id,
+                             groupID=counts(x)$gene_id)
+  dxd.sequin <- estimateSizeFactors(dxd.sequin)
+  dxd.sequin <- estimateDispersions(dxd.sequin)
+  dxd.sequin <- testForDEU(dxd.sequin, reducedModel = ~sample+exon)
+  return(dxd.sequin)
+})
+
+dxr.sequin <- lapply(dxd.sequin, function(x){
+  DEXSeqResults(x, independentFiltering = FALSE)
+})
+
+# gene level result
+dxr.g.sequin <- lapply(dxr.sequin, function(x){
+  qval.sequin <- perGeneQValue(x)
+  data.frame(gene=names(qval.sequin), qval.sequin)
+})
+# feature level
+dxr.sequin <- lapply(dxr.sequin, function(x){
+  as.data.frame(x[,c("featureID", "groupID", "pvalue", "padj")])
+})
+DTU.gene.sequin.DEXSeq <- lapply(dxr.g.sequin, function(x){
+  x$gene[x$qval.sequin < 0.05]
+})
+DTU.tx.sequin.DEXSeq <- lapply(dxr.sequin, function(x){
+  x$featureID[x$padj < 0.05]
+})
+```
+
+## limma
+
+### human
+
+```{r limmahuman, cache=TRUE}
+
+x.human <- lapply(d.human, function(x){
+  data.counts <- counts(x)[,-c(1:2)]
+  x.human <- DGEList(counts = as.matrix(counts(x)[,-c(1:2)]),
+                     samples = x@samples,
+                     genes = counts(x)[,c(1,2)])
+  rownames(x.human) <- counts(x)$feature_id
+  x.human <- calcNormFactors(x.human)
+  x.human
+})
+
+ex.human <- lapply(x.human, function(x){
+  design <- model.matrix(~group, x$samples)
+  v.human <- voom(x, design, plot=T)
+  fit.human <- lmFit(v.human)
+  # efit.human <- eBayes(fit.human)
+  diffSplice(fit.human, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
+})
+
+
+ts.human <- lapply(ex.human, function(x){
+  topSplice(x, number = Inf)
+})
+ts.human.tx <- lapply(ex.human, function(x){
+  topSplice(x, test = "t", number = Inf)
+})
+
+DTU.gene.human.limma <- lapply(ts.human, function(x){
+  x$GeneID[x$FDR < 0.05]
+})
+DTU.tx.human.limma <- lapply(ts.human.tx, function(x){
+  x$ExonID[x$FDR < 0.05]
+})
+```
+
+### sequin
+
+```{r limmasequin, cache=TRUE}
+# also using DRIMSeq filtered results
+x.sequin <- lapply(d.sequin, function(x){
+  data.counts <- counts(x)[,-c(1:2)]
+  x.sequin <- DGEList(counts = as.matrix(counts(x)[,-c(1:2)]),
+                     samples = x@samples,
+                     genes = counts(x)[,c(1,2)])
+  rownames(x.sequin) <- counts(x)$feature_id
+  x.sequin <- calcNormFactors(x.sequin)
+  x.sequin
+})
+
+ex.sequin <- lapply(x.sequin, function(x){
+  design <- model.matrix(~group, x$samples)
+  v.sequin <- voom(x, design, plot=T)
+  fit.sequin <- lmFit(v.sequin)
+  # efit.sequin <- eBayes(fit.sequin)
+  diffSplice(fit.sequin, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
+})
+
+
+ts.sequin <- lapply(ex.sequin, function(x){
+  topSplice(x, number = Inf)
+})
+ts.sequin.tx <- lapply(ex.sequin, function(x){
+  topSplice(x, test = "t", number = Inf)
+})
+DTU.gene.sequin.limma <- lapply(ts.sequin, function(x){
+  x$GeneID[x$FDR < 0.05]
+})
+DTU.tx.sequin.limma <- lapply(ts.sequin.tx, function(x){
+  x$ExonID[x$FDR < 0.05]
+})
+```
+
+## edgeR
+
+### human
+
+```{r edgerhuman, cache=TRUE}
+qlfit.human <- lapply(x.human, function(x){
+  design <- model.matrix(~group, x$samples)
+  x.human <- estimateDisp(x, design)
+  # plotBCV(x.human)
+  qlfit.human <- glmQLFit(x.human, design)
+  # plotQLDisp(qlfit.human)
+  qlfit.human
+})
+
+sp.human <- lapply(qlfit.human, function(x){
+  diffSpliceDGE(x, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
+})
+
+tsdge.human <- lapply(sp.human, function(x){
+  topSpliceDGE(x, test = "simes", number = Inf)
+})
+tsdge.human.tx <- lapply(sp.human, function(x){
+  topSpliceDGE(x, test = "exon", number = Inf)
+})
+DTU.gene.human.edgeR <- lapply(tsdge.human, function(x){
+  x$GeneID[x$FDR < 0.05]
+})
+DTU.tx.human.edgeR <- lapply(tsdge.human.tx, function(x){
+  x$ExonID[x$FDR < 0.05]
+})
+```
+### sequin
+
+```{r edgersequin, cache=TRUE}
+qlfit.sequin <- lapply(x.sequin, function(x){
+  design <- model.matrix(~group, x$samples)
+  x.sequin <- estimateDisp(x, design)
+  # plotBCV(x.sequin)
+  qlfit.sequin <- glmQLFit(x.sequin, design)
+  # plotQLDisp(qlfit.sequin)
+  qlfit.sequin
+})
+
+sp.sequin <- lapply(qlfit.sequin, function(x){
+  diffSpliceDGE(x, geneid = x$genes$gene_id, exonid=x$genes$feature_id)
+})
+
+tsdge.sequin <- lapply(sp.sequin, function(x){
+  topSpliceDGE(x, test = "simes", number = Inf)
+})
+tsdge.sequin.tx <- lapply(sp.sequin, function(x){
+  topSpliceDGE(x, test = "exon", number = Inf)
+})
+DTU.gene.sequin.edgeR <- lapply(tsdge.sequin, function(x){
+  x$GeneID[x$FDR < 0.05]
+})
+DTU.tx.sequin.edgeR <- lapply(tsdge.sequin.tx, function(x){
+  x$ExonID[x$FDR < 0.05]
+})
+```
+
+## satuRn
+
+### human
+
+```{r saturnhuman, cache=TRUE}
+# counts.human <- counts(ddata.human)[,-c(1:2)]
+# rownames(counts.human) <- counts(ddata.human)$feature_id
+
+sumExp.human <- lapply(d.human, function(x){
+  counts <- counts(x)[,-c(1,2)]
+  rownames(counts) <- counts(x)[,2]
+  sumExp.human <- SummarizedExperiment(
+    assays = list(counts = counts),
+    colData = x@samples,
+    rowData = data.frame(
+      gene_id = counts(x)[,1],
+      isoform_id = counts(x)[,2]
+    )
+  )
+  # colData(sumExp.human)$group <- factor(colData(sumExp.human)$group)
+  metadata(sumExp.human)$formula <- ~ as.factor(colData(sumExp.human)$group)
+  sumExp.human <- fitDTU(object = sumExp.human,
+                         formula=~0+group)
+  design <- model.matrix(~0+group, data=colData(sumExp.human))
+  # contr <- paste("group", x[1], "-group", x[2], sep = "")
+  levels <- as.character(unique(x@samples$group))
+  contr <- paste("group", levels[1], "-group", levels[2], sep = "")
+  contr <- makeContrasts(contrasts=contr, levels=colnames(design))
+  sumExp.human <- testDTU(object = sumExp.human, contrasts = contr)
+  sumExp.human
+})
+
+# contr <- makeContrasts(BvsA=HCC827-H1975, levels=colnames(design))
+
+saturnres.human <- lapply(sumExp.human, function(x){
+  name <- names(rowData(x))[4]
+  rowData(x)[[name]]
+})
+
+# Compute gene level q-values
+qScreen.human <- lapply(sumExp.human, function(x){
+  name <- names(rowData(x))[4]
+  pvals.human <- rowData(x)[[name]]$pval
+  geneID <- factor(rowData(x)$gene_id)
+  geneSplit <- split(seq(along = geneID), geneID)
+  pGene.human <- sapply(geneSplit, function(i) min(pvals.human[i]))
+  pGene.human[is.na(pGene.human)] <- 1
+  theta <- unique(sort(pGene.human))
+  # gene-level significance testing
+  q.human <- DEXSeq:::perGeneQValueExact(pGene.human, theta, geneSplit) 
+  qScreen.human <- rep(NA_real_, length(pGene.human))
+  qScreen.human <- q.human[match(pGene.human, theta)]
+  qScreen.human <- pmin(1, qScreen.human)
+  names(qScreen.human) <- names(geneSplit)
+  return(qScreen.human)
+})
+
+DTU.gene.human.satuRn <- lapply(qScreen.human, function(x){
+  names(x)[x<0.05]
+})
+DTU.tx.human.satuRn <- lapply(saturnres.human, function(x){
+  rownames(x)[x$regular_FDR<0.05]
+})
+```
+
+### sequin
+
+```{r saturnsequin, cache=TRUE}
+# counts.sequin <- counts(ddata.sequin)[,-c(1:2)]
+# rownames(counts.sequin) <- counts(ddata.sequin)$feature_id
+
+sumExp.sequin <- lapply(d.sequin, function(x){
+  counts <- counts(x)[,-c(1,2)]
+  rownames(counts) <- counts(x)[,2]
+  sumExp.sequin <- SummarizedExperiment(
+    assays = list(counts = counts),
+    colData = x@samples,
+    rowData = data.frame(
+      gene_id = counts(x)[,1],
+      isoform_id = counts(x)[,2]
+    )
+  )
+  # colData(sumExp.sequin)$group <- factor(colData(sumExp.sequin)$group)
+  metadata(sumExp.sequin)$formula <- ~ as.factor(colData(sumExp.sequin)$group)
+  sumExp.sequin <- fitDTU(object = sumExp.sequin,
+                         formula=~0+group)
+  design <- model.matrix(~0+group, data=colData(sumExp.sequin))
+  # contr <- paste("group", x[1], "-group", x[2], sep = "")
+  levels <- as.character(unique(x@samples$group))
+  contr <- paste("group", levels[1], "-group", levels[2], sep = "")
+  contr <- makeContrasts(contrasts=contr, levels=colnames(design))
+  sumExp.sequin <- testDTU(object = sumExp.sequin, contrasts = contr)
+  sumExp.sequin
+})
+
+# contr <- makeContrasts(BvsA=HCC827-H1975, levels=colnames(design))
+
+saturnres.sequin <- lapply(sumExp.sequin, function(x){
+  name <- names(rowData(x))[4]
+  rowData(x)[[name]]
+})
+
+# Compute gene level q-values
+qScreen.sequin <- lapply(sumExp.sequin, function(x){
+  name <- names(rowData(x))[4]
+  pvals.sequin <- rowData(x)[[name]]$pval
+  geneID <- factor(rowData(x)$gene_id)
+  geneSplit <- split(seq(along = geneID), geneID)
+  pGene.sequin <- sapply(geneSplit, function(i) min(pvals.sequin[i]))
+  pGene.sequin[is.na(pGene.sequin)] <- 1
+  theta <- unique(sort(pGene.sequin))
+  # gene-level significance testing
+  q.sequin <- DEXSeq:::perGeneQValueExact(pGene.sequin, theta, geneSplit) 
+  qScreen.sequin <- rep(NA_real_, length(pGene.sequin))
+  qScreen.sequin <- q.sequin[match(pGene.sequin, theta)]
+  qScreen.sequin <- pmin(1, qScreen.sequin)
+  names(qScreen.sequin) <- names(geneSplit)
+  return(qScreen.sequin)
+})
+
+DTU.gene.sequin.satuRn <- lapply(qScreen.sequin, function(x){
+  names(x)[x<0.05]
+})
+DTU.tx.sequin.satuRn <- lapply(saturnres.sequin, function(x){
+  rownames(x)[x$regular_FDR<0.05]
+})
+```
+
+## Compare results
+
+### Calculate recovery rate
+
+```{r}
+calcRecovery <- function(DE){
+  tmp <- sapply(2:length(DE), function(x){
+    sum(DE[[1]] %in% DE[[x]])
+  }, simplify=TRUE)
+  c(length(DE[[1]]), tmp)/length(DE[[1]])
+}
+
+# Human gene
+rec.human.gene <- sapply(list(DTU.gene.human.DEXSeq, DTU.gene.human.DRIMSeq, DTU.gene.human.edgeR, DTU.gene.human.limma, DTU.gene.human.satuRn),
+                         calcRecovery,
+                         simplify = TRUE)
+rownames(rec.human.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(rec.human.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+library(data.table)
+rec.human.gene <- melt(rec.human.gene)
+colnames(rec.human.gene) <- c("Comparison", "Method", "Recovery rate")
+
+pdf(file.path(OUT, "humanGeneRecovery.pdf"), height = 5, width = 8)
+ggplot(rec.human.gene, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+# Human transcript
+rec.human.tx <- sapply(list(DTU.tx.human.DEXSeq, DTU.tx.human.DRIMSeq, DTU.tx.human.edgeR, DTU.tx.human.limma, DTU.tx.human.satuRn),
+                         calcRecovery,
+                         simplify = TRUE)
+rownames(rec.human.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(rec.human.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+rec.human.tx <- melt(rec.human.tx)
+colnames(rec.human.tx) <- c("Comparison", "Method", "Recovery rate")
+
+pdf(file.path(OUT, "humanTranscriptRecovery.pdf"), height = 5, width = 8)
+ggplot(rec.human.tx, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+# Sequin gene
+rec.sequin.gene <- sapply(list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+                         calcRecovery,
+                         simplify = TRUE)
+rownames(rec.sequin.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(rec.sequin.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+rec.sequin.gene <- melt(rec.sequin.gene)
+colnames(rec.sequin.gene) <- c("Comparison", "Method", "Recovery rate")
+
+pdf(file.path(OUT, "sequinGeneRecovery.pdf"), height = 5, width = 8)
+ggplot(rec.sequin.gene, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+# Sequin transcript
+rec.sequin.tx <- sapply(list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+                         calcRecovery,
+                         simplify = TRUE)
+rownames(rec.sequin.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(rec.sequin.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+rec.sequin.tx <- melt(rec.sequin.tx)
+colnames(rec.sequin.tx) <- c("Comparison", "Method", "Recovery rate")
+
+pdf(file.path(OUT, "sequinTranscriptRecovery.pdf"), height = 5, width = 8)
+ggplot(rec.sequin.tx, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+```
+
+### Calculate inconsistancy rate
+```{r}
+calcInconsistancy <- function(DE){
+  tmp <- sapply(1:length(DE), function(x){
+    sum(!(DE[[x]] %in% DE[[1]]))
+  }, simplify=TRUE)
+  tmp/length(DE[[1]])
+}
+
+# Human gene
+inc.human.gene <- sapply(list(DTU.gene.human.DEXSeq, DTU.gene.human.DRIMSeq, DTU.gene.human.edgeR, DTU.gene.human.limma, DTU.gene.human.satuRn),
+                         calcInconsistancy,
+                         simplify = TRUE)
+rownames(inc.human.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(inc.human.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+library(data.table)
+inc.human.gene <- melt(inc.human.gene)
+colnames(inc.human.gene) <- c("Comparison", "Method", "Inconsistancy rate")
+
+pdf(file.path(OUT, "humanGeneInconsistancy.pdf"), height = 5, width = 8)
+ggplot(inc.human.gene, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+# Human transcript
+inc.human.tx <- sapply(list(DTU.tx.human.DEXSeq, DTU.tx.human.DRIMSeq, DTU.tx.human.edgeR, DTU.tx.human.limma, DTU.tx.human.satuRn),
+                         calcInconsistancy,
+                         simplify = TRUE)
+rownames(inc.human.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(inc.human.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+inc.human.tx <- melt(inc.human.tx)
+colnames(inc.human.tx) <- c("Comparison", "Method", "Inconsistancy rate")
+
+pdf(file.path(OUT, "humanTranscriptInconsistancy.pdf"), height = 5, width = 8)
+ggplot(inc.human.tx, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+# Sequin gene
+inc.sequin.gene <- sapply(list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+                         calcInconsistancy,
+                         simplify = TRUE)
+rownames(inc.sequin.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(inc.sequin.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+inc.sequin.gene <- melt(inc.sequin.gene)
+colnames(inc.sequin.gene) <- c("Comparison", "Method", "Inconsistancy rate")
+
+pdf(file.path(OUT, "sequinGeneInconsistancy.pdf"), height = 5, width = 8)
+ggplot(inc.sequin.gene, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+# Sequin transcript
+inc.sequin.tx <- sapply(list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+                         calcInconsistancy,
+                         simplify = TRUE)
+rownames(inc.sequin.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(inc.sequin.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+inc.sequin.tx <- melt(inc.sequin.tx)
+colnames(inc.sequin.tx) <- c("Comparison", "Method", "Inconsistancy rate")
+
+pdf(file.path(OUT, "sequinTranscriptInconsistancy.pdf"), height = 5, width = 8)
+ggplot(inc.sequin.tx, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+```
+
+### Calculate power (number of DTU)
+```{r}
+# Human gene
+power.human.gene <- sapply(list(DTU.gene.human.DEXSeq, DTU.gene.human.DRIMSeq, DTU.gene.human.edgeR, DTU.gene.human.limma, DTU.gene.human.satuRn),
+                         function(x){sapply(x, length, simplify = TRUE)},
+                         simplify = TRUE)
+rownames(power.human.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(power.human.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+library(data.table)
+power.human.gene <- melt(power.human.gene)
+colnames(power.human.gene) <- c("Comparison", "Method", "Number of DTU")
+
+pdf(file.path(OUT, "humanGenePower.pdf"), height = 5, width = 8)
+ggplot(power.human.gene, aes(x=Comparison, y=`Number of DTU`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+# Human transcript
+power.human.tx <- sapply(list(DTU.tx.human.DEXSeq, DTU.tx.human.DRIMSeq, DTU.tx.human.edgeR, DTU.tx.human.limma, DTU.tx.human.satuRn),
+                         function(x){sapply(x, length, simplify = TRUE)},
+                         simplify = TRUE)
+rownames(power.human.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(power.human.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+power.human.tx <- melt(power.human.tx)
+colnames(power.human.tx) <- c("Comparison", "Method", "Number of DTU")
+
+pdf(file.path(OUT, "humanTranscriptPower.pdf"), height = 5, width = 8)
+ggplot(power.human.tx, aes(x=Comparison, y=`Number of DTU`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+# Sequin gene
+power.sequin.gene <- sapply(list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+                         function(x){sapply(x, length, simplify = TRUE)},
+                         simplify = TRUE)
+rownames(power.sequin.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(power.sequin.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+power.sequin.gene <- melt(power.sequin.gene)
+colnames(power.sequin.gene) <- c("Comparison", "Method", "Number of DTU")
+
+pdf(file.path(OUT, "sequinGenePower.pdf"), height = 5, width = 8)
+ggplot(power.sequin.gene, aes(x=Comparison, y=`Number of DTU`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+
+# Sequin transcript
+power.sequin.tx <- sapply(list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+                         function(x){sapply(x, length, simplify = TRUE)},
+                         simplify = TRUE)
+rownames(power.sequin.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
+colnames(power.sequin.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+power.sequin.tx <- melt(power.sequin.tx)
+colnames(power.sequin.tx) <- c("Comparison", "Method", "Number of DTU")
+
+pdf(file.path(OUT, "sequinTranscriptPower.pdf"), height = 5, width = 8)
+ggplot(power.sequin.tx, aes(x=Comparison, y=`Number of DTU`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
+dev.off()
+```
+
+```{r}
+numDTU.gene <- rbind(power.human.gene, power.sequin.gene)
+numDTU.gene <- numDTU.gene[numDTU.gene$Comparison == "100vs000", ]
+numDTU.gene$Gene <- rep(c("Human", "Sequin"), c(5, 5))
+
+pdf(file.path(OUT, "numDTUgene.pdf"), height = 5, width = 8)
+ggplot(numDTU.gene, aes(x=Method, y=`Number of DTU`, fill=Gene))+
+  geom_bar(stat="identity") +
+  theme_bw() +
+  scale_fill_manual(values=c("#D39394", "#71838F")) +
+  theme(text = element_text(size = 20))
+dev.off()
+
+numDTU.tx <- rbind(power.human.tx, power.sequin.tx)
+numDTU.tx <- numDTU.tx[numDTU.tx$Comparison == "100vs000", ]
+numDTU.tx$Transcript <- rep(c("Human", "Sequin"), c(5, 5))
+
+pdf(file.path(OUT, "numDTUtranscript.pdf"), height = 5, width = 8)
+ggplot(numDTU.tx, aes(x=Method, y=`Number of DTU`, fill=Transcript))+
+  geom_bar(stat="identity") +
+  theme_bw() +
+  scale_fill_manual(values=c("#D39394", "#71838F")) +
+  theme(text = element_text(size = 20))
+dev.off()
+```
+
+
+### sequin FDR and TPR
+
+```{r}
+annodir <- "/wehisan/home/allstaff/d/dong.x/annotation/sequins"
+anno <- read.delim(file.path(annodir, "rnasequin_isoforms_2.4.tsv"), sep = "\t", stringsAsFactors = FALSE)
+geneanno <- read.delim(file.path(annodir, "rnasequin_genes_2.4.tsv"), sep = "\t", stringsAsFactors = FALSE)
+# calculate annotate proportion
+# proportion <- data.frame(txID = anno$NAME)
+# tx2gene <- limma::strsplit2(proportion$txID, "_")
+# tx2gene <-  paste(tx2gene[,1], tx2gene[,2], sep="_")
+# proportion$geneID <- tx2gene
+# m <- match(proportion$geneID, geneanno$NAME)
+# proportion$MIX_A <- anno$MIX_A / geneanno$MIX_A[m]
+# proportion$MIX_B <- anno$MIX_B / geneanno$MIX_B[m]
+# proportion$FC <- proportion$MIX_A / proportion$MIX_B
+# proportion$isChanges <- FALSE
+# proportion$isChanges[abs(proportion$FC-1) > 0.001] <- TRUE
+# saveRDS(proportion, file="proportion.RDS")
+proportion <- readRDS("proportion.RDS")
+
+trueDTU.gene <- unique(proportion$geneID[proportion$isChanges==TRUE])
+trueDTU.transcript <- proportion$txID[proportion$isChanges==TRUE]
+```
+
+#### FDR and TPR
+
+```{r}
+calcFDR <- function(DE, trueDE){
+  sapply(DE, function(x){
+    FD = sum(!(x %in% trueDE))
+    FD / length(x)
+  }, simplify=TRUE)
+}
+
+FDR.sequin.gene <- as.data.frame(sapply(
+  list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+  function(x){calcFDR(x, trueDTU.gene)},
+  simplify=TRUE
+))
+colnames(FDR.sequin.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+FDR.sequin.gene <- melt(FDR.sequin.gene, variable.name = "Method", value.name = "False discovery rate")
+FDR.sequin.gene$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+pdf(file.path(OUT, "sequinGeneFDR.pdf"), height = 4)
+ggplot(FDR.sequin.gene, aes(x=Comparison, y=`False discovery rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))
+dev.off()
+
+FDR.sequin.tx <- as.data.frame(sapply(
+  list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+  function(x){calcFDR(x, trueDTU.transcript)},
+  simplify=TRUE
+))
+colnames(FDR.sequin.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+FDR.sequin.tx <- melt(FDR.sequin.tx, variable.name = "Method", value.name = "False discovery rate")
+FDR.sequin.tx$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+pdf(file.path(OUT, "sequinTranscriptFDR.pdf"), height = 4)
+ggplot(FDR.sequin.tx, aes(x=Comparison, y=`False discovery rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))
+dev.off()
+```
+
+```{r}
+calcTPR <- function(DE, trueDE){
+  sapply(DE, function(x){
+    TP = sum(x %in% trueDE)
+    TP / length(trueDE)
+  }, simplify=TRUE)
+}
+
+TPR.sequin.gene <- as.data.frame(sapply(
+  list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+  function(x){calcTPR(x, trueDTU.gene)},
+  simplify=TRUE
+))
+colnames(TPR.sequin.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+TPR.sequin.gene <- melt(TPR.sequin.gene, variable.name = "Method", value.name = "True positive rate")
+TPR.sequin.gene$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+pdf(file.path(OUT, "sequinGeneTPR.pdf"), height = 4)
+ggplot(TPR.sequin.gene, aes(x=Comparison, y=`True positive rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))
+dev.off()
+
+TPR.sequin.tx <- as.data.frame(sapply(
+  list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+  function(x){calcTPR(x, trueDTU.transcript)},
+  simplify=TRUE
+))
+colnames(TPR.sequin.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
+TPR.sequin.tx <- melt(TPR.sequin.tx, variable.name = "Method", value.name = "True positive rate")
+TPR.sequin.tx$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
+pdf(file.path(OUT, "sequinTranscriptTPR.pdf"), height = 4)
+ggplot(TPR.sequin.tx, aes(x=Comparison, y=`True positive rate`, colour=Method, group=Method)) +
+  geom_line() +
+  geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
+  theme_bw() +
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))
+dev.off()
+```
+
+
+```{r}
+save.image("DTU_mix.RData")
+sessionInfo()
+```
+
