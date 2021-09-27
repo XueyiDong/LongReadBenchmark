@@ -54,7 +54,7 @@ txdf <- readRDS("txdf.RDS")
 ## DRIMSeq
 
 ### human
-```{r DRIMSeq, echo=TRUE, eval=TRUE, cache=TRUE}
+```{r DRIMSeq, echo=TRUE, eval=FALSE, cache=TRUE}
 samples <- data.frame(
   sample_id = samples,
   group = rep(c("000", "100", "075", "050", "025"), rep(3, 5)),
@@ -124,43 +124,43 @@ DTU.tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
 ```
 
 ```{r DRIMSeq2, echo=FALSE, eval=TRUE}
-# samples <- data.frame(
-#   sample_id = samples,
-#   group = rep(c("000", "100", "075", "050", "025"), rep(3, 5)),
-#   stringsAsFactors = FALSE
-# )
-# samples$group <- as.factor(samples$group)
-# counts <- as.data.frame(txi$counts, stringAsFactors = FALSE)
-# # deal with gene names
-# genes <- rownames(counts)
-# genes <- strsplit2(genes, "|", fixed=TRUE)
-# rownames(counts) <- genes[,1]
-# counts <- counts[match(txdf$TXNAME, rownames(counts)),]
-# counts <- cbind(txdf$GENEID, txdf$TXNAME, counts)
-# colnames(counts)[3:ncol(counts)] <- make.names(colnames(counts)[3:ncol(counts)])
-# colnames(counts) <- c("gene_id", "feature_id", samples$sample_id)
-# 
-# comparison <- list(
-#   c100vs0=c("100", "000"),
-#   c75vs25=c("075", "025"),
-#   c50vs25=c("050", "025"),
-#   c75vs50=c("075", "050")
-# )
-# 
-# human.gene <- grep("^ENSG", counts$gene_id)
-# sequin.gene <- grep("^R", counts$gene_id)
-# 
-# d.human <- readRDS("d.human.RDS")
-# drres.human <- lapply(d.human, DRIMSeq::results)
-# drres.txp.human <- lapply(d.human, 
-#                   function(x){DRIMSeq::results(x, level = "feature")})
-# 
-# DTU.gene.human.DRIMSeq <- lapply(drres.human, function(x){
-#   x$gene_id[x$adj_pvalue < 0.05]
-# })
-# DTU.tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
-#   x$feature_id[x$adj_pvalue < 0.05]
-# })
+samples <- data.frame(
+  sample_id = samples,
+  group = rep(c("000", "100", "075", "050", "025"), rep(3, 5)),
+  stringsAsFactors = FALSE
+)
+samples$group <- as.factor(samples$group)
+counts <- as.data.frame(txi$counts, stringAsFactors = FALSE)
+# deal with gene names
+genes <- rownames(counts)
+genes <- strsplit2(genes, "|", fixed=TRUE)
+rownames(counts) <- genes[,1]
+counts <- counts[match(txdf$TXNAME, rownames(counts)),]
+counts <- cbind(txdf$GENEID, txdf$TXNAME, counts)
+colnames(counts)[3:ncol(counts)] <- make.names(colnames(counts)[3:ncol(counts)])
+colnames(counts) <- c("gene_id", "feature_id", samples$sample_id)
+
+comparison <- list(
+  c100vs0=c("100", "000"),
+  c75vs25=c("075", "025"),
+  c50vs25=c("050", "025"),
+  c75vs50=c("075", "050")
+)
+
+human.gene <- grep("^ENSG", counts$gene_id)
+sequin.gene <- grep("^R", counts$gene_id)
+
+d.human <- readRDS("d.human.RDS")
+drres.human <- lapply(d.human, DRIMSeq::results)
+drres.txp.human <- lapply(d.human,
+                  function(x){DRIMSeq::results(x, level = "feature")})
+
+DTU.gene.human.DRIMSeq <- lapply(drres.human, function(x){
+  x$gene_id[x$adj_pvalue < 0.05]
+})
+DTU.tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
+  x$feature_id[x$adj_pvalue < 0.05]
+})
 ```
 
 
@@ -861,7 +861,7 @@ geneanno <- read.delim(file.path(annodir, "rnasequin_genes_2.4.tsv"), sep = "\t"
 # proportion$isChanges <- FALSE
 # proportion$isChanges[abs(proportion$FC-1) > 0.001] <- TRUE
 # saveRDS(proportion, file="proportion.RDS")
-proportion <- readRDS("proportion.RDS")
+proportion <- readRDS("../ONT/proportion.RDS")
 
 trueDTU.gene <- unique(proportion$geneID[proportion$isChanges==TRUE])
 trueDTU.transcript <- proportion$txID[proportion$isChanges==TRUE]
