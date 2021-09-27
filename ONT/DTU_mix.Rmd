@@ -1,7 +1,7 @@
 ---
-title: "DTU in-silico mixture analysis"
+title: "DTU in-silico mixture analysis for ONT"
 author: "Xueyi Dong"
-date: "30/08/2021"
+date: "27/09/2021"
 output: html_document
 ---
 
@@ -24,7 +24,7 @@ OUT="./DTUmix"
 
 ## Load salmon quantification
 
-```{r}
+```{r loadQuan, echo=TRUE, eval=FALSE}
 # Load Salmon quant TPM data
 samples <-list.files("salmon_bs")
 quant <- file.path("./salmon_bs", samples, "quant.sf")
@@ -41,6 +41,13 @@ tab <- table(txdf$GENEID)
 txdf$ntx <- tab[match(txdf$GENEID, names(tab))]
 saveRDS(txdf, "txdf.RDS")
 
+```
+
+```{r readload, echo=FALSE, eval=TRUE}
+samples <-list.files("salmon_bs")
+quant <- file.path("./salmon_bs", samples, "quant.sf")
+txi <- readRDS("txi.RDS")
+txdf <- readRDS("txdf.RDS")
 ```
 
 ## DRIMSeq
@@ -158,7 +165,7 @@ DTU.tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
 
 ### sequin
 
-```{r}
+```{r drimsequin, cache=TRUE}
 ddata.sequin <- dmDSdata(counts = counts[sequin.gene,], samples = samples)
 ddata.sequin <- dmFilter(ddata.sequin, min_samps_gene_expr = 15, min_samps_feature_expr = 3, 
               min_gene_expr = 10, min_feature_expr = 10, 
@@ -199,7 +206,7 @@ DTU.tx.sequin.DRIMSeq <- lapply(drres.txp.sequin, function(x){
 
 ### human
 
-```{r}
+```{r dexhuman, cache=TRUE}
 # human, using DRIMSeq filtered results
 # dxd.human <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.human)[,-c(1:2)])),
 #                      sampleData=samples,
@@ -250,7 +257,7 @@ DTU.tx.human.DEXSeq <- lapply(dxr.human, function(x){
 
 ### sequin
 
-```{r}
+```{r dexsequin, cache=TRUE}
 # sequin, using DRIMSeq filtered results
 # dxd.sequin <- DEXSeqDataSet(countData = round(as.matrix(counts(ddata.sequin)[,-c(1:2)])),
 #                      sampleData=samples,
@@ -301,7 +308,7 @@ DTU.tx.sequin.DEXSeq <- lapply(dxr.sequin, function(x){
 
 ### human
 
-```{r}
+```{r limmahuman, cache=TRUE}
 
 x.human <- lapply(d.human, function(x){
   data.counts <- counts(x)[,-c(1:2)]
@@ -339,7 +346,7 @@ DTU.tx.human.limma <- lapply(ts.human.tx, function(x){
 
 ### sequin
 
-```{r}
+```{r limmasequin, cache=TRUE}
 # also using DRIMSeq filtered results
 x.sequin <- lapply(d.sequin, function(x){
   data.counts <- counts(x)[,-c(1:2)]
@@ -378,7 +385,7 @@ DTU.tx.sequin.limma <- lapply(ts.sequin.tx, function(x){
 
 ### human
 
-```{r}
+```{r edgerhuman, cache=TRUE}
 qlfit.human <- lapply(x.human, function(x){
   design <- model.matrix(~group, x$samples)
   x.human <- estimateDisp(x, design)
@@ -407,7 +414,7 @@ DTU.tx.human.edgeR <- lapply(tsdge.human.tx, function(x){
 ```
 ### sequin
 
-```{r}
+```{r edgersequin, cache=TRUE}
 qlfit.sequin <- lapply(x.sequin, function(x){
   design <- model.matrix(~group, x$samples)
   x.sequin <- estimateDisp(x, design)
@@ -439,7 +446,7 @@ DTU.tx.sequin.edgeR <- lapply(tsdge.sequin.tx, function(x){
 
 ### human
 
-```{r}
+```{r saturnhuman, cache=TRUE}
 # counts.human <- counts(ddata.human)[,-c(1:2)]
 # rownames(counts.human) <- counts(ddata.human)$feature_id
 
@@ -502,7 +509,7 @@ DTU.tx.human.satuRn <- lapply(saturnres.human, function(x){
 
 ### sequin
 
-```{r}
+```{r saturnsequin, cache=TRUE}
 # counts.sequin <- counts(ddata.sequin)[,-c(1:2)]
 # rownames(counts.sequin) <- counts(ddata.sequin)$feature_id
 
