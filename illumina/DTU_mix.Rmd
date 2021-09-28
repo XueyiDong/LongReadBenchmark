@@ -573,6 +573,23 @@ DTU.tx.sequin.satuRn <- lapply(saturnres.sequin, function(x){
 
 ## Compare results
 
+
+```{r}
+DTU.gene.human <- list(
+  DTU.gene.human.DEXSeq, DTU.gene.human.DRIMSeq, DTU.gene.human.edgeR, DTU.gene.human.limma, DTU.gene.human.satuRn
+)
+DTU.tx.human <- list(
+  DTU.tx.human.DEXSeq, DTU.tx.human.DRIMSeq, DTU.tx.human.edgeR, DTU.tx.human.limma, DTU.tx.human.satuRn
+  )
+DTU.gene.sequin <- list(
+  DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn
+)
+DTU.tx.sequin <- list(
+  DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn
+)
+```
+
+
 ### Calculate recovery rate
 
 ```{r}
@@ -584,7 +601,7 @@ calcRecovery <- function(DE){
 }
 
 # Human gene
-rec.human.gene <- sapply(list(DTU.gene.human.DEXSeq, DTU.gene.human.DRIMSeq, DTU.gene.human.edgeR, DTU.gene.human.limma, DTU.gene.human.satuRn),
+rec.human.gene <- sapply(DTU.gene.human,
                          calcRecovery,
                          simplify = TRUE)
 rownames(rec.human.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -603,7 +620,7 @@ ggplot(rec.human.gene, aes(x=Comparison, y=`Recovery rate`, colour=Method, group
 dev.off()
 
 # Human transcript
-rec.human.tx <- sapply(list(DTU.tx.human.DEXSeq, DTU.tx.human.DRIMSeq, DTU.tx.human.edgeR, DTU.tx.human.limma, DTU.tx.human.satuRn),
+rec.human.tx <- sapply(DTU.tx.human,
                          calcRecovery,
                          simplify = TRUE)
 rownames(rec.human.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -621,7 +638,7 @@ ggplot(rec.human.tx, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=M
 dev.off()
 
 # Sequin gene
-rec.sequin.gene <- sapply(list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+rec.sequin.gene <- sapply(DTU.gene.sequin,
                          calcRecovery,
                          simplify = TRUE)
 rownames(rec.sequin.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -639,7 +656,7 @@ ggplot(rec.sequin.gene, aes(x=Comparison, y=`Recovery rate`, colour=Method, grou
 dev.off()
 
 # Sequin transcript
-rec.sequin.tx <- sapply(list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+rec.sequin.tx <- sapply(DTU.tx.sequin,
                          calcRecovery,
                          simplify = TRUE)
 rownames(rec.sequin.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -667,7 +684,7 @@ calcInconsistancy <- function(DE){
 }
 
 # Human gene
-inc.human.gene <- sapply(list(DTU.gene.human.DEXSeq, DTU.gene.human.DRIMSeq, DTU.gene.human.edgeR, DTU.gene.human.limma, DTU.gene.human.satuRn),
+inc.human.gene <- sapply(DTU.gene.human,
                          calcInconsistancy,
                          simplify = TRUE)
 rownames(inc.human.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -686,7 +703,7 @@ ggplot(inc.human.gene, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, 
 dev.off()
 
 # Human transcript
-inc.human.tx <- sapply(list(DTU.tx.human.DEXSeq, DTU.tx.human.DRIMSeq, DTU.tx.human.edgeR, DTU.tx.human.limma, DTU.tx.human.satuRn),
+inc.human.tx <- sapply(DTU.tx.human,
                          calcInconsistancy,
                          simplify = TRUE)
 rownames(inc.human.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -704,7 +721,7 @@ ggplot(inc.human.tx, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, gr
 dev.off()
 
 # Sequin gene
-inc.sequin.gene <- sapply(list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+inc.sequin.gene <- sapply(DTU.gene.sequin,
                          calcInconsistancy,
                          simplify = TRUE)
 rownames(inc.sequin.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -722,7 +739,7 @@ ggplot(inc.sequin.gene, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method,
 dev.off()
 
 # Sequin transcript
-inc.sequin.tx <- sapply(list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+inc.sequin.tx <- sapply(DTU.tx.sequin,
                          calcInconsistancy,
                          simplify = TRUE)
 rownames(inc.sequin.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -743,7 +760,7 @@ dev.off()
 ### Calculate power (number of DTU)
 ```{r}
 # Human gene
-power.human.gene <- sapply(list(DTU.gene.human.DEXSeq, DTU.gene.human.DRIMSeq, DTU.gene.human.edgeR, DTU.gene.human.limma, DTU.gene.human.satuRn),
+power.human.gene <- sapply(DTU.gene.human,
                          function(x){sapply(x, length, simplify = TRUE)},
                          simplify = TRUE)
 rownames(power.human.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -762,7 +779,7 @@ ggplot(power.human.gene, aes(x=Comparison, y=`Number of DTU`, colour=Method, gro
 dev.off()
 
 # Human transcript
-power.human.tx <- sapply(list(DTU.tx.human.DEXSeq, DTU.tx.human.DRIMSeq, DTU.tx.human.edgeR, DTU.tx.human.limma, DTU.tx.human.satuRn),
+power.human.tx <- sapply(DTU.tx.human,
                          function(x){sapply(x, length, simplify = TRUE)},
                          simplify = TRUE)
 rownames(power.human.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -780,7 +797,7 @@ ggplot(power.human.tx, aes(x=Comparison, y=`Number of DTU`, colour=Method, group
 dev.off()
 
 # Sequin gene
-power.sequin.gene <- sapply(list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+power.sequin.gene <- sapply(DTU.gene.sequin,
                          function(x){sapply(x, length, simplify = TRUE)},
                          simplify = TRUE)
 rownames(power.sequin.gene) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -798,7 +815,7 @@ ggplot(power.sequin.gene, aes(x=Comparison, y=`Number of DTU`, colour=Method, gr
 dev.off()
 
 # Sequin transcript
-power.sequin.tx <- sapply(list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+power.sequin.tx <- sapply(DTU.tx.sequin,
                          function(x){sapply(x, length, simplify = TRUE)},
                          simplify = TRUE)
 rownames(power.sequin.tx) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -861,7 +878,7 @@ geneanno <- read.delim(file.path(annodir, "rnasequin_genes_2.4.tsv"), sep = "\t"
 # proportion$isChanges <- FALSE
 # proportion$isChanges[abs(proportion$FC-1) > 0.001] <- TRUE
 # saveRDS(proportion, file="proportion.RDS")
-proportion <- readRDS("../ONT/proportion.RDS")
+proportion <- readRDS("proportion.RDS")
 
 trueDTU.gene <- unique(proportion$geneID[proportion$isChanges==TRUE])
 trueDTU.transcript <- proportion$txID[proportion$isChanges==TRUE]
@@ -878,7 +895,7 @@ calcFDR <- function(DE, trueDE){
 }
 
 FDR.sequin.gene <- as.data.frame(sapply(
-  list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+  DTU.gene.sequin,
   function(x){calcFDR(x, trueDTU.gene)},
   simplify=TRUE
 ))
@@ -894,7 +911,7 @@ ggplot(FDR.sequin.gene, aes(x=Comparison, y=`False discovery rate`, colour=Metho
 dev.off()
 
 FDR.sequin.tx <- as.data.frame(sapply(
-  list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+  DTU.tx.sequin,
   function(x){calcFDR(x, trueDTU.transcript)},
   simplify=TRUE
 ))
@@ -919,7 +936,7 @@ calcTPR <- function(DE, trueDE){
 }
 
 TPR.sequin.gene <- as.data.frame(sapply(
-  list(DTU.gene.sequin.DEXSeq, DTU.gene.sequin.DRIMSeq, DTU.gene.sequin.edgeR, DTU.gene.sequin.limma, DTU.gene.sequin.satuRn),
+  DTU.gene.sequin,
   function(x){calcTPR(x, trueDTU.gene)},
   simplify=TRUE
 ))
@@ -935,7 +952,7 @@ ggplot(TPR.sequin.gene, aes(x=Comparison, y=`True positive rate`, colour=Method,
 dev.off()
 
 TPR.sequin.tx <- as.data.frame(sapply(
-  list(DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn),
+  DTU.tx.sequin,
   function(x){calcTPR(x, trueDTU.transcript)},
   simplify=TRUE
 ))
@@ -950,6 +967,13 @@ ggplot(TPR.sequin.tx, aes(x=Comparison, y=`True positive rate`, colour=Method, g
   scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))
 dev.off()
 ```
+```{r}
+saveRDS(DTU.gene.human, file = file.path(OUT, "DTU.gene.human.RDS"))
+saveRDS(DTU.tx.human, file.path(OUT, "DTU.tx.human.RDS"))
+saveRDS(DTU.gene.sequin, file.path(OUT, "DTU.gene.sequin.RDS"))
+saveRDS(DTU.tx.sequin, file.path(OUT, "DTU.tx.sequin.RDS"))
+```
+
 
 
 ```{r}
