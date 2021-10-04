@@ -70,3 +70,31 @@ for(i in 1:5){
     alpha = 0.4
   )
 }
+
+# upset plot for long vs short 100 vs 000
+# human
+DE.human.illumina.100vs000 <- lapply(DE.human.illumina, function(x){
+  return(x[[1]])
+})
+names(DE.human.illumina.100vs000) <- paste(c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq"), "Illumina", sep = "_")
+DE.human.ONT.100vs000 <- lapply(DE.human.ONT, function(x){
+  return(x[[1]])
+})
+names(DE.human.ONT.100vs000) <- paste(c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq"), "ONT", sep = "_")
+library(UpSetR)
+pdf("plots/DTEhumanUpset.pdf", height = 5, width = 8)
+upset(fromList(append(DE.human.illumina.100vs000, DE.human.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
+dev.off()
+
+# sequin
+DE.sequin.illumina.100vs000 <- lapply(DE.sequin.illumina, function(x){
+  return(x[[1]])
+})
+names(DE.sequin.illumina.100vs000) <- paste(c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq"), "Illumina", sep = "_")
+DE.sequin.ONT.100vs000 <- lapply(DE.sequin.ONT, function(x){
+  return(x[[1]])
+})
+names(DE.sequin.ONT.100vs000) <- paste(c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq"), "ONT", sep = "_")
+pdf("plots/DTEsequinUpset.pdf", height = 5, width = 8)
+upset(fromList(append(DE.sequin.illumina.100vs000, DE.sequin.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
+dev.off()

@@ -36,7 +36,7 @@ dge.short$genes$nTranscript <- calcTxNum(rownames(dge.short), grepl("^R", rownam
 overdisp2 <- data.frame(
   Overdispersion = c(dge$genes$Overdispersion, dge.short$genes$Overdispersion),
   Length = c(dge$genes$Length, dge.short$genes$Length),
-  Data = rep(c("long read", "short read"), c(nrow(dge), nrow(dge.short))),
+  Data = rep(c("ONT long read", "Illumina short read"), c(nrow(dge), nrow(dge.short))),
   Gene = c(rownames(dge), rownames(dge.short)),
   AveExpr = c(rowSums(dge$counts), rowSums(dge.short$counts)),
   numberTranscript = c(dge$genes$nTranscript, dge.short$genes$nTranscript)
@@ -62,7 +62,7 @@ dge$genes$nTranscript <- calcTxNum(rownames(dge), grepl("^R", rownames(dge)))
 dge.short$genes$nTranscript <- calcTxNum(rownames(dge.short), grepl("^R", rownames(dge.short)))
 overdisp2$numberTranscript <- c(dge$genes$nTranscript, dge.short$genes$nTranscript)
 # scatter plot with colour
-pdf("plots/overdisp.pdf", height = 5)
+pdf("plots/overdisp.pdf", height = 5, width = 8)
 overdisp$numberTranscripts <- dge.short$genes$nTranscript
 ggplot(overdisp, aes(x = Overdispersion.short, y = Overdispersion.long, colour=numberTranscripts)) +
   geom_point() +
@@ -73,20 +73,19 @@ dev.off()
 #stratify by number of transcripts per gene
 maxnum <- max(overdisp2$numberTranscript)
 overdisp2$nTxGroup <- Hmisc::cut2(overdisp2$numberTranscript, cuts = c(1, 2, 6, 11, 21, 51, maxnum))
-pdf("plots/overdispBox.pdf", height = 4)
-ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
-  geom_boxplot(alpha=0.4) +
-  labs(x = "Number of transcripts per gene") +
-  theme_bw()
+pdf("plots/overdispBox.pdf", height = 5, width = 8)
 ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
   geom_boxplot(alpha=0.4) +
   # geom_jitter() +
   labs(x = "Number of transcripts per gene") +
   scale_y_continuous(trans = "log10") +
-  theme_bw()
+  theme_bw()+
+  theme(text = element_text(size = 20)) +
+  scale_fill_manual(values = c("#438DAC", "#FCB344")) +
+  scale_colour_manual(values = c("#438DAC", "#FCB344"))
 dev.off()
 
-pdf("plots/overdispLength.pdf", height = 4)
+pdf("plots/overdispLength.pdf", height = 5, width = 8)
 ggplot(overdisp2[overdisp2$numberTranscript==1,], aes(x=Length, y=Overdispersion)) +
   stat_binhex() +
   scale_x_continuous(trans = "log10") +
