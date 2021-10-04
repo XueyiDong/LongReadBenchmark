@@ -1,7 +1,7 @@
 ---
 title: "Pseudo mixture analysis for differential transcript expression analysis"
 author: "Xueyi Dong"
-date: "14/06/2021"
+date: "28/09/2021"
 output: 
   html_document: 
     toc: yes
@@ -356,6 +356,14 @@ DE.sequin.NOISeq <- lapply(noires.sequin, function(x){
 
 ## Results
 
+```{r}
+DE.human <- list(DE.human.limma, DE.human.edgeR, DE.human.DESeq2, DE.human.EBSeq, DE.human.NOISeq)
+DE.sequin <- list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq)
+saveRDS(DE.human, file.path(OUT, "DE.human.RDS"))
+saveRDS(DE.sequin, file.path(OUT, "DE.sequin.RDS"))
+```
+
+
 ### Calculate recovery rate
 
 ```{r}
@@ -366,7 +374,7 @@ calcRecovery <- function(DE){
   c(length(DE[[1]]), tmp)/length(DE[[1]])
 }
 
-rec.human <- as.data.frame(sapply(list(DE.human.limma, DE.human.edgeR, DE.human.DESeq2, DE.human.EBSeq, DE.human.NOISeq),
+rec.human <- as.data.frame(sapply(DE.human,
                     calcRecovery,
                     simplify = TRUE))
 rownames(rec.human) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -384,7 +392,7 @@ ggplot(rec.human, aes(x=Comparison, y=`Recovery rate`, colour=Method, group=Meth
   theme(text = element_text(size = 20))
 dev.off()
 
-rec.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+rec.sequin <- as.data.frame(sapply(DE.sequin,
                     calcRecovery,
                     simplify = TRUE))
 rownames(rec.sequin) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -413,7 +421,7 @@ calcInconsistancy <- function(DE){
   tmp/length(DE[[1]])
 }
 
-inc.human <- as.data.frame(sapply(list(DE.human.limma, DE.human.edgeR, DE.human.DESeq2, DE.human.EBSeq, DE.human.NOISeq),
+inc.human <- as.data.frame(sapply(DE.human,
                     calcInconsistancy,
                     simplify = TRUE))
 rownames(inc.human) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -431,7 +439,7 @@ ggplot(inc.human, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, group
   theme(text = element_text(size = 20))
 dev.off()
 
-inc.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+inc.sequin <- as.data.frame(sapply(DE.sequin,
                     calcInconsistancy,
                     simplify = TRUE))
 rownames(inc.sequin) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -453,7 +461,7 @@ dev.off()
 ### Power (number of DE genes)
 
 ```{r}
-power.human <- as.data.frame(sapply(list(DE.human.limma, DE.human.edgeR, DE.human.DESeq2, DE.human.EBSeq, DE.human.NOISeq),
+power.human <- as.data.frame(sapply(DE.human,
                     function(x){sapply(x, length, simplify = TRUE)},
                     simplify = TRUE))
 rownames(power.human) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -473,7 +481,7 @@ dev.off()
 ```
 
 ```{r}
-power.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+power.sequin <- as.data.frame(sapply(DE.sequin,
                     function(x){sapply(x, length, simplify = TRUE)},
                     simplify = TRUE))
 rownames(power.sequin) <- c("100vs000", "075vs025", "050vs025", "075vs050")
@@ -503,7 +511,7 @@ calcFDR <- function(DE){
   }, simplify=TRUE)
 }
                     
-FDR.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+FDR.sequin <- as.data.frame(sapply(DE.sequin,
                      calcFDR, 
                      simplify = TRUE))
 
@@ -532,7 +540,7 @@ calcTPR <- function(DE){
   }, simplify=TRUE)
 }
                     
-TPR.sequin <- as.data.frame(sapply(list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq),
+TPR.sequin <- as.data.frame(sapply(DE.sequin,
                      calcTPR, 
                      simplify = TRUE))
 
