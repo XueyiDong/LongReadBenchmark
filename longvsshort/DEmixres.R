@@ -40,7 +40,8 @@ ggplot(DEgenecomp, aes(x=method, y=number, fill=comparison))+
   geom_bar(stat="identity", position="dodge") +
   facet_grid(cols=vars(category)) +
   theme_bw() +
-  theme(text = element_text(size = 20))
+  theme(text = element_text(size = 20)) +
+  scale_fill_manual(values=c("#CB664F", "#D3B1A7", "#8DBFA3", "#DEBA47"))
 dev.off()
 
 # venn diagrams for long vs short of each method 100 vs 000
