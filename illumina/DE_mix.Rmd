@@ -581,46 +581,66 @@ anno$logFC_NOISeq <- -noires.sequin[[1]]$log2FC[match(anno$NAME, rownames(noires
 ```
 
 ```{r}
+lfclm <- lm(anno$logFC~anno$logFC_limma)
+eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
+                 list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 pdf(file.path(OUT, "sequinlogfclimma.pdf"), height = 4)
 ggplot(anno, aes(x=logFC, y=logFC_limma))+
   geom_point() +
   geom_smooth(alpha=0.5, method='lm', formula= y~x) +
+  annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
   theme(text = element_text(size = 20))
 dev.off()
 
+lfclm <- lm(anno$logFC~anno$logFC_edgeR)
+eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
+                 list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 pdf(file.path(OUT, "sequinlogfcedgeR.pdf"), height = 4)
 ggplot(anno, aes(x=logFC, y=logFC_edgeR))+
   geom_point() +
   geom_smooth(alpha=0.5, method='lm', formula= y~x) +
+  annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
   theme(text = element_text(size = 20))
 dev.off()
 
+lfclm <- lm(anno$logFC~anno$logFC_DESeq2)
+eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
+                 list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 pdf(file.path(OUT, "sequinlogfcDESeq2.pdf"), height = 4)
 ggplot(anno, aes(x=logFC, y=logFC_DESeq2))+
   geom_point() +
   geom_smooth(alpha=0.5, method='lm', formula= y~x) +
+  annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
   theme(text = element_text(size = 20))
 dev.off()
 
+lfclm <- lm(anno$logFC~anno$logFC_EBSeq)
+eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
+                 list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 pdf(file.path(OUT, "sequinlogfcEBSeq.pdf"), height = 4)
 ggplot(anno, aes(x=logFC, y=logFC_EBSeq))+
   geom_point() +
-  geom_smooth(alpha=0.5, method='lm', formula= y~x) +
+  geom_smooth(alpha=0.5, method='lm', formula= y~x)+
+  annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
   theme(text = element_text(size = 20))
 dev.off()
 
+lfclm <- lm(anno$logFC~anno$logFC_NOISeq)
+eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
+                 list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 pdf(file.path(OUT, "sequinlogfcNOISeq.pdf"), height = 4)
 ggplot(anno, aes(x=logFC, y=logFC_NOISeq))+
   geom_point() +
   geom_smooth(alpha=0.5, method='lm', formula= y~x) +
+  annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
   theme(text = element_text(size = 20))

@@ -974,65 +974,7 @@ saveRDS(DTU.gene.sequin, file.path(OUT, "DTU.gene.sequin.RDS"))
 saveRDS(DTU.tx.sequin, file.path(OUT, "DTU.tx.sequin.RDS"))
 ```
 
-### Sequin logFC expected vs estimated
 
-Only calculate for pure samples comparisons
-
-```{r}
-GeneFC.sequin = PostFC(EBOut.sequin[[1]])
-anno$logFC_limma <- tt.sequin[[1]]$logFC[match(anno$NAME, tt.sequin[[1]]$TXNAME)]
-anno$logFC_edgeR <- ttag.sequin[[1]]$logFC[match(anno$NAME, ttag.sequin[[1]]$TXNAME)]
-anno$logFC_DESeq2 <- deres.sequin[[1]]$log2FoldChange[match(anno$NAME, rownames(deres.sequin[[1]]))]
-anno$logFC_EBSeq <- -log2(GeneFC.sequin$PostFC)[match(anno$NAME, names(GeneFC.sequin$PostFC))]
-anno$logFC_NOISeq <- -noires.sequin[[1]]$log2FC[match(anno$NAME, rownames(noires.sequin[[1]]))]
-```
-
-```{r}
-pdf(file.path(OUT, "sequinlogfclimma.pdf"), height = 4)
-ggplot(anno, aes(x=logFC, y=logFC_limma))+
-  geom_point() +
-  geom_smooth(alpha=0.5, method='lm', formula= y~x) +
-  # geom_abline(intercept = 0, slope = 1) +
-  theme_bw()+
-  theme(text = element_text(size = 20))
-dev.off()
-
-pdf(file.path(OUT, "sequinlogfcedgeR.pdf"), height = 4)
-ggplot(anno, aes(x=logFC, y=logFC_edgeR))+
-  geom_point() +
-  geom_smooth(alpha=0.5, method='lm', formula= y~x) +
-  # geom_abline(intercept = 0, slope = 1) +
-  theme_bw()+
-  theme(text = element_text(size = 20))
-dev.off()
-
-pdf(file.path(OUT, "sequinlogfcDESeq2.pdf"), height = 4)
-ggplot(anno, aes(x=logFC, y=logFC_DESeq2))+
-  geom_point() +
-  geom_smooth(alpha=0.5, method='lm', formula= y~x) +
-  # geom_abline(intercept = 0, slope = 1) +
-  theme_bw()+
-  theme(text = element_text(size = 20))
-dev.off()
-
-pdf(file.path(OUT, "sequinlogfcEBSeq.pdf"), height = 4)
-ggplot(anno, aes(x=logFC, y=logFC_EBSeq))+
-  geom_point() +
-  geom_smooth(alpha=0.5, method='lm', formula= y~x) +
-  # geom_abline(intercept = 0, slope = 1) +
-  theme_bw()+
-  theme(text = element_text(size = 20))
-dev.off()
-
-pdf(file.path(OUT, "sequinlogfcNOISeq.pdf"), height = 4)
-ggplot(anno, aes(x=logFC, y=logFC_NOISeq))+
-  geom_point() +
-  geom_smooth(alpha=0.5, method='lm', formula= y~x) +
-  # geom_abline(intercept = 0, slope = 1) +
-  theme_bw()+
-  theme(text = element_text(size = 20))
-dev.off()
-```
 
 ```{r}
 save.image("DTU_mix.RData")
