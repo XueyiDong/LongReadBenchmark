@@ -138,6 +138,10 @@ tt.sequin <- lapply(comparison, function(x){
   # dt.sequin <- decideTests(efit.sequin)
   topTable(efit.sequin, coef=ncol(design), n=Inf)
 })
+for(i in 1:4){
+  write.table(tt.sequin[[i]], file = paste(OUT, "/topTableSequin", names(tt.sequin)[i], ".tsv", sep=""),
+              sep = "\t")
+}
 ```
 ### Fit a separate model for human genes
 
@@ -154,6 +158,10 @@ tt.human <- lapply(comparison, function(x){
   # dt.human <- decideTests(efit.human)
   topTable(efit.human, coef=ncol(design), n=Inf)
 })
+for(i in 1:4){
+  write.table(tt.human[[i]], file = paste(OUT, "/topTableHuman", names(tt.human)[i], ".tsv", sep=""),
+              sep = "\t")
+}
 ```
 
 Get DE genes

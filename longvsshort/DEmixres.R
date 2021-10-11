@@ -86,6 +86,12 @@ library(UpSetR)
 pdf("plots/DTEhumanUpset.pdf", height = 5, width = 8)
 upset(fromList(append(DE.human.illumina.100vs000, DE.human.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
 dev.off()
+pdf("plots/DTEhumanUpsetONT.pdf", height = 5, width = 8)
+upset(fromList(DE.human.ONT.100vs000), order.by = "freq")
+dev.off()
+pdf("plots/DTEhumanUpsetIllumina.pdf", height = 5, width = 8)
+upset(fromList(DE.human.illumina.100vs000), order.by = "freq")
+dev.off()
 
 # sequin
 DE.sequin.illumina.100vs000 <- lapply(DE.sequin.illumina, function(x){
@@ -98,4 +104,33 @@ DE.sequin.ONT.100vs000 <- lapply(DE.sequin.ONT, function(x){
 names(DE.sequin.ONT.100vs000) <- paste(c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq"), "ONT", sep = "_")
 pdf("plots/DTEsequinUpset.pdf", height = 5, width = 8)
 upset(fromList(append(DE.sequin.illumina.100vs000, DE.sequin.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
+dev.off()
+
+# long vs short t
+tt.human.ONT <- read.table("../ONT/DTEmix/topTableHumanc100vs0.tsv", sep = "\t", header = T)
+tt.human.illumina <- read.table("../illumina/DTEmix/topTableHumanc100vs0.tsv", sep = "\t", header = T)
+tt.sequin.ONT <- read.table("../ONT/DTEmix/topTableSequinc100vs0.tsv", sep = "\t", header = T)
+tt.sequin.illumina <- read.table("../illumina/DTEmix/topTableSequinc100vs0.tsv", sep = "\t", header = T)
+m <- match(tt.human.illumina$TXNAME, tt.human.ONT$TXNAME)
+m2 <- match(tt.sequin.illumina$TXNAME, tt.sequin.ONT$TXNAME)
+
+t <- data.frame(
+  t.long = c(tt.human.ONT$t[m], tt.sequin.ONT$t[m2]),
+  t.short = c(tt.human.illumina$t, tt.sequin.illumina$t),
+  source = rep(c("human", "sequin"), c(nrow(tt.human.illumina), nrow(tt.sequin.illumina)))
+  
+)
+
+t.lm <- lm(t$t.short ~ t$t.long)
+summary(t.lm)
+
+pdf("plots/t.pdf", height = 5, width = 8)
+ggplot(t, aes(x=t.long, y=t.short)) +
+  stat_binhex() +
+  geom_smooth(method='lm', formula= y~x) +
+  theme_bw() +
+  labs(x="ONT t-statistic", y = "Illumina t-statistic", fill = "Density:\nnumber of \ntranscripts") +
+  annotate(geom="text", x=40, y=100, label="Adj R2 = 0.49\np-value < 2.2e-16", size=6) +
+  scale_fill_viridis(direction = -1, option="A", trans = "log10") +
+  theme(text=element_text(size = 20)) 
 dev.off()
