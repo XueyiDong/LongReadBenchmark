@@ -578,6 +578,11 @@ anno$logFC_edgeR <- ttag.sequin[[1]]$logFC[match(anno$NAME, ttag.sequin[[1]]$TXN
 anno$logFC_DESeq2 <- deres.sequin[[1]]$log2FoldChange[match(anno$NAME, rownames(deres.sequin[[1]]))]
 anno$logFC_EBSeq <- -log2(GeneFC.sequin$PostFC)[match(anno$NAME, names(GeneFC.sequin$PostFC))]
 anno$logFC_NOISeq <- -noires.sequin[[1]]$log2FC[match(anno$NAME, rownames(noires.sequin[[1]]))]
+anno$DE_limma <- anno$NAME %in% DE.sequin.limma[[1]]
+anno$DE_edgeR <- anno$NAME %in% DE.sequin.edgeR[[1]]
+anno$DE_DESeq2 <- anno$NAME %in% DE.sequin.DESeq2[[1]]
+anno$DE_EBSeq <- anno$NAME %in% DE.sequin.EBSeq[[1]]
+anno$DE_NOISeq <- anno$NAME %in% DE.sequin.NOISeq[[1]]
 ```
 
 ```{r}
@@ -586,13 +591,14 @@ eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
                  list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 # pdf(file.path(OUT, "sequinlogfclimma.pdf"), height = 4)
 p1 <- ggplot(anno, aes(x=logFC, y=logFC_limma))+
-  geom_point() +
+  geom_point(aes(colour=DE_limma)) +
   geom_smooth(alpha=0.5, method='lm', formula= y~x) +
   annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
-  theme(text = element_text(size = 20)) +
+  theme(text = element_text(size = 20), legend.position = "none") +
   ggtitle("limma")
+  
 # dev.off()
 
 lfclm <- lm(anno$logFC~anno$logFC_edgeR)
@@ -600,12 +606,12 @@ eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
                  list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 # pdf(file.path(OUT, "sequinlogfcedgeR.pdf"), height = 4)
 p2 <- ggplot(anno, aes(x=logFC, y=logFC_edgeR))+
-  geom_point() +
+  geom_point(aes(colour = DE_edgeR)) +
   geom_smooth(alpha=0.5, method='lm', formula= y~x) +
   annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
-  theme(text = element_text(size = 20)) +
+  theme(text = element_text(size = 20), legend.position = "none") +
   ggtitle("edgeR")
 # dev.off()
 
@@ -614,12 +620,12 @@ eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
                  list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 # pdf(file.path(OUT, "sequinlogfcDESeq2.pdf"), height = 4)
 p3 <- ggplot(anno, aes(x=logFC, y=logFC_DESeq2))+
-  geom_point() +
+  geom_point(aes(colour=DE_DESeq2)) +
   geom_smooth(alpha=0.5, method='lm', formula= y~x) +
   annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
-  theme(text = element_text(size = 20)) +
+  theme(text = element_text(size = 20), legend.position = "none") +
   ggtitle("DESeq2")
 # dev.off()
 
@@ -628,12 +634,12 @@ eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
                  list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 # pdf(file.path(OUT, "sequinlogfcEBSeq.pdf"), height = 4)
 p4 <- ggplot(anno, aes(x=logFC, y=logFC_EBSeq))+
-  geom_point() +
+  geom_point(aes(colour=DE_EBSeq)) +
   geom_smooth(alpha=0.5, method='lm', formula= y~x)+
   annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
-  theme(text = element_text(size = 20)) +
+  theme(text = element_text(size = 20), legend.position = "none") +
   ggtitle("EBSeq")
 # dev.off()
 
@@ -642,17 +648,21 @@ eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
                  list(r2 = format(summary(lfclm)$r.squared, digits = 3)))))
 # pdf(file.path(OUT, "sequinlogfcNOISeq.pdf"), height = 4)
 p5 <- ggplot(anno, aes(x=logFC, y=logFC_NOISeq))+
-  geom_point() +
+  geom_point(aes(colour=DE_NOISeq)) +
   geom_smooth(alpha=0.5, method='lm', formula= y~x) +
   annotate(geom="text", x = -4, y = 8, label = eq, parse = TRUE, size = 6) +
   # geom_abline(intercept = 0, slope = 1) +
   theme_bw()+
   theme(text = element_text(size = 20)) +
-  ggtitle("NOISeq")
+  ggtitle("NOISeq") +
+  labs(colour="is DTE")
 # dev.off()
 
+leg <- get_legend(p5)
+p5 <- p5 +
+  theme(legend.position = "none")
 pdf(file.path(OUT, "sequinlogfc.pdf"), height = 10, width = 15)
-plot_grid(p1, p2, p3, p4, p5, ncol=3)
+plot_grid(p1, p2, p3, p4, p5, leg, ncol=3)
 dev.off()
 ```
 
