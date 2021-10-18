@@ -82,6 +82,9 @@ DE.human.ONT.100vs000 <- lapply(DE.human.ONT, function(x){
   return(x[[1]])
 })
 names(DE.human.ONT.100vs000) <- paste(c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq"), "ONT", sep = "_")
+saveRDS(DE.human.illumina.100vs000, "DE.human.illumina.100vs000.RDS")
+saveRDS(DE.human.ONT.100vs000, "DE.human.ONT.100vs000.RDS")
+
 library(UpSetR)
 pdf("plots/DTEhumanUpset.pdf", height = 5, width = 8)
 upset(fromList(append(DE.human.illumina.100vs000, DE.human.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
@@ -92,6 +95,9 @@ dev.off()
 pdf("plots/DTEhumanUpsetIllumina.pdf", height = 5, width = 8)
 upset(fromList(DE.human.illumina.100vs000), order.by = "freq")
 dev.off()
+
+
+
 
 # sequin
 DE.sequin.illumina.100vs000 <- lapply(DE.sequin.illumina, function(x){

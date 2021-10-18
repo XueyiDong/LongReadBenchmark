@@ -97,3 +97,16 @@ pdf("plots/overdispExp.pdf", height = 4)
     scale_x_continuous(trans = "log10") +
     theme_bw()
 dev.off()
+
+
+# explore ONT or Illumina only findings
+DE.human.illumina.100vs000 <- readRDS("DE.human.illumina.100vs000.RDS")
+DE.human.ONT.100vs000 <- readRDS( "DE.human.ONT.100vs000.RDS")
+
+intersect.human.ONT <- Reduce(intersect, DE.human.ONT.100vs000)
+intersect.human.Illumina <- Reduce(intersect, DE.human.illumina.100vs000)
+union.human.ONT <- Reduce(union, DE.human.ONT.100vs000)
+union.human.Illumina <- Reduce(union, DE.human.illumina.100vs000)
+DE.human.ONTonly <- intersect.human.ONT[!(intersect.human.ONT %in% union.human.Illumina)]
+DE.human.Illuminaonly <- intersect.human.Illumina[!(intersect.human.Illumina %in% union.human.ONT)]
+intersect.human.all <- intersect(intersect.human.ONT, intersect.human.Illumina)  
