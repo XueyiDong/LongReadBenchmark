@@ -134,61 +134,72 @@ ggplot(dge$genes, aes(x=category, y=Length, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
-  theme(text = element_text(size = 16))
+  theme(text = element_text(size = 16)) +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge$genes, aes(x=category, y=Length, fill=category)) +
   geom_boxplot() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
-  theme(text = element_text(size = 16))
+  theme(text = element_text(size = 16)) +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge$genes, aes(x=category, y=EffectiveLength, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
-  theme(text = element_text(size = 16))
+  theme(text = element_text(size = 16)) +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge$genes, aes(x=category, y=EffectiveLength, fill=category)) +
   geom_boxplot() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
-  theme(text = element_text(size = 16))
+  theme(text = element_text(size = 16)) +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge$genes, aes(x=category, y=Overdispersion, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  ggtitle("long read overdispersion")
+  ggtitle("long read overdispersion") +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge.short$genes, aes(x=category, y=Overdispersion, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  ggtitle("short read overdispersion")
+  ggtitle("short read overdispersion") +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge$genes, aes(x=category, y=nTranscript, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
-  theme(text = element_text(size = 16))
+  theme(text = element_text(size = 16)) +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  ggtitle("long read expression")
+  ggtitle("long read expression") +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_boxplot() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  ggtitle("long read expression")
+  ggtitle("long read expression") +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge.short$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  ggtitle("short read expression")
+  ggtitle("short read expression") +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 ggplot(dge.short$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_boxplot() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  ggtitle("short read expression")
+  ggtitle("short read expression") +
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
 dev.off()
