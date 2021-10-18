@@ -108,6 +108,10 @@ DE.sequin.ONT.100vs000 <- lapply(DE.sequin.ONT, function(x){
   return(x[[1]])
 })
 names(DE.sequin.ONT.100vs000) <- paste(c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq"), "ONT", sep = "_")
+
+saveRDS(DE.sequin.illumina.100vs000, "DE.sequin.illumina.100vs000.RDS")
+saveRDS(DE.sequin.ONT.100vs000, "DE.sequin.ONT.100vs000.RDS")
+
 pdf("plots/DTEsequinUpset.pdf", height = 5, width = 8)
 upset(fromList(append(DE.sequin.illumina.100vs000, DE.sequin.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
 dev.off()
