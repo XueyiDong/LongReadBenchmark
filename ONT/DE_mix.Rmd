@@ -690,6 +690,20 @@ ggplot(annoData, aes(x=exp, y=value, colour=sample)) +
   annotate(geom="text", x = 0.02, y = 9, label = eq, parse = TRUE, size = 6) 
   # annotate(geom="text", x=300, y=160000, label=paste0("Pearson's r=", round(cor(annoData$exp, annoData$value, use = "complete.obs"), 2)), size=8) 
 dev.off()
+
+anno$AverageAbundance <- (anno$MIX_A + anno$MIX_B) / 2
+ggplot(anno, aes(x=logFC, y=logFC_limma))+
+  geom_point(aes(colour=AverageAbundance, shape=DE_limma), size=3) +
+  geom_smooth(alpha=0.5, method='lm', formula= y~x) +
+  theme_bw()+
+  theme(text = element_text(size = 20)) +
+  scale_colour_viridis_c(trans="log")
+ggplot(anno, aes(x=logFC, y=logFC_limma))+
+  geom_point(aes(colour=LENGTH, shape=DE_limma), size=3) +
+  geom_smooth(alpha=0.5, method='lm', formula= y~x) +
+  theme_bw()+
+  theme(text = element_text(size = 20)) +
+  scale_colour_viridis_c(trans="log")
 ```
 
 ## Session information
