@@ -110,3 +110,85 @@ union.human.Illumina <- Reduce(union, DE.human.illumina.100vs000)
 DE.human.ONTonly <- intersect.human.ONT[!(intersect.human.ONT %in% union.human.Illumina)]
 DE.human.Illuminaonly <- intersect.human.Illumina[!(intersect.human.Illumina %in% union.human.ONT)]
 intersect.human.all <- intersect(intersect.human.ONT, intersect.human.Illumina)  
+
+rownames(dge) <- strsplit2(rownames(dge), "|", fixed = TRUE)[,1]
+dge$genes$category <- NA
+dge$genes$category[match(DE.human.ONTonly, rownames(dge))] <- "ONT_only"
+dge$genes$category[match(DE.human.Illuminaonly, rownames(dge))] <- "Illumina_only"
+dge$genes$category[match(intersect.human.all, rownames(dge))] <- "Intersect_all"
+rownames(dge.short) <- strsplit2(rownames(dge.short), "|", fixed = TRUE)[,1]
+dge.short$genes$category <- NA
+dge.short$genes$category[match(DE.human.ONTonly, rownames(dge.short))] <- "ONT_only"
+dge.short$genes$category[match(DE.human.Illuminaonly, rownames(dge.short))] <- "Illumina_only"
+dge.short$genes$category[match(intersect.human.all, rownames(dge.short))] <- "Intersect_all"
+
+dge$samples$group <- rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+dge <- dge[filterByExpr(dge),]
+dge.short$samples$group <- rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+dge.short <- dge.short[filterByExpr(dge.short),]
+dge$genes$totalCount <- rowSums(dge$counts)
+dge.short$genes$totalCount <- rowSums(dge.short$counts)
+
+pdf("plots/DTEcategory.pdf", height = 5, width = 8)
+ggplot(dge$genes, aes(x=category, y=Length, fill=category)) +
+  geom_violin() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+ggplot(dge$genes, aes(x=category, y=Length, fill=category)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+ggplot(dge$genes, aes(x=category, y=EffectiveLength, fill=category)) +
+  geom_violin() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+ggplot(dge$genes, aes(x=category, y=EffectiveLength, fill=category)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+ggplot(dge$genes, aes(x=category, y=Overdispersion, fill=category)) +
+  geom_violin() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16)) +
+  ggtitle("long read overdispersion")
+ggplot(dge.short$genes, aes(x=category, y=Overdispersion, fill=category)) +
+  geom_violin() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16)) +
+  ggtitle("short read overdispersion")
+ggplot(dge$genes, aes(x=category, y=nTranscript, fill=category)) +
+  geom_violin() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+ggplot(dge$genes, aes(x=category, y=totalCount, fill=category)) +
+  geom_violin() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16)) +
+  ggtitle("long read expression")
+ggplot(dge$genes, aes(x=category, y=totalCount, fill=category)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16)) +
+  ggtitle("long read expression")
+ggplot(dge.short$genes, aes(x=category, y=totalCount, fill=category)) +
+  geom_violin() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16)) +
+  ggtitle("short read expression")
+ggplot(dge.short$genes, aes(x=category, y=totalCount, fill=category)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16)) +
+  ggtitle("short read expression")
+dev.off()
