@@ -691,6 +691,11 @@ ggplot(annoData, aes(x=exp, y=value, colour=sample)) +
   # annotate(geom="text", x=300, y=160000, label=paste0("Pearson's r=", round(cor(annoData$exp, annoData$value, use = "complete.obs"), 2)), size=8) 
 dev.off()
 
+```
+
+Dig a little bit further into the false positives / not well estimated logFCs
+
+```{r}
 anno$AverageAbundance <- (anno$MIX_A + anno$MIX_B) / 2
 ggplot(anno, aes(x=logFC, y=logFC_limma))+
   geom_point(aes(colour=AverageAbundance, shape=DE_limma), size=3) +
@@ -704,6 +709,9 @@ ggplot(anno, aes(x=logFC, y=logFC_limma))+
   theme_bw()+
   theme(text = element_text(size = 20)) +
   scale_colour_viridis_c(trans="log")
+
+summary(abs(anno$logFC_limma-anno$logFC))
+na.omit(anno[abs(anno$logFC_limma-anno$logFC) > 1,])
 ```
 
 ## Session information

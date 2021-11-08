@@ -878,7 +878,7 @@ geneanno <- read.delim(file.path(annodir, "rnasequin_genes_2.4.tsv"), sep = "\t"
 # proportion$isChanges <- FALSE
 # proportion$isChanges[abs(proportion$FC-1) > 0.001] <- TRUE
 # saveRDS(proportion, file="proportion.RDS")
-proportion <- readRDS("proportion.RDS")
+proportion <- readRDS("../ONT/proportion.RDS")
 
 trueDTU.gene <- unique(proportion$geneID[proportion$isChanges==TRUE])
 trueDTU.transcript <- proportion$txID[proportion$isChanges==TRUE]

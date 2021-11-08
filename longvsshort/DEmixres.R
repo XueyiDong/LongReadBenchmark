@@ -86,8 +86,12 @@ saveRDS(DE.human.illumina.100vs000, "DE.human.illumina.100vs000.RDS")
 saveRDS(DE.human.ONT.100vs000, "DE.human.ONT.100vs000.RDS")
 
 library(UpSetR)
-pdf("plots/DTEhumanUpset.pdf", height = 5, width = 8)
-upset(fromList(append(DE.human.illumina.100vs000, DE.human.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
+pdf("plots/DTEhumanUpset.pdf", height = 5, width = 11)
+upset(fromList(append(DE.human.illumina.100vs000, DE.human.ONT.100vs000)), 
+      nsets=10, nintersects = 25, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
+      sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2)[order(sapply(append(DE.human.illumina.100vs000, DE.human.ONT.100vs000), length, simplify = T), decreasing = TRUE)])
+      # sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2))
 dev.off()
 pdf("plots/DTEhumanUpsetONT.pdf", height = 5, width = 8)
 upset(fromList(DE.human.ONT.100vs000), order.by = "freq")
