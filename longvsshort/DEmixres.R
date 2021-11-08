@@ -94,10 +94,12 @@ upset(fromList(append(DE.human.illumina.100vs000, DE.human.ONT.100vs000)),
       # sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2))
 dev.off()
 pdf("plots/DTEhumanUpsetONT.pdf", height = 5, width = 8)
-upset(fromList(DE.human.ONT.100vs000), order.by = "freq")
+upset(fromList(DE.human.ONT.100vs000), order.by = "freq",
+      sets.bar.color = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675")[order(sapply(DE.human.ONT.100vs000, length, simplify = T), decreasing = T)])
 dev.off()
 pdf("plots/DTEhumanUpsetIllumina.pdf", height = 5, width = 8)
-upset(fromList(DE.human.illumina.100vs000), order.by = "freq")
+upset(fromList(DE.human.illumina.100vs000), order.by = "freq",
+      sets.bar.color = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675")[order(sapply(DE.human.illumina.100vs000, length, simplify = T), decreasing = T)])
 dev.off()
 
 
