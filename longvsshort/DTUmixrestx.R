@@ -81,7 +81,9 @@ DTU.tx.human.ONT.100vs000 <- lapply(DTU.tx.human.ONT, function(x){
 names(DTU.tx.human.ONT.100vs000) <- paste(c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn"), "ONT", sep = "_")
 library(UpSetR)
 pdf("plots/DTUtxhumanUpset.pdf", height = 5, width = 8)
-upset(fromList(append(DTU.tx.human.illumina.100vs000, DTU.tx.human.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
+upset(fromList(append(DTU.tx.human.illumina.100vs000, DTU.tx.human.ONT.100vs000)), 
+      nsets=10, nintersects = 25, order.by = "freq",
+      sets.bar.color = rep(c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"), 2)[order(sapply(append(DTU.tx.human.illumina.100vs000, DTU.tx.human.ONT.100vs000), length, simplify = T), decreasing = T)])
 dev.off()
 
 # sequin
@@ -94,5 +96,7 @@ DTU.tx.sequin.ONT.100vs000 <- lapply(DTU.tx.sequin.ONT, function(x){
 })
 names(DTU.tx.sequin.ONT.100vs000) <- paste(c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn"), "ONT", sep = "_")
 pdf("plots/DTUtxsequinUpset.pdf", height = 5, width = 8)
-upset(fromList(append(DTU.tx.sequin.illumina.100vs000, DTU.tx.sequin.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
+upset(fromList(append(DTU.tx.sequin.illumina.100vs000, DTU.tx.sequin.ONT.100vs000)), 
+      nsets=10, nintersects = 25, order.by = "freq",
+      sets.bar.color = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227")[c(2, 4, 1, 5, 5, 2, 3, 1, 4, 3)])
 dev.off()
