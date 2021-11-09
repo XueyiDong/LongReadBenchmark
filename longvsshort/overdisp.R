@@ -105,118 +105,121 @@ DE.human.ONT.100vs000 <- readRDS( "DE.human.ONT.100vs000.RDS")
 DE.sequin.illumina.100vs000 <- readRDS("DE.human.illumina.100vs000.RDS")
 DE.sequin.ONT.100vs000 <- readRDS( "DE.human.ONT.100vs000.RDS")
 
-intersect.human.ONT <- Reduce(intersect, DE.human.ONT.100vs000)
-intersect.human.Illumina <- Reduce(intersect, DE.human.illumina.100vs000)
+# intersect.human.ONT <- Reduce(intersect, DE.human.ONT.100vs000)
+# intersect.human.Illumina <- Reduce(intersect, DE.human.illumina.100vs000)
 union.human.ONT <- Reduce(union, DE.human.ONT.100vs000)
 union.human.Illumina <- Reduce(union, DE.human.illumina.100vs000)
-DE.human.ONTonly <- intersect.human.ONT[!(intersect.human.ONT %in% union.human.Illumina)]
-DE.human.Illuminaonly <- intersect.human.Illumina[!(intersect.human.Illumina %in% union.human.ONT)]
-intersect.human.all <- intersect(intersect.human.ONT, intersect.human.Illumina)  
+DE.human.all <- intersect(union.human.ONT, union.human.Illumina)  
+DE.human.ONTonly <- union.human.ONT[!(union.human.ONT %in% union.human.Illumina)]
+DE.human.Illuminaonly <- union.human.Illumina[!(union.human.Illumina %in% union.human.ONT)]
 
-intersect.sequin.ONT <- Reduce(intersect, DE.sequin.ONT.100vs000)
-intersect.sequin.Illumina <- Reduce(intersect, DE.sequin.illumina.100vs000)
+
+# intersect.sequin.ONT <- Reduce(intersect, DE.sequin.ONT.100vs000)
+# intersect.sequin.Illumina <- Reduce(intersect, DE.sequin.illumina.100vs000)
 union.sequin.ONT <- Reduce(union, DE.sequin.ONT.100vs000)
 union.sequin.Illumina <- Reduce(union, DE.sequin.illumina.100vs000)
-DE.sequin.ONTonly <- intersect.sequin.ONT[!(intersect.sequin.ONT %in% union.sequin.Illumina)]
-DE.sequin.Illuminaonly <- intersect.sequin.Illumina[!(intersect.sequin.Illumina %in% union.sequin.ONT)]
-intersect.sequin.all <- intersect(intersect.sequin.ONT, intersect.sequin.Illumina)
+DE.sequin.all <- intersect(union.sequin.ONT, union.sequin.Illumina)
+DE.sequin.ONTonly <- union.sequin.ONT[!(union.sequin.ONT %in% union.sequin.Illumina)]
+DE.sequin.Illuminaonly <- union.sequin.Illumina[!(union.sequin.Illumina %in% union.sequin.ONT)]
+
 
 rownames(dge) <- strsplit2(rownames(dge), "|", fixed = TRUE)[,1]
-dge$genes$category <- NA
-dge$genes$category[match(DE.human.ONTonly, rownames(dge))] <- "ONT_only"
-dge$genes$category[match(DE.human.Illuminaonly, rownames(dge))] <- "Illumina_only"
-dge$genes$category[match(intersect.human.all, rownames(dge))] <- "Intersect_all"
-dge$genes$category[match(DE.sequin.ONTonly, rownames(dge))] <- "ONT_only"
-dge$genes$category[match(DE.sequin.Illuminaonly, rownames(dge))] <- "Illumina_only"
-dge$genes$category[match(intersect.sequin.all, rownames(dge))] <- "Intersect_all"
+dge$genes$category <- "Not DTE"
+dge$genes$category[match(DE.human.ONTonly, rownames(dge))] <- "ONT only"
+dge$genes$category[match(DE.human.Illuminaonly, rownames(dge))] <- "Illumina only"
+dge$genes$category[match(DE.human.all, rownames(dge))] <- "ONT and Illumina"
+dge$genes$category[match(DE.sequin.ONTonly, rownames(dge))] <- "ONT only"
+dge$genes$category[match(DE.sequin.Illuminaonly, rownames(dge))] <- "Illumina only"
+dge$genes$category[match(DE.sequin.all, rownames(dge))] <- "ONT and Illumina"
 rownames(dge.short) <- strsplit2(rownames(dge.short), "|", fixed = TRUE)[,1]
-dge.short$genes$category <- NA
-dge.short$genes$category[match(DE.human.ONTonly, rownames(dge.short))] <- "ONT_only"
-dge.short$genes$category[match(DE.human.Illuminaonly, rownames(dge.short))] <- "Illumina_only"
-dge.short$genes$category[match(intersect.human.all, rownames(dge.short))] <- "Intersect_all"
-dge.short$genes$category[match(DE.sequin.ONTonly, rownames(dge.short))] <- "ONT_only"
-dge.short$genes$category[match(DE.sequin.Illuminaonly, rownames(dge.short))] <- "Illumina_only"
-dge.short$genes$category[match(intersect.sequin.all, rownames(dge.short))] <- "Intersect_all"
+dge.short$genes$category <- "Not DTE"
+dge.short$genes$category[match(DE.human.ONTonly, rownames(dge.short))] <- "ONT only"
+dge.short$genes$category[match(DE.human.Illuminaonly, rownames(dge.short))] <- "Illumina only"
+dge.short$genes$category[match(DE.human.all, rownames(dge.short))] <- "ONT and Illumina"
+dge.short$genes$category[match(DE.sequin.ONTonly, rownames(dge.short))] <- "ONT only"
+dge.short$genes$category[match(DE.sequin.Illuminaonly, rownames(dge.short))] <- "Illumina only"
+dge.short$genes$category[match(DE.sequin.all, rownames(dge.short))] <- "ONT and Illumina"
 dge$samples$group <- rep(c("000", "100", "075", "050", "025"), rep(3, 5))
 dge <- dge[filterByExpr(dge),]
 dge.short$samples$group <- rep(c("000", "100", "075", "050", "025"), rep(3, 5))
 dge.short <- dge.short[filterByExpr(dge.short),]
 dge$genes$totalCount <- rowSums(dge$counts)
 dge.short$genes$totalCount <- rowSums(dge.short$counts)
-
+dge$genes$category <- factor(dge$genes$category, levels = c("Illumina only", "ONT and Illumina", "ONT only", "Not DTE"))
+dge.short$genes$category <- factor(dge.short$genes$category, levels = c("Illumina only", "ONT and Illumina", "ONT only", "Not DTE"))
 pdf("plots/DTEcategory.pdf", height = 5, width = 8)
 ggplot(dge$genes, aes(x=category, y=Length, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge$genes, aes(x=category, y=Length, fill=category)) +
   geom_boxplot() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge$genes, aes(x=category, y=EffectiveLength, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge$genes, aes(x=category, y=EffectiveLength, fill=category)) +
   geom_boxplot() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge$genes, aes(x=category, y=Overdispersion, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("long read overdispersion") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge.short$genes, aes(x=category, y=Overdispersion, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("short read overdispersion") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge$genes, aes(x=category, y=nTranscript, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("long read expression") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_boxplot() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("long read expression") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge.short$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("short read expression") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge.short$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_boxplot() +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("short read expression") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 dev.off()
 
 dge.sequin <- dge[grepl("^R", rownames(dge)),]
@@ -228,14 +231,14 @@ ggplot(dge.sequin$genes, aes(x=category, y=Length, fill=category)) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge.sequin$genes, aes(x=category, y=EffectiveLength, fill=category)) +
   geom_violin(alpha = 0.5) +
   geom_point(position = position_jitter(seed = 1, width = 0.2)) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge.sequin$genes, aes(x=category, y=Overdispersion, fill=category)) +
   geom_violin(alpha = 0.5) +
   geom_point(position = position_jitter(seed = 1, width = 0.2)) +
@@ -243,7 +246,7 @@ ggplot(dge.sequin$genes, aes(x=category, y=Overdispersion, fill=category)) +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("long read overdispersion") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge.short.sequin$genes, aes(x=category, y=Overdispersion, fill=category)) +
   geom_violin(alpha = 0.5) +
   geom_point(position = position_jitter(seed = 1, width = 0.2)) +
@@ -251,14 +254,14 @@ ggplot(dge.short.sequin$genes, aes(x=category, y=Overdispersion, fill=category))
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("short read overdispersion") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge.sequin$genes, aes(x=category, y=nTranscript, fill=category)) +
   geom_violin(alpha = 0.5) +
   geom_point(position = position_jitter(seed = 1, width = 0.2)) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge.sequin$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_violin(alpha = 0.5) +
   geom_point(position = position_jitter(seed = 1, width = 0.2)) +
@@ -266,7 +269,7 @@ ggplot(dge.sequin$genes, aes(x=category, y=totalCount, fill=category)) +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("long read expression") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 ggplot(dge.short.sequin$genes, aes(x=category, y=totalCount, fill=category)) +
   geom_violin(alpha = 0.5) +
   geom_point(position = position_jitter(seed = 1, width = 0.2)) +
@@ -274,5 +277,5 @@ ggplot(dge.short.sequin$genes, aes(x=category, y=totalCount, fill=category)) +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("short read expression") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 dev.off()
