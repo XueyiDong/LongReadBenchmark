@@ -80,7 +80,7 @@ DTU.gene.human.ONT.100vs000 <- lapply(DTU.gene.human.ONT, function(x){
 })
 names(DTU.gene.human.ONT.100vs000) <- paste(c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn"), "ONT", sep = "_")
 library(UpSetR)
-pdf("plots/DTUgenehumanUpset.pdf", height = 5, width = 8)
+pdf("plots/DTUgenehumanUpset.pdf", height = 5, width = 11)
 upset(fromList(append(DTU.gene.human.illumina.100vs000, DTU.gene.human.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -96,8 +96,9 @@ DTU.gene.sequin.ONT.100vs000 <- lapply(DTU.gene.sequin.ONT, function(x){
   return(x[[1]])
 })
 names(DTU.gene.sequin.ONT.100vs000) <- paste(c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn"), "ONT", sep = "_")
-pdf("plots/DTUgenesequinUpset.pdf", height = 5, width = 8)
+pdf("plots/DTUgenesequinUpset.pdf", height = 5, width = 11)
 upset(fromList(append(DTU.gene.sequin.illumina.100vs000, DTU.gene.sequin.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
       sets.bar.color = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227")[c(2, 1, 5, 4, 3, 2, 5, 1, 4, 3)])
 dev.off()
