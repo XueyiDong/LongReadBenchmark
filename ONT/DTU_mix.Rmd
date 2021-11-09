@@ -906,7 +906,8 @@ ggplot(FDR.sequin.gene, aes(x=Comparison, y=`False discovery rate`, colour=Metho
   geom_line() +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
 dev.off()
 
 FDR.sequin.tx <- as.data.frame(sapply(
@@ -922,7 +923,8 @@ ggplot(FDR.sequin.tx, aes(x=Comparison, y=`False discovery rate`, colour=Method,
   geom_line() +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
 dev.off()
 ```
 
@@ -947,7 +949,8 @@ ggplot(TPR.sequin.gene, aes(x=Comparison, y=`True positive rate`, colour=Method,
   geom_line() +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
 dev.off()
 
 TPR.sequin.tx <- as.data.frame(sapply(
@@ -963,7 +966,8 @@ ggplot(TPR.sequin.tx, aes(x=Comparison, y=`True positive rate`, colour=Method, g
   geom_line() +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
-  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))
+  scale_colour_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  theme(text = element_text(size = 20))
 dev.off()
 ```
 
