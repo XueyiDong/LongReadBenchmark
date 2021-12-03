@@ -337,6 +337,13 @@ ts.human.tx <- lapply(ex.human, function(x){
   topSplice(x, test = "t", number = Inf)
 })
 
+for(i in 1:4){
+  write.table(ts.human[[i]], file = paste(OUT, "/topSpliceHuman", names(ts.human)[i], ".tsv", sep=""),
+              sep = "\t")
+  write.table(ts.human.tx[[i]], file = paste(OUT, "/topSpliceHumanTx", names(ts.human.tx)[i], ".tsv", sep=""),
+              sep = "\t")
+}
+
 DTU.gene.human.limma <- lapply(ts.human, function(x){
   x$GeneID[x$FDR < 0.05]
 })
@@ -374,6 +381,14 @@ ts.sequin <- lapply(ex.sequin, function(x){
 ts.sequin.tx <- lapply(ex.sequin, function(x){
   topSplice(x, test = "t", number = Inf)
 })
+
+for(i in 1:4){
+  write.table(ts.sequin[[i]], file = paste(OUT, "/topSpliceSequin", names(ts.sequin)[i], ".tsv", sep=""),
+              sep = "\t")
+  write.table(ts.sequin.tx[[i]], file = paste(OUT, "/topSpliceSequinTx", names(ts.sequin.tx)[i], ".tsv", sep=""),
+              sep = "\t")
+}
+
 DTU.gene.sequin.limma <- lapply(ts.sequin, function(x){
   x$GeneID[x$FDR < 0.05]
 })

@@ -103,3 +103,48 @@ upset(fromList(append(DTU.tx.sequin.illumina.100vs000, DTU.tx.sequin.ONT.100vs00
       sets.bar.color = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227")[c(2, 4, 1, 5, 5, 2, 3, 1, 4, 3)]
       )
 dev.off()
+
+# long vs short t
+ts.human.ONT <- read.table("../ONT/DTUmix/topSpliceHumanTxc100vs0.tsv", sep = "\t", header = T)
+ts.human.illumina <- read.table("../illumina/DTUmix/topSpliceHumanTxc100vs0.tsv", sep = "\t", header = T)
+ts.sequin.ONT <- read.table("../ONT/DTUmix/topSpliceSequinTxc100vs0.tsv", sep = "\t", header = T)
+ts.sequin.illumina <- read.table("../illumina/DTUmix/topSpliceSequinTxc100vs0.tsv", sep = "\t", header = T)
+m <- match(ts.human.illumina$ExonID, ts.human.ONT$ExonID)
+m2 <- match(ts.sequin.illumina$ExonID, ts.sequin.ONT$ExonID)
+
+t <- data.frame(
+  t.long = c(ts.human.ONT$t[m], ts.sequin.ONT$t[m2]),
+  t.short = c(ts.human.illumina$t, ts.sequin.illumina$t),
+  source = rep(c("human", "sequin"), c(nrow(ts.human.illumina), nrow(ts.sequin.illumina)))
+  
+)
+t$z.long <- limma::zscoreT(t$t.long, df=4)
+t$z.short <- limma::zscoreT(t$t.short, df = 4)
+t <- na.omit(t)
+
+t.lm <- lm(t$t.short ~ t$t.long)
+summary(t.lm)
+z.lm <- lm(t$z.short ~ t$z.long)
+summary(z.lm)
+
+pdf("plots/t_DTU.pdf", height = 5, width = 8)
+ggplot(t, aes(x=t.long, y=t.short)) +
+  stat_binhex() +
+  geom_smooth(method='lm', formula= y~x) +
+  theme_bw() +
+  labs(x="ONT t-statistic", y = "Illumina t-statistic", fill = "Density:\nnumber of \ntranscripts") +
+  annotate(geom="text", x=40, y=100, label="Adj R2 = 0.26\np-value < 2.2e-16", size=6) +
+  scale_fill_viridis(direction = -1, option="A", trans = "log10") +
+  theme(text=element_text(size = 20)) 
+dev.off()
+
+pdf("plots/z_DTU.pdf", height = 5, width = 8)
+ggplot(t, aes(x=z.long, y=z.short)) +
+  stat_binhex() +
+  geom_smooth(method='lm', formula= y~x) +
+  theme_bw() +
+  labs(x="ONT z-score", y = "Illumina z-score", fill = "Density:\nnumber of \ntranscripts") +
+  annotate(geom="text", x = 3, y = 5, label="Adj R2 = 0.23\np-value < 2.2e-16", size=6) +
+  scale_fill_viridis(direction = -1, option="A", trans = "log10") +
+  theme(text=element_text(size = 20)) 
+dev.off()
