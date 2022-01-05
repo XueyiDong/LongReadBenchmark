@@ -45,3 +45,12 @@ biotype<- mapIds(
   column = "GENEBIOTYPE")
 dge.human$genes$biotype <- biotype[match(dge.human$genes$SYMBOL, names(biotype))]
 head(dge.human$genes)
+# x.human$genes$sumCount <- rowSums(x.human$counts)
+# biotypeSum <- aggregate(x.human$gene$sumCount, by=list(x.human$genes$biotype), FUN=sum, simplify=TRUE)
+# # pseudogene count prop
+# sum(biotypeSum$x[grep("pseudogene$", biotypeSum$Group.1)]) / sum(biotypeSum$x)
+# # for each sample
+# sapply(1:6, function(x){
+#   typesum = aggregate(x.human$counts[,x], by=list(x.human$genes$biotype), FUN=sum, simplify=TRUE)
+#   sum(typesum$x[grep("pseudogene$", typesum$Group.1)]) / sum(typesum$x)
+# }, simplify=TRUE)

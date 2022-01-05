@@ -1,4 +1,5 @@
 library(ggplot2)
+library(viridis)
 
 DE.human.ONT <- readRDS("../ONT/DTEmix/DE.human.RDS")
 DE.human.illumina <- readRDS("../illumina/DTEmix/DE.human.RDS")
@@ -151,7 +152,7 @@ ggplot(t, aes(x=t.long, y=t.short)) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
   labs(x="ONT t-statistic", y = "Illumina t-statistic", fill = "Density:\nnumber of \ntranscripts") +
-  annotate(geom="text", x=40, y=100, label="Adj R2 = 0.49\np-value < 2.2e-16", size=6) +
+  annotate(geom="text", x=40, y=100, label="Adj R2 = 0.56\np-value < 2.2e-16", size=6) +
   scale_fill_viridis(direction = -1, option="A", trans = "log10") +
   theme(text=element_text(size = 20)) 
 dev.off()
@@ -162,7 +163,7 @@ ggplot(t, aes(x=z.long, y=z.short)) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
   labs(x="ONT z-score", y = "Illumina z-score", fill = "Density:\nnumber of \ntranscripts") +
-  annotate(geom="text", x = 3, y = 5, label="Adj R2 = 0.54\np-value < 2.2e-16", size=6) +
+  annotate(geom="text", x = 3, y = 5, label="Adj R2 = 0.59\np-value < 2.2e-16", size=6) +
   scale_fill_viridis(direction = -1, option="A", trans = "log10") +
   theme(text=element_text(size = 20)) 
 dev.off()
