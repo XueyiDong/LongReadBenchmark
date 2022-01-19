@@ -1,10 +1,12 @@
 library(ggplot2)
 library(viridis)
 
-DE.human.ONT <- readRDS("../ONT/DTEmix/DE.human.RDS")
-DE.human.illumina <- readRDS("../illumina/DTEmix/DE.human.RDS")
-DE.sequin.ONT <- readRDS("../ONT/DTEmix/DE.sequin.RDS")
-DE.sequin.illumina <- readRDS("../illumina/DTEmix/DE.sequin.RDS")
+DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
+
+DE.human.ONT <- readRDS(file.path(DIR, "ONT/DTEmix/DE.human.RDS"))
+DE.human.illumina <- readRDS(file.path(DIR, "illumina/DTEmix/DE.human.RDS"))
+DE.sequin.ONT <- readRDS(file.path(DIR, "ONT/DTEmix/DE.sequin.RDS"))
+DE.sequin.illumina <- readRDS(file.path(DIR, "illumina/DTEmix/DE.sequin.RDS"))
 # names(DE.human.ONT) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
 # names(DE.human.illumina) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
 # names(DE.sequin.ONT) <- c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq")
@@ -120,14 +122,17 @@ saveRDS(DE.sequin.illumina.100vs000, "DE.sequin.illumina.100vs000.RDS")
 saveRDS(DE.sequin.ONT.100vs000, "DE.sequin.ONT.100vs000.RDS")
 
 pdf("plots/DTEsequinUpset.pdf", height = 5, width = 8)
-upset(fromList(append(DE.sequin.illumina.100vs000, DE.sequin.ONT.100vs000)), nsets=10, nintersects = 25, order.by = "freq")
+upset(fromList(append(DE.sequin.illumina.100vs000, DE.sequin.ONT.100vs000)), 
+      nsets=10, nintersects = 25, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
+      sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2)[order(sapply(append(DE.sequin.illumina.100vs000, DE.sequin.ONT.100vs000), length, simplify = T), decreasing = TRUE)])
 dev.off()
 
 # long vs short t
-tt.human.ONT <- read.table("../ONT/DTEmix/topTableHumanc100vs0.tsv", sep = "\t", header = T)
-tt.human.illumina <- read.table("../illumina/DTEmix/topTableHumanc100vs0.tsv", sep = "\t", header = T)
-tt.sequin.ONT <- read.table("../ONT/DTEmix/topTableSequinc100vs0.tsv", sep = "\t", header = T)
-tt.sequin.illumina <- read.table("../illumina/DTEmix/topTableSequinc100vs0.tsv", sep = "\t", header = T)
+tt.human.ONT <- read.table(file.path(DIR, "ONT/DTEmix/topTableHumanc100vs0.tsv"), sep = "\t", header = T)
+tt.human.illumina <- read.table(file.path(DIR, "illumina/DTEmix/topTableHumanc100vs0.tsv"), sep = "\t", header = T)
+tt.sequin.ONT <- read.table(file.path(DIR, "ONT/DTEmix/topTableSequinc100vs0.tsv"), sep = "\t", header = T)
+tt.sequin.illumina <- read.table(file.path(DIR, "illumina/DTEmix/topTableSequinc100vs0.tsv"), sep = "\t", header = T)
 m <- match(tt.human.illumina$TXNAME, tt.human.ONT$TXNAME)
 m2 <- match(tt.sequin.illumina$TXNAME, tt.sequin.ONT$TXNAME)
 
