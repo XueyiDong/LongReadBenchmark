@@ -2,10 +2,12 @@ library(edgeR)
 library(ggplot2)
 library(viridis)
 
-s <- catchSalmon(file.path("../ONT/salmon_bs", list.files("../ONT/salmon_bs")))
+DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
+
+s <- catchSalmon(file.path(DIR, "ONT/salmon_bs", list.files(file.path(DIR, "/ONT/salmon_bs"))))
 dge <- DGEList(counts=s$counts/s$annotation$Overdispersion, genes=s$annotation)
 
-s.short <- catchSalmon(file.path("../illumina/salmon_bs", list.files("../illumina/salmon_bs")))
+s.short <- catchSalmon(file.path(DIR, "illumina/salmon_bs", list.files(file.path(DIR, "illumina/salmon_bs"))))
 dge.short <- DGEList(counts = s.short$counts/s.short$annotation$Overdispersion, genes = s.short$annotation)
 
 # long vs short scatter plot
@@ -102,8 +104,8 @@ dev.off()
 # explore ONT or Illumina only findings
 DE.human.illumina.100vs000 <- readRDS("DE.human.illumina.100vs000.RDS")
 DE.human.ONT.100vs000 <- readRDS( "DE.human.ONT.100vs000.RDS")
-DE.sequin.illumina.100vs000 <- readRDS("DE.human.illumina.100vs000.RDS")
-DE.sequin.ONT.100vs000 <- readRDS( "DE.human.ONT.100vs000.RDS")
+DE.sequin.illumina.100vs000 <- readRDS("DE.sequin.illumina.100vs000.RDS")
+DE.sequin.ONT.100vs000 <- readRDS( "DE.sequin.ONT.100vs000.RDS")
 
 # intersect.human.ONT <- Reduce(intersect, DE.human.ONT.100vs000)
 # intersect.human.Illumina <- Reduce(intersect, DE.human.illumina.100vs000)
