@@ -1,11 +1,14 @@
 library(ggplot2)
 library(edgeR)
+library(MetBrewer)
 
 # load DGE lists
-s <- catchSalmon(file.path("../ONT/salmon_bs", list.files("../ONT/salmon_bs")))
-dge <- DGEList(counts=s$counts/s$annotation$Overdispersion, genes=s$annotation)
-s.short <- catchSalmon(file.path("../illumina/salmon_bs", list.files("../illumina/salmon_bs")))
-dge.short <- DGEList(counts = s.short$counts/s.short$annotation$Overdispersion, genes = s.short$annotation)
+# s <- catchSalmon(file.path("../ONT/salmon_bs", list.files("../ONT/salmon_bs")))
+# dge <- DGEList(counts=s$counts/s$annotation$Overdispersion, genes=s$annotation)
+# s.short <- catchSalmon(file.path("../illumina/salmon_bs", list.files("../illumina/salmon_bs")))
+# dge.short <- DGEList(counts = s.short$counts/s.short$annotation$Overdispersion, genes = s.short$annotation)
+dge <- readRDS("dge.rds")
+dge.short <- readRDS("dge_short.rds")
 
 # organize read num stat 
 read.stat <- data.frame(
@@ -19,11 +22,14 @@ read.stat <- data.frame(
 
 read.stat <- data.table::melt(read.stat, id.vars = c("sample", "dataset"))
 # read num plot
-ggplot(read.stat, aes(x=sample, y=value, fill=variable))+
-  geom_bar(stat="identity", position = "dodge") +
+pdf("plots/readNum.pdf", height = 5, width = 8)
+ggplot(read.stat, aes(x=variable, y=value, fill=sample))+
+  geom_bar(stat="identity") +
   facet_grid(cols=vars(dataset)) +
   theme_bw() +
-  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 45, hjust = 1)) 
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = met.brewer("Troy", 6))
+dev.off()
 
 # gene biotype info
 dge.human <- dge[grep("^ENST", rownames(dge)), ]
