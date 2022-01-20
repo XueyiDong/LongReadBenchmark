@@ -76,7 +76,7 @@ ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
   labs(x = "Number of transcripts per gene") +
   scale_y_continuous(trans = "log10") +
   theme_bw()+
-  theme(text = element_text(size = 20)) +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
   scale_fill_manual(values = c("#438DAC", "#FCB344")) +
   scale_colour_manual(values = c("#438DAC", "#FCB344"))
 # +
