@@ -1,6 +1,7 @@
 library(ggplot2)
 library(edgeR)
 library(MetBrewer)
+library(scales)
 
 # load DGE lists
 # s <- catchSalmon(file.path("../ONT/salmon_bs", list.files("../ONT/salmon_bs")))
@@ -23,11 +24,15 @@ read.stat <- data.frame(
 read.stat <- data.table::melt(read.stat, id.vars = c("sample", "dataset"))
 # read num plot
 pdf("plots/readNum.pdf", height = 5, width = 8)
-ggplot(read.stat, aes(x=variable, y=value, fill=sample))+
+ggplot(read.stat, aes(x=variable, y=value, fill=sample, label = value))+
   geom_bar(stat="identity") +
   facet_grid(cols=vars(dataset)) +
+  geom_text(aes(label = label_number_si()(value)), size = 4, colour = "white", position = position_stack(vjust = 0.5)) +
+  ylab("Number") +
+  xlab("Category") +
   theme_bw() +
-  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))+
   scale_fill_manual(values = met.brewer("Troy", 6))
 dev.off()
 
