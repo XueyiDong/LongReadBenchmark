@@ -15,8 +15,10 @@ dge.short <- readRDS("dge_short.rds")
 read.stat <- data.frame(
   sample = rep(c(paste("H1975", 1:3, sep = "-"),
               paste("HCC827", c(1, 2, 5), sep = "-")), 2),
-  raw_read = c(46809934, 40748569, 42074278, 51044877, 48219467, 39145316,
+  raw_reads = c(46809934, 40748569, 42074278, 51044877, 48219467, 39145316,
                31073747, 34059318, 27974052, 31329213, 134000622, 30331521),
+  mapped_reads = c(41054341, 35939259, 36437436, 46878103, 40629774, 36962945,
+                   28999906, 31495290, 26126733, 29046678, 125097661, 26408681),
   read_counts = c(dge$samples$lib.size[1:6], dge.short$samples$lib.size[1:6]),
   dataset = rep(c("ONT", "Illumina"), c(6,6))
 )
