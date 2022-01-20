@@ -107,23 +107,51 @@ DE.human.ONT.100vs000 <- readRDS( "DE.human.ONT.100vs000.RDS")
 DE.sequin.illumina.100vs000 <- readRDS("DE.sequin.illumina.100vs000.RDS")
 DE.sequin.ONT.100vs000 <- readRDS( "DE.sequin.ONT.100vs000.RDS")
 
-# intersect.human.ONT <- Reduce(intersect, DE.human.ONT.100vs000)
-# intersect.human.Illumina <- Reduce(intersect, DE.human.illumina.100vs000)
+
+intersect.human.ONT <- Reduce(intersect, DE.human.ONT.100vs000)
+intersect.human.Illumina <- Reduce(intersect, DE.human.illumina.100vs000)
 union.human.ONT <- Reduce(union, DE.human.ONT.100vs000)
 union.human.Illumina <- Reduce(union, DE.human.illumina.100vs000)
-DE.human.all <- intersect(union.human.ONT, union.human.Illumina)  
+DE.human.all <- intersect(union.human.ONT, union.human.Illumina)
 DE.human.ONTonly <- union.human.ONT[!(union.human.ONT %in% union.human.Illumina)]
 DE.human.Illuminaonly <- union.human.Illumina[!(union.human.Illumina %in% union.human.ONT)]
 
+# # find DTE detected by all methods
+# DE.human.all <- intersect(intersect.human.ONT, intersect.human.Illumina)
+# # Find intersect DTE set by at least 2 method
+# comb <- data.frame(
+#   A=rep(1:5, rep(5, 5)),
+#   B = rep(1:5, 5))
+# comb <- comb[comb$A != comb$B,]
+# union2.human.ONT <- apply(comb, 1, function(x){
+#   return(intersect(DE.human.ONT.100vs000[[x[1]]], DE.human.ONT.100vs000[[x[2]]]))
+# })
+# union2.human.ONT <- Reduce(union, union2.human.ONT)
+# DE.human.ONTonly <- union2.human.ONT[!(union2.human.ONT %in% union.human.Illumina)]
+# union2.human.Illumina <- apply(comb, 1, function(x){
+#   return(intersect(DE.human.illumina.100vs000[[x[1]]], DE.human.illumina.100vs000[[x[2]]]))
+# })
+# union2.human.Illumina <- Reduce(union, union2.human.Illumina)
+# DE.human.Illuminaonly <- union2.human.Illumina[!(union2.human.Illumina %in% union.human.ONT)]
 
-# intersect.sequin.ONT <- Reduce(intersect, DE.sequin.ONT.100vs000)
-# intersect.sequin.Illumina <- Reduce(intersect, DE.sequin.illumina.100vs000)
+intersect.sequin.ONT <- Reduce(intersect, DE.sequin.ONT.100vs000)
+intersect.sequin.Illumina <- Reduce(intersect, DE.sequin.illumina.100vs000)
 union.sequin.ONT <- Reduce(union, DE.sequin.ONT.100vs000)
 union.sequin.Illumina <- Reduce(union, DE.sequin.illumina.100vs000)
 DE.sequin.all <- intersect(union.sequin.ONT, union.sequin.Illumina)
 DE.sequin.ONTonly <- union.sequin.ONT[!(union.sequin.ONT %in% union.sequin.Illumina)]
 DE.sequin.Illuminaonly <- union.sequin.Illumina[!(union.sequin.Illumina %in% union.sequin.ONT)]
-
+# DE.sequin.all <- intersect(intersect.sequin.ONT, intersect.sequin.Illumina)
+# union2.sequin.ONT <- apply(comb, 1, function(x){
+#   return(intersect(DE.sequin.ONT.100vs000[[x[1]]], DE.sequin.ONT.100vs000[[x[2]]]))
+# })
+# union2.sequin.ONT <- Reduce(union, union2.sequin.ONT)
+# DE.sequin.ONTonly <- union2.sequin.ONT[!(union2.sequin.ONT %in% union.sequin.Illumina)]
+# union2.sequin.Illumina <- apply(comb, 1, function(x){
+#   return(intersect(DE.sequin.illumina.100vs000[[x[1]]], DE.sequin.illumina.100vs000[[x[2]]]))
+# })
+# union2.sequin.Illumina <- Reduce(union, union2.sequin.Illumina)
+# DE.sequin.Illuminaonly <- union2.sequin.Illumina[!(union2.sequin.Illumina %in% union.sequin.ONT)]
 
 rownames(dge) <- strsplit2(rownames(dge), "|", fixed = TRUE)[,1]
 dge$genes$category <- "Not DTE"
