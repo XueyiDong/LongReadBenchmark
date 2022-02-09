@@ -1,0 +1,6 @@
+S1	mixA	batch1	/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/ONT_aligned/subsample_fq/barcode01_sub_10.fq.gz
+S2	mixA	batch1	/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/ONT_aligned/subsample_fq/barcode02_sub_10.fq.gz
+S3	mixA	batch1	/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/ONT_aligned/subsample_fq/barcode03_sub_10.fq.gz
+S4	mixB	batch1	/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/ONT_aligned/subsample_fq/barcode04_sub_10.fq.gz
+S5	mixB	batch1	/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/ONT_aligned/subsample_fq/barcode05_sub_10.fq.gz
+S6	mixB	batch1	/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/ONT_aligned/subsample_fq/barcode06_sub_10.fq.gz

@@ -10,7 +10,7 @@ library(Hmisc)
 dir_bam  <- "/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/ONT/transcriptome_mapping"
 bams <- list.files(path = dir_bam, pattern="primary.bam$")
 for (i in 1:6){
-  bam1 <- suppressWarnings(readBam(file.path(dir_bam, bams[[i]])))
+  bam1 <- suppressWarnings(readBam(file.path(dir_bam, bams[[1]])))
   readDF <- makeReadDf(bam1)
   summ <- makeSummaryList(bam1)
   saveRDS(readDF, file = paste("./full_length/", i, ".readDF.RDS"))

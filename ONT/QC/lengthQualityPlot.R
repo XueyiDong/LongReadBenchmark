@@ -1,6 +1,6 @@
 library(ggplot2)
 
-qcdata <- readRDS("./summaryInfo.RDS")
+qcdata <- readRDS("/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/ONT/QC/summaryInfo.RDS")
 qcdata <- as.data.frame(qcdata, stringsAsFactors = FALSE)
 qcdata$Read_length <- as.numeric(qcdata$Read_length)
 qcdata$Qscore <- as.numeric(qcdata$Qscore)
