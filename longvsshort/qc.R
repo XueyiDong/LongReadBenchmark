@@ -3,13 +3,15 @@ library(edgeR)
 library(MetBrewer)
 library(scales)
 
+DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
 # load DGE lists
-# s <- catchSalmon(file.path("../ONT/salmon_bs", list.files("../ONT/salmon_bs")))
+# s <- catchSalmon(file.path(DIR, "ONT/salmon_bs", list.files(file.path(DIR, "/ONT/salmon_bs"))))
 # dge <- DGEList(counts=s$counts/s$annotation$Overdispersion, genes=s$annotation)
-# s.short <- catchSalmon(file.path("../illumina/salmon_bs", list.files("../illumina/salmon_bs")))
+# s.short <- catchSalmon(file.path(DIR, "illumina/salmon_bs", list.files(file.path(DIR, "illumina/salmon_bs"))))
 # dge.short <- DGEList(counts = s.short$counts/s.short$annotation$Overdispersion, genes = s.short$annotation)
+
 dge <- readRDS("dge.rds")
-dge.short <- readRDS("dge_short.rds")
+dge.short <- readRDS("dge.short.rds")
 
 # organize read num stat 
 read.stat <- data.frame(
@@ -58,6 +60,20 @@ biotype<- mapIds(
   column = "GENEBIOTYPE")
 dge.human$genes$biotype <- biotype[match(dge.human$genes$SYMBOL, names(biotype))]
 head(dge.human$genes)
+# deal with biotype
+# http://asia.ensembl.org/info/genome/genebuild/biotypes.html
+# scaRNA is a kind of snoRNA
+
+dge.human$genes$biotype[grepl("pseudogene$", dge.human$genes$biotype)] <- "pseudogene"
+dge.human$genes$biotype[grepl("^TR", dge.human$genes$biotype)] <- "TR_gene"
+dge.human$genes$biotype[grepl("^IG", dge.human$genes$biotype)] <- "IG_gene"
+dge.human$genes$biotype[dge.human$genes$biotype %in% c("miRNA", "misc_RNA", 
+                                                       "piRNA", "rRNA", "siRNA",
+                                                       "snRNA", "snoRNA", "scaRNA",
+                                                       "tRNA", "vaultRNA"
+                                                       )] <- "ncRNA"
+
+
 # x.human$genes$sumCount <- rowSums(x.human$counts)
 # biotypeSum <- aggregate(x.human$gene$sumCount, by=list(x.human$genes$biotype), FUN=sum, simplify=TRUE)
 # # pseudogene count prop
