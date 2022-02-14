@@ -2,6 +2,7 @@ library(ggplot2)
 library(edgeR)
 library(MetBrewer)
 library(scales)
+library(RColorBrewer)
 
 DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
 # load DGE lists
@@ -43,43 +44,54 @@ dev.off()
 # gene biotype info
 dge.human <- dge[grep("^ENST", rownames(dge)), ]
 library(Homo.sapiens)
-geneid <- strsplit2(rownames(dge.human$counts), "\\|")[, 2]
-geneid <- strsplit2(geneid, "\\.")[,1]
-genes <- select(Homo.sapiens, keys=geneid, columns=c("SYMBOL", "TXCHROM"), 
-                keytype="ENSEMBL")
-dge.human$genes <- cbind(dge.human$genes, genes[match(geneid, genes$ENSEMBL),])
+# geneid <- strsplit2(rownames(dge.human$counts), "\\|")[, 2]
+# geneid <- strsplit2(geneid, "\\.")[,1]
+# genes <- select(Homo.sapiens, keys=geneid, columns=c("SYMBOL", "TXCHROM"), 
+#                 keytype="ENSEMBL")
+# dge.human$genes <- cbind(dge.human$genes, genes[match(geneid, genes$ENSEMBL),])
+txid <- strsplit2(rownames(dge.human$counts), "\\|")[,1]
+txid <- strsplit2(txid, "\\.")[,1]
 
 library(AnnotationHub)
 ah <- AnnotationHub()
-EnsDb.Hsapiens.v98 <- query(ah, c("EnsDb", "Homo Sapiens", 98))[[1]]
+EnsDb.Hsapiens.v104 <- query(ah, c("EnsDb", "Homo Sapiens", 104))[[1]]
 biotype<- mapIds(
-  x = EnsDb.Hsapiens.v98,
+  x = EnsDb.Hsapiens.v104,
   # NOTE: Need to remove gene version number prior to lookup.
-  keys = na.omit(dge.human$genes$SYMBOL),
-  keytype = "SYMBOL",
-  column = "GENEBIOTYPE")
-dge.human$genes$biotype <- biotype[match(dge.human$genes$SYMBOL, names(biotype))]
-head(dge.human$genes)
+  keys = txid,
+  keytype = "TXID",
+  column = "TXBIOTYPE")
+dge.human$genes$biotype <- biotype
+# head(dge.human$genes)
 # deal with biotype
 # http://asia.ensembl.org/info/genome/genebuild/biotypes.html
 # scaRNA is a kind of snoRNA
 
 dge.human$genes$biotype[grepl("pseudogene$", dge.human$genes$biotype)] <- "pseudogene"
-dge.human$genes$biotype[grepl("^TR", dge.human$genes$biotype)] <- "TR_gene"
-dge.human$genes$biotype[grepl("^IG", dge.human$genes$biotype)] <- "IG_gene"
+dge.human$genes$biotype[grepl("^TR", dge.human$genes$biotype)] <- "IG_or_TR_gene"
+dge.human$genes$biotype[grepl("^IG", dge.human$genes$biotype)] <- "IG_or_TR_gene"
 dge.human$genes$biotype[dge.human$genes$biotype %in% c("miRNA", "misc_RNA", 
                                                        "piRNA", "rRNA", "siRNA",
                                                        "snRNA", "snoRNA", "scaRNA",
-                                                       "tRNA", "vaultRNA"
+                                                       "tRNA", "vault_RNA", "scRNA",
+                                                       "sRNA", "Mt_rRNA", "Mt_tRNA",
+                                                       "ribozyme"
                                                        )] <- "ncRNA"
 
-
-# x.human$genes$sumCount <- rowSums(x.human$counts)
-# biotypeSum <- aggregate(x.human$gene$sumCount, by=list(x.human$genes$biotype), FUN=sum, simplify=TRUE)
-# # pseudogene count prop
-# sum(biotypeSum$x[grep("pseudogene$", biotypeSum$Group.1)]) / sum(biotypeSum$x)
-# # for each sample
-# sapply(1:6, function(x){
-#   typesum = aggregate(x.human$counts[,x], by=list(x.human$genes$biotype), FUN=sum, simplify=TRUE)
-#   sum(typesum$x[grep("pseudogene$", typesum$Group.1)]) / sum(typesum$x)
-# }, simplify=TRUE)
+# for each sample
+biotype_sum <- sapply(1:6, function(x){
+  typesum = aggregate(dge.human$counts[,x], by=list(dge.human$genes$biotype), FUN=sum, simplify=TRUE)
+  return(typesum)
+}, simplify=FALSE)
+biotype_sum <- do.call("rbind", biotype_sum)
+biotype_sum$sample <- rep(paste0("barcode0", 1:6), rep(10, 6))
+colnames(biotype_sum) <- c("biotype", "total_count", "sample")
+# order the bars
+ord = aggregate(biotype_sum$total_count, by = list(biotype_sum$biotype), FUN = sum, simplify = TRUE)
+ord = ord[order(ord$x), ]
+ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
+  geom_bar(stat="identity", position = "fill") +
+  theme_bw() +
+  theme(text = element_text(size = 20)) +
+  scale_fill_brewer(palette = "Set3")
+  
