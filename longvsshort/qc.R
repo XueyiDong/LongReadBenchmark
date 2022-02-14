@@ -93,5 +93,6 @@ ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord
   geom_bar(stat="identity", position = "fill") +
   theme_bw() +
   theme(text = element_text(size = 20)) +
-  scale_fill_brewer(palette = "Set3")
+  scale_fill_brewer(palette = "Set3") +
+  labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
   
