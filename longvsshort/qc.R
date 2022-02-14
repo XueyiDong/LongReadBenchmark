@@ -89,10 +89,18 @@ colnames(biotype_sum) <- c("biotype", "total_count", "sample")
 # order the bars
 ord = aggregate(biotype_sum$total_count, by = list(biotype_sum$biotype), FUN = sum, simplify = TRUE)
 ord = ord[order(ord$x), ]
+<<<<<<< Updated upstream
+=======
+pdf("plots/biotype.pdf", height = 5, width = 8)
+>>>>>>> Stashed changes
 ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
   geom_bar(stat="identity", position = "fill") +
   theme_bw() +
   theme(text = element_text(size = 20)) +
   scale_fill_brewer(palette = "Set3") +
   labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
+<<<<<<< Updated upstream
   
+=======
+dev.off()  
+>>>>>>> Stashed changes

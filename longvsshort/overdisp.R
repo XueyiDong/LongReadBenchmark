@@ -88,6 +88,7 @@ ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
 #   ) 
 dev.off()
 
+<<<<<<< Updated upstream
 # pdf("plots/overdispLength.pdf", height = 5, width = 8)
 # ggplot(overdisp2[overdisp2$numberTranscript==1,], aes(x=Length, y=Overdispersion)) +
 #   stat_binhex() +
@@ -312,3 +313,17 @@ ggplot(dge.short.sequin$genes, aes(x=category, y=totalCount, fill=category)) +
   ggtitle("short read expression") +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 dev.off()
+=======
+pdf("plots/overdispLength.pdf", height = 5, width = 8)
+ggplot(overdisp2[overdisp2$numberTranscript==1,], aes(x=Length, y=Overdispersion)) +
+  stat_binhex() +
+  scale_x_continuous(trans = "log10") +
+  theme_bw()
+dev.off()
+pdf("plots/overdispExp.pdf", height = 4)
+  ggplot(overdisp2[overdisp2$numberTranscript==1,], aes(x=AveExpr, y=Overdispersion)) +
+    stat_binhex() +
+    scale_x_continuous(trans = "log10") +
+    theme_bw()
+dev.of
+>>>>>>> Stashed changes
