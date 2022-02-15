@@ -5,10 +5,10 @@ qcdata <- readRDS("/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong
 qcdata <- as.data.frame(qcdata, stringsAsFactors = FALSE)
 qcdata$Read_length <- as.numeric(qcdata$Read_length)
 qcdata$Qscore <- as.numeric(qcdata$Qscore)
+qcdata$Barcode[!(qcdata$Barcode %in% c(paste0("barcode0", 1:6)))] <- "other"
 
 # qcdata.sub <- qcdata[1:1000, ]
 pdf("plots/LengthDistSample.pdf", height = 5, width = 8)
-qcdata$Barcode[!(qcdata$Barcode %in% c(paste0("barcode0", 1:6)))] <- "other"
 ggplot(qcdata, aes(x=Read_length, colour=Barcode, linetype=Barcode)) +
   geom_density() +
   theme_bw() +

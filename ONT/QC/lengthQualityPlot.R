@@ -4,16 +4,16 @@ qcdata <- readRDS("/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong
 qcdata <- as.data.frame(qcdata, stringsAsFactors = FALSE)
 qcdata$Read_length <- as.numeric(qcdata$Read_length)
 qcdata$Qscore <- as.numeric(qcdata$Qscore)
-
-maxLength = max(qcdata$Read_length)
+qcdata$Barcode[!(qcdata$Barcode %in% c(paste0("barcode0", 1:6)))] <- "other"
+qcdata.filt <- qcdata[qcdata$Barcode != "other", ]
+maxLength = max(qcdata.filt$Read_length)
 maxLength
-qcdata$LengthGroup <- Hmisc::cut2(qcdata$Read_length, cuts = c(0, 500, 1000,
-                                                     3000, maxLength))
-qcdata$LengthGroup <- gsub(" ", "", qcdata$LengthGroup)
-qcdata$LengthGroup <- gsub(",", ", ", qcdata$LengthGroup)
-
-qcdata$LengthGroup <- factor(qcdata$LengthGroup, levels = c(
-  "[0, 500)", "[500, 1000)", "[1000, 3000)", "[3000, 208481]"
+qcdata.filt$LengthGroup <- Hmisc::cut2(qcdata.filt$Read_length, cuts = c(0, 500, 1000,
+                                                     2000, maxLength))
+qcdata.filt$LengthGroup <- gsub(" ", "", qcdata.filt$LengthGroup)
+qcdata.filt$LengthGroup <- gsub(",", ", ", qcdata.filt$LengthGroup)
+qcdata.filt$LengthGroup <- factor(qcdata.filt$LengthGroup, levels = c(
+  "[0, 500)", "[500, 1000)", "[1000, 2000)", paste0("[2000, ", maxLength, "]")
 ))
 
 stat_box_data <- function(y, upper_limit = max(qcdata$Qscore) * 1.15) {
@@ -26,7 +26,7 @@ stat_box_data <- function(y, upper_limit = max(qcdata$Qscore) * 1.15) {
 }
 
 pdf("plots/lengthQualityViolin.pdf", height = 4, width = 8)
-ggplot(qcdata, aes(x=LengthGroup, y=Qscore, fill=LengthGroup, colour = LengthGroup)) +
+ggplot(qcdata.filt, aes(x=LengthGroup, y=Qscore, fill=LengthGroup, colour = LengthGroup)) +
   geom_violin(alpha = 0.4) +
   theme_bw() +
   theme(text = element_text(size=20), legend.position = "none") +
