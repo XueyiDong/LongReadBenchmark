@@ -154,3 +154,5 @@ ggplot(biotype_sum.all, aes(x=sample, y=total_count, fill=factor(biotype, levels
   scale_fill_brewer(palette = "Set3") +
   labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
 dev.off()
+
+#------
