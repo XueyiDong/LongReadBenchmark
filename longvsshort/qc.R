@@ -83,6 +83,7 @@ colnames(biotype_sum) <- c("biotype", "total_count", "sample")
 ord = aggregate(biotype_sum$total_count, by = list(biotype_sum$biotype), FUN = sum, simplify = TRUE)
 ord = ord[order(ord$x), ]
 
+
 pdf("plots/biotype.pdf", height = 5, width = 8)
 ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
   geom_bar(stat="identity", position = "fill") +
