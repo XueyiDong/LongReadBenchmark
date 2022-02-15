@@ -14,6 +14,7 @@ DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_ben
 dge <- readRDS("dge.rds")
 dge.short <- readRDS("dge.short.rds")
 
+#---- read num plot
 # organize read num stat 
 read.stat <- data.frame(
   sample = rep(c(paste("H1975", 1:3, sep = "-"),
@@ -41,14 +42,9 @@ ggplot(read.stat, aes(x=variable, y=value, fill=sample, label = value))+
   scale_fill_manual(values = met.brewer("Troy", 6))
 dev.off()
 
+#---- biotype ONT
 # gene biotype info
 dge.human <- dge[grep("^ENST", rownames(dge)), ]
-library(Homo.sapiens)
-# geneid <- strsplit2(rownames(dge.human$counts), "\\|")[, 2]
-# geneid <- strsplit2(geneid, "\\.")[,1]
-# genes <- select(Homo.sapiens, keys=geneid, columns=c("SYMBOL", "TXCHROM"), 
-#                 keytype="ENSEMBL")
-# dge.human$genes <- cbind(dge.human$genes, genes[match(geneid, genes$ENSEMBL),])
 txid <- strsplit2(rownames(dge.human$counts), "\\|")[,1]
 txid <- strsplit2(txid, "\\.")[,1]
 
@@ -62,11 +58,8 @@ biotype<- mapIds(
   keytype = "TXID",
   column = "TXBIOTYPE")
 dge.human$genes$biotype <- biotype
-# head(dge.human$genes)
 # deal with biotype
 # http://asia.ensembl.org/info/genome/genebuild/biotypes.html
-# scaRNA is a kind of snoRNA
-
 dge.human$genes$biotype[grepl("pseudogene$", dge.human$genes$biotype)] <- "pseudogene"
 dge.human$genes$biotype[grepl("^TR", dge.human$genes$biotype)] <- "IG_or_TR_gene"
 dge.human$genes$biotype[grepl("^IG", dge.human$genes$biotype)] <- "IG_or_TR_gene"
@@ -89,18 +82,74 @@ colnames(biotype_sum) <- c("biotype", "total_count", "sample")
 # order the bars
 ord = aggregate(biotype_sum$total_count, by = list(biotype_sum$biotype), FUN = sum, simplify = TRUE)
 ord = ord[order(ord$x), ]
-<<<<<<< Updated upstream
-=======
+
 pdf("plots/biotype.pdf", height = 5, width = 8)
->>>>>>> Stashed changes
 ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
   geom_bar(stat="identity", position = "fill") +
   theme_bw() +
-  theme(text = element_text(size = 20)) +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_fill_brewer(palette = "Set3") +
   labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
-<<<<<<< Updated upstream
-  
-=======
 dev.off()  
->>>>>>> Stashed changes
+
+#---- biotype Illumina
+dge.short.human <- dge[grep("^ENST", rownames(dge.short)), ]
+txid <- strsplit2(rownames(dge.short.human$counts), "\\|")[,1]
+txid <- strsplit2(txid, "\\.")[,1]
+
+biotype<- mapIds(
+  x = EnsDb.Hsapiens.v104,
+  # NOTE: Need to remove gene version number prior to lookup.
+  keys = txid,
+  keytype = "TXID",
+  column = "TXBIOTYPE")
+dge.short.human$genes$biotype <- biotype
+# deal with biotype
+dge.short.human$genes$biotype[grepl("pseudogene$", dge.short.human$genes$biotype)] <- "pseudogene"
+dge.short.human$genes$biotype[grepl("^TR", dge.short.human$genes$biotype)] <- "IG_or_TR_gene"
+dge.short.human$genes$biotype[grepl("^IG", dge.short.human$genes$biotype)] <- "IG_or_TR_gene"
+dge.short.human$genes$biotype[dge.short.human$genes$biotype %in% c("miRNA", "misc_RNA", 
+                                                       "piRNA", "rRNA", "siRNA",
+                                                       "snRNA", "snoRNA", "scaRNA",
+                                                       "tRNA", "vault_RNA", "scRNA",
+                                                       "sRNA", "Mt_rRNA", "Mt_tRNA",
+                                                       "ribozyme"
+)] <- "ncRNA"
+
+# for each sample
+biotype_sum.short <- sapply(1:6, function(x){
+  typesum = aggregate(dge.short.human$counts[,x], by=list(dge.short.human$genes$biotype), FUN=sum, simplify=TRUE)
+  return(typesum)
+}, simplify=FALSE)
+biotype_sum.short <- do.call("rbind", biotype_sum.short)
+
+# biotype_sum.short$sample <- rep(c("H1975-1", "H1975-2", "H1975-3", "HCC827-1", "HCC827-2", "HCC827-5"), rep(10, 6))
+biotype_sum.short$sample <- rep(paste0("barcode0", 1:6), rep(10, 6))
+colnames(biotype_sum.short) <- c("biotype", "total_count", "sample")
+# order the bars
+ord = aggregate(biotype_sum$total_count, by = list(biotype_sum$biotype), FUN = sum, simplify = TRUE)
+ord = ord[order(ord$x), ]
+
+pdf("plots/biotype_short.pdf", height = 5, width = 8)
+ggplot(biotype_sum.short, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
+  geom_bar(stat="identity", position = "fill") +
+  theme_bw() +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_fill_brewer(palette = "Set3") +
+  labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
+dev.off()
+
+#---- biotype long and short
+biotype_sum.all <- rbind(biotype_sum, biotype_sum.short)
+biotype_sum.all$dataset <- rep(c("ONT", "Illumina"), c(nrow(biotype_sum), nrow(biotype_sum.short)))
+pdf("plots/biotype_all.pdf", height = 5, width = 8)
+ggplot(biotype_sum.all, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
+  geom_bar(stat="identity", position = "fill") +
+  facet_grid(cols=vars(dataset)) +
+  theme_bw() +
+  theme(text = element_text(size = 20), 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  scale_fill_brewer(palette = "Set3") +
+  labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
+dev.off()
