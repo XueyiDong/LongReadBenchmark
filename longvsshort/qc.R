@@ -93,6 +93,12 @@ ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord
   labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
 dev.off()  
 
+#---- calculate proportion for ONT
+biotype_sum$proportion <- sapply(1:nrow(biotype_sum), function(x){
+  sample.sum = sum(biotype_sum$total_count[biotype_sum$sample == biotype_sum$sample[x]])
+  return(biotype_sum$total_count[x] / sample.sum)
+}, simplify = TRUE)
+
 #---- biotype Illumina
 dge.short.human <- dge[grep("^ENST", rownames(dge.short)), ]
 txid <- strsplit2(rownames(dge.short.human$counts), "\\|")[,1]
@@ -139,6 +145,12 @@ ggplot(biotype_sum.short, aes(x=sample, y=total_count, fill=factor(biotype, leve
   scale_fill_brewer(palette = "Set3") +
   labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
 dev.off()
+
+#---- calculate proportion for Illumina
+biotype_sum.short$proportion <- sapply(1:nrow(biotype_sum.short), function(x){
+  sample.sum = sum(biotype_sum.short$total_count[biotype_sum.short$sample == biotype_sum.short$sample[x]])
+  return(biotype_sum.short$total_count[x] / sample.sum)
+}, simplify = TRUE)
 
 #---- biotype long and short
 biotype_sum.all <- rbind(biotype_sum, biotype_sum.short)
