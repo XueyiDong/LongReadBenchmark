@@ -7,18 +7,20 @@ library(data.table)
 library(GenomicFeatures)
 library(Hmisc)
 # read and calculate, save to RDS
-dir_bam  <- "/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/ONT/transcriptome_mapping"
-bams <- list.files(path = dir_bam, pattern="primary.bam$")
-for (i in 1:6){
-  bam1 <- suppressWarnings(readBam(file.path(dir_bam, bams[[1]])))
+dir_bam  <- "/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/ONT/transcriptome_mapping/split"
+bams <- list.files(path = dir_bam, pattern=".bam$")
+args = commandArgs(trailingOnly=TRUE)
+i = as.numeric(args[1])
+# for (i in 1:6){
+  bam1 <- suppressWarnings(readBam(file.path(dir_bam, bams[i])))
   readDF <- makeReadDf(bam1)
   summ <- makeSummaryList(bam1)
-  saveRDS(readDF, file = paste("./full_length/", i, ".readDF.RDS"))
-  saveRDS(summ, file= paste("./full_length/", i, ".summ.RDS"))
-  saveRDS(bam1, file= paste("./full_length/", i, ".bam.RDS"))
+  saveRDS(readDF, file = paste("./full_length/", bams[i], ".readDF.RDS"))
+  saveRDS(summ, file= paste("./full_length/", bams[i], ".summ.RDS"))
+  saveRDS(bam1, file= paste("./full_length/", bams[i], ".bam.RDS"))
   rm(bam1)
   gc()
-}
+# }
 
 #------------------------
 # 
