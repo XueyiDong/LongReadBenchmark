@@ -70,20 +70,29 @@ maxLength = max(readDF$tx_len)
 readDF$txLengthGroup <- cut2(readDF$tx_len, cuts = c(0, 500, 1000, 1500,
                                              2000, maxLength))
 readDF$covFraction <- readDF$width / readDF$tx_len
+cat("Saving RDF.", "\n")
+saveRDS(readDF, "readDF2.RDS")
 library(viridis)
+library(parallel)
 #calculate some stats by transcript
 cat("calculating tx stats.", "\n")
-txStat <- sapply(unique(readDF$seqnames), function(x){
+nCores = detectCores()
+cat("number of cores:", nCores, "\n")
+tx <- unique(readDF$seqnames)
+txStat <- mclapply(tx, function(x){
   readDF.sel = readDF[readDF$seqnames==x, ]
   meanCovFrac = mean(readDF.sel$covFraction)
   medianCovFrac = median(readDF.sel$covFraction)
   fl95 = sum(readDF.sel$covFraction >= 0.95) / nrow(readDF.sel)
   fl90 = sum(readDF.sel$covFraction >= 0.90) / nrow(readDF.sel)
   c(readDF.sel[1, "tx_len"], meanCovFrac, medianCovFrac, fl95, fl90, nrow(readDF.sel))
-}, simplify = TRUE)
+}, mc.cores = nCores)
+cat("transformming tx stats.", "\n")
+txStat <- matrix(unlist(txStat), nrow = 6)
 txStat <- as.data.frame(t(txStat))
 colnames(txStat) <- c("tx_len", "mean", "median", "fl95", "fl90", "count")
 txStat$log_count <- log(txStat$count)
+txStat$transcript <- tx
 saveRDS(txStat, "txStat.RDS")
 cat("making plot.", "\n")
 # Fig 3C
