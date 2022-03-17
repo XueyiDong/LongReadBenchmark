@@ -197,8 +197,16 @@ quant <- na.omit(quant)
 cor(quant$TPM_short, quant$CPM_long)
 cor(quant$TPM_short[quant$group=="H1975"], quant$CPM_long[quant$group=="H1975"])
 cor(quant$TPM_short[quant$group=="HCC827"], quant$CPM_long[quant$group=="HCC827"])
-H1975.lm <- lm(quant$TPM_short[quant$group=="H1975"] ~ quant$CPM_long[quant$group=="H1975"])
-HCC827.lm <- lm(quant$TPM_short[quant$group=="HCC827"] ~ quant$CPM_long[quant$group=="HCC827"])
-summary(H1975.lm)
-summary(HCC827.lm)
-
+pdf("plots/longVsShortQuant.pdf", height = 5, width = 5)
+ggplot(quant, aes(x = CPM_long, y = TPM_short))+
+  stat_binhex() +
+  scale_fill_viridis(trans = "log10", option = "A")+
+  annotate(geom="text", x=3, y=12,
+           label=paste0("Pearson's r=", round(cor(quant$TPM_short, quant$CPM_long), 3)),
+           size=7)+
+  labs(x = expression("log"[2]*"CPM ONT read counts"),
+       y = expression("log"[2]*"TPM Illumina read counts")
+  ) +
+  theme_bw() +
+  theme(text=element_text(size = 20))
+dev.off()

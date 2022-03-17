@@ -680,7 +680,7 @@ eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
                  list(r2 = format(summary(cpmablm)$r.squared, digits = 3)))))
 library(scales)
 pdf(file.path(OUT, "sequinCPMvsAbundance.pdf"), height = 5, width = 8)
-ggplot(annoData, aes(x=exp, y=value, colour=sample)) +
+p <- ggplot(annoData, aes(x=exp, y=value, colour=sample)) +
   geom_point() +
   theme_bw() +
   scale_x_continuous(trans = "log10", labels = comma) +
@@ -690,7 +690,9 @@ ggplot(annoData, aes(x=exp, y=value, colour=sample)) +
   theme(text = element_text(size = 20)) +
   annotate(geom="text", x = 0.02, y = 12, label = eq, parse = TRUE, size = 6) 
   # annotate(geom="text", x=300, y=160000, label=paste0("Pearson's r=", round(cor(annoData$exp, annoData$value, use = "complete.obs"), 2)), size=8) 
+plot(p)
 dev.off()
+saveRDS(p, "sequinCPMvsAbundancePlot.RDS")
 ```
 
 ## Session information

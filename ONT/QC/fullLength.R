@@ -84,7 +84,7 @@ cat("RDF loaded.", "\n")
 library(parallel)
 #calculate some stats by transcript
 Sys.time()
-cat("calculating tx stats for tx", 1 + 9283 * (args - 1), "to", 9283 * agrs, "\n")
+cat("calculating tx stats for tx", 1 + 9283 * (args - 1), "to", 9283 * args, "\n")
 nCores = detectCores()
 cat("number of cores:", nCores, "\n")
 # tx <- unique(readDF$seqnames)
@@ -92,15 +92,17 @@ cat("number of cores:", nCores, "\n")
 # saveRDS(tx, "tx.RDS")
 tx <- readRDS("tx.RDS")
 tx <- as.character(tx)
-txStat <- mclapply(tx[(1 + 9283 * (args - 1)) : 9283 * agrs], function(x){
+txStat <- mclapply(tx[(1 + 9283 * (args - 1)) : 9283 * args], function(x){
   cat("calculating for tx", x, "\n")
   readDF.sel = readDF[readDF$seqnames==x, ]
   meanCovFrac = mean(readDF.sel$covFraction)
   medianCovFrac = median(readDF.sel$covFraction)
   fl95 = sum(readDF.sel$covFraction >= 0.95) / nrow(readDF.sel)
   fl90 = sum(readDF.sel$covFraction >= 0.90) / nrow(readDF.sel)
-  c(readDF.sel[1, "tx_len"], meanCovFrac, medianCovFrac, fl95, fl90, nrow(readDF.sel))
   cat("Tx length:", readDF.sel[1, "tx_len"], "full length fraction:", fl95, "\n")
+  len.tmp = readDF.sel[1, "tx_len"]
+  rm(readDF.sel)
+  return(c(len.tmp, meanCovFrac, medianCovFrac, fl95, fl90, nrow(readDF.sel)))
 }, mc.cores = nCores)
 Sys.time()
 cat("saving intermediate output result.", "\n")
@@ -116,7 +118,7 @@ txStat <- matrix(unlist(txStat), nrow = 6)
 txStat <- as.data.frame(t(txStat))
 colnames(txStat) <- c("tx_len", "mean", "median", "fl95", "fl90", "count")
 txStat$log_count <- log(txStat$count)
-txStat$tx <- tx[(1 + 9283 * (args - 1)) : 9283 * agrs][which(ind==FALSE)]
+txStat$tx <- tx[(1 + 9283 * (args - 1)) : 9283 * args][which(ind==FALSE)]
 dge <- readRDS("../../longvsshort/dge.rds")
 dge$genes$totalCount <- rowSums(dge$counts[,1:6])
 txStat$count_dge <- dge$genes$totalCount[match(txStat$tx, rownames(dge))]
