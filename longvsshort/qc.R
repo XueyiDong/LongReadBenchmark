@@ -201,15 +201,4 @@ H1975.lm <- lm(quant$TPM_short[quant$group=="H1975"] ~ quant$CPM_long[quant$grou
 HCC827.lm <- lm(quant$TPM_short[quant$group=="HCC827"] ~ quant$CPM_long[quant$group=="HCC827"])
 summary(H1975.lm)
 summary(HCC827.lm)
-pdf("plots/longVsShortQuant.pdf", height = 5, width = 10)
-ggplot(quant, aes(x = CPM_long, y = TPM_short))+
-  facet_grid(cols=vars(group)) +
-  stat_binhex() +
-  scale_fill_viridis(trans = "log10")+
-  theme(text=element_text(size = 20)) +
-  theme_bw() +
-  labs(x = expression("log"[2]*"CPM ONT read counts"),
-       y = expression("log"[2]*"TPM Illumina read counts")
-       )+
-  geom_smooth(method='lm', formula= y~x)
-dev.off()
+
