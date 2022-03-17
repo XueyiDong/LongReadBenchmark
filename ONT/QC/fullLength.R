@@ -53,6 +53,10 @@ library(Hmisc)
 # saveRDS(rdf, "readDF.RDS")
 
 #------------------------
+
+args = commandArgs(trailingOnly=TRUE)
+args = as.numeric(args[1])
+
 # prepare for plotting
 Sys.time()
 cat("reading RDF.", "\n")
@@ -80,7 +84,7 @@ cat("RDF loaded.", "\n")
 library(parallel)
 #calculate some stats by transcript
 Sys.time()
-cat("calculating tx stats.", "\n")
+cat("calculating tx stats for tx", 1 + 9283 * (args - 1), "to", 9283 * agrs, "\n")
 nCores = detectCores()
 cat("number of cores:", nCores, "\n")
 # tx <- unique(readDF$seqnames)
@@ -88,7 +92,7 @@ cat("number of cores:", nCores, "\n")
 # saveRDS(tx, "tx.RDS")
 tx <- readRDS("tx.RDS")
 tx <- as.character(tx)
-txStat <- mclapply(tx, function(x){
+txStat <- mclapply(tx[(1 + 9283 * (args - 1)) : 9283 * agrs], function(x){
   cat("calculating for tx", x, "\n")
   readDF.sel = readDF[readDF$seqnames==x, ]
   meanCovFrac = mean(readDF.sel$covFraction)
@@ -96,35 +100,49 @@ txStat <- mclapply(tx, function(x){
   fl95 = sum(readDF.sel$covFraction >= 0.95) / nrow(readDF.sel)
   fl90 = sum(readDF.sel$covFraction >= 0.90) / nrow(readDF.sel)
   c(readDF.sel[1, "tx_len"], meanCovFrac, medianCovFrac, fl95, fl90, nrow(readDF.sel))
+  cat("Tx length:", readDF.sel[1, "tx_len"], "full length fraction:", fl95, "\n")
 }, mc.cores = nCores)
 Sys.time()
 cat("saving intermediate output result.", "\n")
-saveRDS(txStat, "txStat.RDS")
+saveRDS(txStat, paste0("txStat", args, ".RDS"))
 rm(readDF)
 cat("clean memory.", "\n")
 gc()
 Sys.time()
 cat("transformming tx stats.", "\n")
+ind <- sapply(txStat, is.null, simplify=TRUE)
+table(ind)
 txStat <- matrix(unlist(txStat), nrow = 6)
 txStat <- as.data.frame(t(txStat))
 colnames(txStat) <- c("tx_len", "mean", "median", "fl95", "fl90", "count")
 txStat$log_count <- log(txStat$count)
+txStat$tx <- tx[(1 + 9283 * (args - 1)) : 9283 * agrs][which(ind==FALSE)]
+dge <- readRDS("../../longvsshort/dge.rds")
+dge$genes$totalCount <- rowSums(dge$counts[,1:6])
+txStat$count_dge <- dge$genes$totalCount[match(txStat$tx, rownames(dge))]
 # txStat$transcript <- tx
 gc()
 Sys.time()
 cat("calculation completed.", "\n")
-saveRDS(txStat, "txStat_final.RDS")
+saveRDS(txStat, paste0("txStat_final", args, ".RDS"))
 # gc()
 # cat("making plot.", "\n")
 # Fig 3C
-library(viridis)
-pdf("plots/txLenFL.pdf", height = 5, width = 8)
-ggplot(txStat, aes(x=tx_len, y=fl95, colour = log_count))+
-  scale_x_continuous(trans = "log10") +
-  geom_point() +
-  labs(x = "Annotated transcript length", y = "Fraction of full-length", colour = "log count") +
-  theme_bw() +
-  theme(text = element_text(size = 20)) +
-  scale_colour_viridis()
-dev.off()
+# library(viridis)
+# pdf("plots/txLenFL.pdf", height = 5, width = 8)
+# ggplot(txStat, aes(x=tx_len, y=fl95, colour = log_count))+
+#   scale_x_continuous(trans = "log10") +
+#   geom_point() +
+#   labs(x = "Annotated transcript length", y = "Fraction of full-length", colour = "log count") +
+#   theme_bw() +
+#   theme(text = element_text(size = 20)) +
+#   scale_colour_viridis()
+# ggplot(txStat, aes(x=tx_len, y=fl95))+
+#   scale_x_continuous(trans = "log10") +
+#   stat_binhex() +
+#   theme_bw() +
+#   labs(x = "Annotated transcript length", y = "Fraction of full-length") +
+#   scale_fill_viridis(trans = "log10")+
+#   theme(text=element_text(size = 20)) 
+# dev.off()
 Sys.time()

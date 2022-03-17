@@ -3,6 +3,7 @@ library(edgeR)
 library(MetBrewer)
 library(scales)
 library(RColorBrewer)
+library(tidyverse)
 
 DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
 # load DGE lists
@@ -167,4 +168,48 @@ ggplot(biotype_sum.all, aes(x=sample, y=total_count, fill=factor(biotype, levels
   labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
 dev.off()
 
-#------
+#------ long vs short quantification
+# long CPM vs short TPM
+# filter
+dge.pure <- dge[,1:6]
+dge.pure$samples$group <- rep(c("H1975", "HCC827"), c(3, 3))
+dge.pure <- dge.pure[filterByExpr(dge.pure),] %>% calcNormFactors
+cpm.long <- cpm(dge.pure)
+
+dge.short.pure <- dge.short[,1:6]
+dge.short.pure$samples$group <- rep(c("H1975", "HCC827"), c(3, 3))
+dge.short.pure <- dge.short.pure[filterByExpr(dge.short.pure), ]%>% calcNormFactors
+tpm3 <- function(counts,len) {
+  x <- counts/len
+  return(t(t(x)*1e6/colSums(x)))
+}
+tpm.short <- tpm3(dge.short.pure$counts, dge.short.pure$genes$Length)
+m <- match(rownames(dge.short.pure), rownames(dge.pure))
+quant <- data.frame(
+  TPM_short = c(log(rowMeans(tpm.short[, 1:3]) + 0.5),
+                log(rowMeans(tpm.short[, 4:6]) + 0.5)),
+  CPM_long = c(log(rowMeans(cpm.long[, 1:3]) + 0.5)[m],
+               log(rowMeans(cpm.long[, 4:6]) + 0.5)[m]),
+  group = rep(c("H1975", "HCC827"), rep(nrow(tpm.short), 2))
+)
+quant <- na.omit(quant)
+# correlation
+cor(quant$TPM_short, quant$CPM_long)
+cor(quant$TPM_short[quant$group=="H1975"], quant$CPM_long[quant$group=="H1975"])
+cor(quant$TPM_short[quant$group=="HCC827"], quant$CPM_long[quant$group=="HCC827"])
+H1975.lm <- lm(quant$TPM_short[quant$group=="H1975"] ~ quant$CPM_long[quant$group=="H1975"])
+HCC827.lm <- lm(quant$TPM_short[quant$group=="HCC827"] ~ quant$CPM_long[quant$group=="HCC827"])
+summary(H1975.lm)
+summary(HCC827.lm)
+pdf("plots/longVsShortQuant.pdf", height = 5, width = 10)
+ggplot(quant, aes(x = CPM_long, y = TPM_short))+
+  facet_grid(cols=vars(group)) +
+  stat_binhex() +
+  scale_fill_viridis(trans = "log10")+
+  theme(text=element_text(size = 20)) +
+  theme_bw() +
+  labs(x = expression("log"[2]*"CPM ONT read counts"),
+       y = expression("log"[2]*"TPM Illumina read counts")
+       )+
+  geom_smooth(method='lm', formula= y~x)
+dev.off()
