@@ -1,11 +1,13 @@
 # source("/wehisan/home/allstaff/d/dong.x/analysis/2020/smchd1/NSC/QC/func.R")
-library(ShortRead)
-library(GenomicAlignments)
-library(dplyr)
-library(ggplot2)
-library(data.table)
-library(GenomicFeatures)
-library(Hmisc)
+suppressPackageStartupMessages({
+  library(ShortRead)
+  library(GenomicAlignments)
+  library(dplyr)
+  library(ggplot2)
+  library(data.table)
+  library(GenomicFeatures)
+  library(Hmisc)
+})
 # library(edgeR)
 
 #-----------
@@ -104,7 +106,9 @@ txStat <- mclapply(tx[(1 + 9283 * (args - 1)) : min((9283 * args), length(tx))],
   # cnt = nrow(readDF.sel)
   # rm(readDF.sel)
   return(c(x, readDF[sel[1], "tx_len"], meanCovFrac, medianCovFrac, fl95, fl90, length(sel)))
-}, mc.cores = nCores)
+}, mc.cores = nCores,
+mc.preschedule = FALSE,
+)
 Sys.time()
 cat("saving intermediate output result.", "\n")
 saveRDS(txStat, paste0("full_length/txStat", args, ".RDS"))
