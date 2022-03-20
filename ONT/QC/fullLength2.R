@@ -13,28 +13,28 @@ suppressPackageStartupMessages({
 
 # #--------------
 # # read in single readDF
-dir_rds <- "/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/ONT/QC/full_length"
+dir <- "/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/ONT/QC/readDF"
 args = commandArgs(trailingOnly=TRUE)
 i = as.numeric(args[1])
-RDFs <- list.files(path = dir_rds, pattern=".readDF.RDS$")
+RDFs <- list.files(path = dir, pattern="RDS$")
 Sys.time()
 cat("reading RDF", RDFs[i], "\n")
 readDF <- readRDS(file.path(dir_rds, RDFs[i]))
 Sys.time()
 cat("RDF loaded.", "\n")
 gc()
-# prepare data for plotting
-readDF$seqnames <- as.character(readDF$seqnames)
-readDF$rname <- as.character(readDF$rname)
-# get tx len and attach to readDF
-cat("reading DGE", "\n")
-dge <- readRDS("../../longvsshort/dge.rds")
-gc()
-readDF$tx_len <- dge$genes$Length[match(readDF$seqnames, rownames(dge))]
-maxLength = max(readDF$tx_len)
-readDF$covFraction <- readDF$width / readDF$tx_len
-cat("RDF calculation completed", "\n")
-gc()
+# # prepare data for plotting
+# readDF$seqnames <- as.character(readDF$seqnames)
+# readDF$rname <- as.character(readDF$rname)
+# # get tx len and attach to readDF
+# cat("reading DGE", "\n")
+# dge <- readRDS("../../longvsshort/dge.rds")
+# gc()
+# readDF$tx_len <- dge$genes$Length[match(readDF$seqnames, rownames(dge))]
+# maxLength = max(readDF$tx_len)
+# readDF$covFraction <- readDF$width / readDF$tx_len
+# cat("RDF calculation completed", "\n")
+# gc()
 # library(parallel)
 #calculate some stats by transcript
 Sys.time()
@@ -49,22 +49,24 @@ cat("A total of", length(tx),"tx", "\n")
 txStat <- sapply(tx, function(x){
   # cat("calculating for", substring(x, 1,17), "\n")
   sel = which(readDF$seqnames==x)
-  fl95 = sum(readDF[sel, ]$covFraction >= 0.95)
-  fl90 = sum(readDF[sel, ]$covFraction >= 0.90)
+  meanCovFrac = mean(readDF[sel, ]$covFraction)
+  medianCovFrac = median(readDF[sel, ]$covFraction)
+  fl95 = sum(readDF[sel, ]$covFraction >= 0.95) / length(sel)
+  fl90 = sum(readDF[sel, ]$covFraction >= 0.90) / length(sel)
   # cat(substring(x, 1,17),  "length:", readDF[sel[1], "tx_len"], ", FL count:", fl95, "\n")
-  return(c(x, readDF[sel[1], "tx_len"], fl95, fl90, length(sel)))
+  return(c(x, readDF[sel[1], "tx_len"], meanCovFrac, medianCovFrac, fl95, fl90, length(sel)))
 }, simplify=TRUE)
 Sys.time()
 cat("saving intermediate output result.", "\n")
-saveRDS(txStat, paste0("txStat/txStatRaw", i, ".RDS"))
+saveRDS(txStat, paste0("txStat/byTx/txStatRaw", i, ".RDS"))
 rm(readDF)
 cat("clean memory.", "\n")
 gc()
 Sys.time()
 cat("transformming tx stats.", "\n")
 txStat <- as.data.frame(t(txStat))
-colnames(txStat) <- c("tx", "tx_len", "fl95", "fl90", "count")
+colnames(txStat) <- c("tx", "tx_len", "mean", "median", "fl95", "fl90", "count")
 gc()
 Sys.time()
 cat("calculation completed.", "\n")
-saveRDS(txStat, paste0("txStat/txStat", i, ".RDS"))
+saveRDS(txStat, paste0("txStat/byTx/txStat", i, ".RDS"))
