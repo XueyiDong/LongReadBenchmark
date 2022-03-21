@@ -146,6 +146,8 @@ rm(tmp)
 txStat <- txStat[-1, ]
 dge <- readRDS("../../longvsshort/dge.rds")
 dge$genes$totalCount <- rowSums(dge$counts[, 1:6])
+dge$samples$group <- rep(c("000", "100", "075", "050", "025"), rep(3, 5))
+filter <- filterByExpr(dge[, 1:6])
 txStat$count <- dge$counts[match(txStat$tx, rownames(dge))]
 txStat$log_count <- log(txStat$count + 0.5)
 txStat$tx_len <- as.numeric(as.character(txStat$tx_len))
@@ -153,38 +155,108 @@ txStat$mean <- as.numeric(as.character(txStat$mean))
 txStat$median <- as.numeric(as.character(txStat$median))
 txStat$fl90 <- as.numeric(as.character(txStat$fl90))
 txStat$fl95 <- as.numeric(as.character(txStat$fl95))
+txStat.filt <- txStat[filter[match(txStat$tx, names(filter))],]
 # ---------------------------------------
 # making plots
 # gc()
 cat("making plot.", "\n")
 library(viridis)
+library(ggExtra)
 pdf("plots/txLenFL.pdf", height = 5, width = 8)
-ggplot(txStat, aes(x=tx_len, y=fl95, colour = log_count))+
+p1 <- ggplot(txStat.filt, aes(x=tx_len, y=fl95, colour = log_count))+
   scale_x_continuous(trans = "log10") +
   geom_point() +
+  # geom_rug() +
   labs(x = "Annotated transcript length", y = "Fraction of full-length", colour = "log count") +
   theme_bw() +
   theme(text = element_text(size = 20)) +
   scale_colour_viridis()
-ggplot(txStat, aes(x=tx_len, y=fl95))+
+ggMarginal(p1, type = "histogram")
+ggplot(txStat.filt, aes(x=tx_len, y=fl95))+
   scale_x_continuous(trans = "log10") +
   stat_binhex() +
   theme_bw() +
   labs(x = "Annotated transcript length", y = "Fraction of full-length") +
   scale_fill_viridis(trans = "log10")+
   theme(text=element_text(size = 20))
-ggplot(txStat, aes(x=tx_len, y=mean))+
+ggplot(txStat.filt, aes(x=tx_len, y=mean))+
   scale_x_continuous(trans = "log10") +
   stat_binhex() +
   theme_bw() +
   labs(x = "Annotated transcript length", y = "Mean coverage fraction") +
   scale_fill_viridis(trans = "log10")+
   theme(text=element_text(size = 20))
-ggplot(txStat, aes(x=tx_len, y=median))+
+ggplot(txStat.filt, aes(x=tx_len, y=median))+
   scale_x_continuous(trans = "log10") +
   stat_binhex() +
   theme_bw() +
   labs(x = "Annotated transcript length", y = "Median coverage fraction") +
   scale_fill_viridis(trans = "log10")+
   theme(text=element_text(size = 20))
+dev.off()
+# violin plot
+maxLength = max(txStat.filt$tx_len)
+txStat.filt$lengthGroup <- Hmisc::cut2(txStat.filt$tx_len, cuts = c(0, 500, 1000, 2000, maxLength))
+txStat.filt$lengthGroup <- gsub(" ", "", txStat.filt$lengthGroup)
+txStat.filt$lengthGroup <- gsub(",", ", ", txStat.filt$lengthGroup)
+txStat.filt$lengthGroup <- factor(txStat.filt$lengthGroup, levels = c(
+  "[0, 500)", "[500, 1000)", "[1000, 2000)", paste0("[2000, ", maxLength, "]")
+))
+stat_box_data <- function(y, upper_limit = 1.15) {
+  return( 
+    data.frame(
+      y = 1.05,
+      label = length(y)
+    )
+  )
+}
+pdf("plots/txLenFLViolin.pdf", height = 5, width = 8)
+ggplot(txStat.filt, aes(x=lengthGroup, y=fl95, fill=lengthGroup, colour=lengthGroup)) +
+  geom_violin(alpha = 0.4) +
+  geom_boxplot(width = 0.1, outlier.color = NA, alpha = 0) +
+  theme_bw() +
+  theme(text = element_text(size=20), legend.position = "none") +
+  labs(x = "Annotated transcript length", y = "Fraction of full-length")+
+  stat_summary(
+    fun.data = stat_box_data, 
+    geom = "text", 
+    hjust = 0.5,
+    vjust = 0.9
+  ) 
+ggplot(txStat.filt, aes(x=lengthGroup, y=fl90, fill=lengthGroup, colour=lengthGroup)) +
+  geom_violin(alpha = 0.4) +
+  geom_boxplot(width = 0.1, outlier.color = NA, alpha = 0) +
+  theme_bw() +
+  theme(text = element_text(size=20), legend.position = "none") +
+  labs(x = "Annotated transcript length", y = "Fraction of full-length")+
+  stat_summary(
+    fun.data = stat_box_data, 
+    geom = "text", 
+    hjust = 0.5,
+    vjust = 0.9
+  )
+ggplot(txStat.filt, aes(x=lengthGroup, y=median, fill=lengthGroup, colour=lengthGroup)) +
+  geom_violin(alpha = 0.4) +
+  geom_boxplot(width = 0.1, outlier.color = NA, alpha = 0) +
+  theme_bw() +
+  theme(text = element_text(size=20), legend.position = "none") +
+  labs(x = "Annotated transcript length", y = "Median base coverage fraction")+
+  stat_summary(
+    fun.data = stat_box_data, 
+    geom = "text", 
+    hjust = 0.5,
+    vjust = 0.9
+  )
+ggplot(txStat.filt, aes(x=lengthGroup, y=mean, fill=lengthGroup, colour=lengthGroup)) +
+  geom_violin(alpha = 0.4) +
+  geom_boxplot(width = 0.1, outlier.color = NA, alpha = 0) +
+  theme_bw() +
+  theme(text = element_text(size=20), legend.position = "none") +
+  labs(x = "Annotated transcript length", y = "Mean base coverage fraction")+
+  stat_summary(
+    fun.data = stat_box_data, 
+    geom = "text", 
+    hjust = 0.5,
+    vjust = 0.9
+  )
 dev.off()
