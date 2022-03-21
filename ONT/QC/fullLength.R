@@ -54,6 +54,25 @@ suppressPackageStartupMessages({
 #     gc()
 # }
 # saveRDS(rdf, "readDF.RDS")
+# gc()
+
+# readDF$seqnames <- as.character(readDF$seqnames)
+# readDF$rname <- as.character(readDF$rname)
+# # get tx len and attach to readDF
+# cat("reading DGE", "\n")
+# dge <- readRDS("../../longvsshort/dge.rds")
+# gc()
+# readDF$tx_len <- dge$genes$Length[match(readDF$seqnames, rownames(dge))]
+# # remove 'novel' isoforms
+# # readDF$novelty <- is.na(readDF$tx_len)
+# # readDF <- readDF[!readDF$novelty,]
+# maxLength = max(readDF$tx_len)
+# readDF$txLengthGroup <- cut2(readDF$tx_len, cuts = c(0, 500, 1000, 1500,
+#                                              2000, maxLength))
+# readDF$covFraction <- readDF$width / readDF$tx_len
+# cat("Saving RDF.", "\n")
+# saveRDS(readDF, "readDF2.RDS")
+# gc()
 
 #------------------------
 # # split RDF by tx
@@ -125,6 +144,15 @@ for(i in 1:17){
 }
 rm(tmp)
 txStat <- txStat[-1, ]
+dge <- readRDS("../../longvsshort/dge.rds")
+dge$genes$totalCount <- rowSums(dge$counts[, 1:6])
+txStat$count <- dge$counts[match(txStat$tx, rownames(dge))]
+txStat$log_count <- log(txStat$count + 0.5)
+txStat$tx_len <- as.numeric(as.character(txStat$tx_len))
+txStat$mean <- as.numeric(as.character(txStat$mean))
+txStat$median <- as.numeric(as.character(txStat$median))
+txStat$fl90 <- as.numeric(as.character(txStat$fl90))
+txStat$fl95 <- as.numeric(as.character(txStat$fl95))
 # ---------------------------------------
 # making plots
 # gc()
@@ -145,5 +173,18 @@ ggplot(txStat, aes(x=tx_len, y=fl95))+
   labs(x = "Annotated transcript length", y = "Fraction of full-length") +
   scale_fill_viridis(trans = "log10")+
   theme(text=element_text(size = 20))
+ggplot(txStat, aes(x=tx_len, y=mean))+
+  scale_x_continuous(trans = "log10") +
+  stat_binhex() +
+  theme_bw() +
+  labs(x = "Annotated transcript length", y = "Mean coverage fraction") +
+  scale_fill_viridis(trans = "log10")+
+  theme(text=element_text(size = 20))
+ggplot(txStat, aes(x=tx_len, y=median))+
+  scale_x_continuous(trans = "log10") +
+  stat_binhex() +
+  theme_bw() +
+  labs(x = "Annotated transcript length", y = "Median coverage fraction") +
+  scale_fill_viridis(trans = "log10")+
+  theme(text=element_text(size = 20))
 dev.off()
-Sys.time()
