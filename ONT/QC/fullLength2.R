@@ -19,31 +19,12 @@ i = as.numeric(args[1])
 RDFs <- list.files(path = dir, pattern="RDS$")
 Sys.time()
 cat("reading RDF", RDFs[i], "\n")
-readDF <- readRDS(file.path(dir_rds, RDFs[i]))
+readDF <- readRDS(file.path(dir, RDFs[i]))
 Sys.time()
 cat("RDF loaded.", "\n")
 gc()
-# # prepare data for plotting
-# readDF$seqnames <- as.character(readDF$seqnames)
-# readDF$rname <- as.character(readDF$rname)
-# # get tx len and attach to readDF
-# cat("reading DGE", "\n")
-# dge <- readRDS("../../longvsshort/dge.rds")
-# gc()
-# readDF$tx_len <- dge$genes$Length[match(readDF$seqnames, rownames(dge))]
-# maxLength = max(readDF$tx_len)
-# readDF$covFraction <- readDF$width / readDF$tx_len
-# cat("RDF calculation completed", "\n")
-# gc()
-# library(parallel)
-#calculate some stats by transcript
 Sys.time()
-# cat("calculating for", 1 + 9283 * (args - 1), "to", 9283 * args, "\n")
-# nCores = detectCores()
-# cat("number of cores:", nCores, "\n")
-# tx <- unique(readDF$seqnames)
-# cat("number of transcripts:", length(tx), "\n")
-# saveRDS(tx, "tx.RDS")
+
 tx <- unique(readDF$seqnames)
 cat("A total of", length(tx),"tx", "\n")
 txStat <- sapply(tx, function(x){
