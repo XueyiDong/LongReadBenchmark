@@ -68,7 +68,7 @@ overdisp2$nTxGroup <- Hmisc::cut2(overdisp2$numberTranscript, cuts = c(1, 2, 6, 
 # }
 #DEPRECATED: to add number on X axis
 # my_xlab <- paste(levels(overdisp2$nTxGroup),"\n(N=",table(overdisp2$nTxGroup),")",sep="")
-pdf("plots/overdispBox.pdf", height = 4, width = 5)
+pdf("plots/overdispBox.pdf", height = 6, width = 5)
 ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
   geom_boxplot(varwidth = TRUE, alpha=0.4) +
   # geom_violin(alpha=0) +

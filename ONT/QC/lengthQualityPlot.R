@@ -25,30 +25,32 @@ stat_box_data <- function(y, upper_limit = max(qcdata$Qscore) * 1.15) {
   )
 }
 
-pdf("plots/lengthQualityViolin.pdf", height = 4, width = 8)
+pdf("plots/lengthQualityViolin.pdf", height = 4, width = 5)
 ggplot(qcdata.filt, aes(x=LengthGroup, y=Qscore, fill=LengthGroup, colour = LengthGroup)) +
   geom_violin(alpha = 0.4) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   theme_bw() +
-  theme(text = element_text(size=20), legend.position = "none") +
   labs(x = "Read length")+
   stat_summary(
     fun.data = stat_box_data, 
     geom = "text", 
     hjust = 0.5,
     vjust = 0.9
-  ) 
+  )  +
+  theme(text = element_text(size=20), legend.position = "none",
+        axis.text.x = element_text(angle = 30, hjust = 1))
 dev.off()
 
-pdf("plots/sampleQualityBox.pdf", height = 4, width = 8)
-ggplot(qcdata, aes(x=Barcode, y=Qscore, fill=Barcode, colour = Barcode)) +
-  geom_boxplot(alpha = 0.4) +
-  theme_bw() +
-  theme(text = element_text(size=20), legend.position = "none", axis.text.x = element_text(angle = 90)) +
-  labs(x = "Read length")+
-  stat_summary(
-    fun.data = stat_box_data, 
-    geom = "text", 
-    hjust = 0.5,
-    vjust = 0.9
-  ) 
-dev.off()
+# pdf("plots/sampleQualityBox.pdf", height = 4, width = 8)
+# ggplot(qcdata, aes(x=Barcode, y=Qscore, fill=Barcode, colour = Barcode)) +
+#   geom_boxplot(alpha = 0.4) +
+#   theme_bw()  +
+#   labs(x = "Read length")+
+#   stat_summary(
+#     fun.data = stat_box_data, 
+#     geom = "text", 
+#     hjust = 0.5,
+#     vjust = 0.9
+#   ) +
+#   theme(text = element_text(size=20), legend.position = "none", axis.text.x = element_text(angle = 90))
+# dev.off()
