@@ -8,7 +8,7 @@ p.long <- p.long + theme(legend.position = "none") +
   ggtitle("ONT sequins") 
 p.short <- p.short + theme(legend.position = "none") +
   ggtitle("Illumina sequins") 
-pdf("plots/sequinCPMvsAbundance.pdf", height = 8, width = 8)
+pdf("plots/sequinCPMvsAbundance.pdf", height = 8, width = 7)
 plot_grid(p.long,
           p.short,
           leg,
