@@ -225,7 +225,7 @@ anno <- data.frame(
   dataset = rep(c("ONT", "Illumina"), c(6, 6))
 )
 anno_colours = list(
-  cell_type = c(H1975 = "firebrick1", HCC827 = "dodgerblue3"),
+  cell_type = c(H1975 = "#8b3a2b", HCC827 = "#235070"),
   dataset = c(ONT = "#438DAC", Illumina = "#FCB344")
 )
 rownames(anno) <- rownames(cormat)
@@ -244,7 +244,7 @@ cpm <- cpm(dge.all[, 1:6])
 tpm <- tpm3(dge.all$counts[, 7:12], dge.short$genes$Length[match(rownames(dge.all), rownames(dge.short))])
 quant.all <- cbind(cpm, tpm)
 cormat2 <- cor(quant.all)
-pdf("plots/corHeatmap.pdf", height = 8, width = 8)
+pdf("plots/corHeatmap.pdf", height = 8, width = 9)
 pheatmap(cormat2,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
          cluster_cols = FALSE,

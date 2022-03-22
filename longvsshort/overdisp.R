@@ -78,8 +78,8 @@ ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
   theme_bw()+
   theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1),
         legend.position = "bottom") +
-  scale_fill_manual(values = c("#438DAC", "#FCB344")) +
-  scale_colour_manual(values = c("#438DAC", "#FCB344"))
+  scale_fill_manual(values = c("#FCB344", "#438DAC")) +
+  scale_colour_manual(values = c("#FCB344", "#438DAC"))
 # +
 #   stat_summary(
 #     fun.data = stat_box_data, 
