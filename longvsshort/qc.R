@@ -30,7 +30,7 @@ read.stat <- data.frame(
 
 read.stat <- data.table::melt(read.stat, id.vars = c("sample", "dataset"))
 # read num plot
-pdf("plots/readNum.pdf", height = 5, width = 8)
+pdf("plots/readNum.pdf", height = 6, width = 6)
 ggplot(read.stat, aes(x=variable, y=value, fill=sample, label = value))+
   geom_bar(stat="identity") +
   facet_grid(cols=vars(dataset)) +
@@ -210,3 +210,69 @@ ggplot(quant, aes(x = CPM_long, y = TPM_short))+
   theme_bw() +
   theme(text=element_text(size = 20))
 dev.off()
+
+#------- quantification correlation matrix heatmap
+m <- match(rownames(dge.short), rownames(dge))
+table(is.na(m))
+dge.all <- DGEList(counts = cbind(dge$counts[m, 1:6], dge.short$counts[, 1:6]))
+dge.all$samples$group <- rep(c("H1975_long", "HCC827_long", "H1975_short", "HCC827_short"), c(3, 3, 3, 3))
+filt <- filterByExpr(dge.all)
+dge.all <- dge.all[filt,]
+cormat <- cor(dge.all$counts)
+library(pheatmap)
+anno <- data.frame(
+  cell_type = rep(rep(c("H1975", "HCC827"), c(3, 3)), 2),
+  dataset = rep(c("ONT", "Illumina"), c(6, 6))
+)
+anno_colours = list(
+  cell_type = c(H1975 = "firebrick1", HCC827 = "dodgerblue3"),
+  dataset = c(ONT = "#438DAC", Illumina = "#FCB344")
+)
+rownames(anno) <- rownames(cormat)
+pheatmap(cormat,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE
+         )
+cpm <- cpm(dge.all[, 1:6])
+tpm <- tpm3(dge.all$counts[, 7:12], dge.short$genes$Length[match(rownames(dge.all), rownames(dge.short))])
+quant.all <- cbind(cpm, tpm)
+cormat2 <- cor(quant.all)
+pdf("plots/corHeatmap.pdf", height = 8, width = 8)
+pheatmap(cormat2,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE,
+         number_color = "black",
+         fontsize = 16,
+         fontsize_number = 12
+)
+dev.off()
+# log scale
+cormat3 <- cor(log(quant.all + 0.5))
+pheatmap(cormat3,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE,
+         number_color = "black"
+)

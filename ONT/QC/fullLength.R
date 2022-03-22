@@ -260,3 +260,6 @@ ggplot(txStat.filt, aes(x=lengthGroup, y=mean, fill=lengthGroup, colour=lengthGr
     vjust = 0.9
   )
 dev.off()
+
+# calculation overall full length proportion
+sum(txStat$fl95 * txStat$count) / sum(txStat$count)

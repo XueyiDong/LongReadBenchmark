@@ -20,7 +20,7 @@ ggplot(qcdata, aes(x=Read_length, colour=Barcode, linetype=Barcode)) +
 dev.off()
 
 # undemultiplexed reads are filtered out
-pdf("plots/LengthDist.pdf", height = 5, width = 8)
+pdf("plots/LengthDist.pdf", height = 4, width = 5)
 ggplot(qcdata[qcdata$Barcode != "other", ], aes(x=Read_length)) +
   geom_density(colour="black") +
   geom_histogram(aes(y=..density..), fill="#438DAC", colour="#438DAC", alpha = .3, bins=50) +

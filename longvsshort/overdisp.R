@@ -38,7 +38,7 @@ dge.short$genes$nTranscript <- calcTxNum(rownames(dge.short), grepl("^R", rownam
 overdisp2 <- data.frame(
   Overdispersion = c(dge$genes$Overdispersion, dge.short$genes$Overdispersion),
   Length = c(dge$genes$Length, dge.short$genes$Length),
-  Data = rep(c("ONT long read", "Illumina short read"), c(nrow(dge), nrow(dge.short))),
+  Data = rep(c("ONT", "Illumina"), c(nrow(dge), nrow(dge.short))),
   Gene = c(rownames(dge), rownames(dge.short)),
   AveExpr = c(rowSums(dge$counts), rowSums(dge.short$counts)),
   numberTranscript = c(dge$genes$nTranscript, dge.short$genes$nTranscript)
@@ -56,8 +56,8 @@ overdisp2$numberTranscript <- c(dge$genes$nTranscript, dge.short$genes$nTranscri
 
 #stratify by number of transcripts per gene
 # DEPRECATED: to add number of ob on plot
-# maxnum <- max(overdisp2$numberTranscript)
-# overdisp2$nTxGroup <- Hmisc::cut2(overdisp2$numberTranscript, cuts = c(1, 2, 6, 11, 21, 51, maxnum))
+maxnum <- max(overdisp2$numberTranscript)
+overdisp2$nTxGroup <- Hmisc::cut2(overdisp2$numberTranscript, cuts = c(1, 2, 6, 11, 21, 51, maxnum))
 # stat_box_data <- function(y, upper_limit = max(overdisp2$Overdispersion) * 1.15) {
 #   return( 
 #     data.frame(
@@ -68,7 +68,7 @@ overdisp2$numberTranscript <- c(dge$genes$nTranscript, dge.short$genes$nTranscri
 # }
 #DEPRECATED: to add number on X axis
 # my_xlab <- paste(levels(overdisp2$nTxGroup),"\n(N=",table(overdisp2$nTxGroup),")",sep="")
-pdf("plots/overdispBox.pdf", height = 5, width = 8)
+pdf("plots/overdispBox.pdf", height = 4, width = 5)
 ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
   geom_boxplot(varwidth = TRUE, alpha=0.4) +
   # geom_violin(alpha=0) +
@@ -76,7 +76,8 @@ ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
   labs(x = "Number of transcripts per gene") +
   scale_y_continuous(trans = "log10") +
   theme_bw()+
-  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = "bottom") +
   scale_fill_manual(values = c("#438DAC", "#FCB344")) +
   scale_colour_manual(values = c("#438DAC", "#FCB344"))
 # +
