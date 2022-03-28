@@ -4,6 +4,7 @@ library(MetBrewer)
 library(scales)
 library(RColorBrewer)
 library(tidyverse)
+library(cowplot)
 
 DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
 # load DGE lists
@@ -285,6 +286,7 @@ summary(lm.long)
 pdf("plots/longLenBias.pdf", height = 5, width = 8)
 ggplot(dge.pure$genes, aes(x = Length, y = totalCount))+
   stat_binhex() +
+  geom_smooth(formula = y~x, method="lm") +
   scale_fill_viridis(trans = "log10", option = "A")+
   scale_x_continuous(trans = "log10") +
   scale_y_continuous(trans = "log10") +
@@ -298,6 +300,32 @@ ggplot(dge.pure$genes, aes(x = Length, y = totalCount))+
   theme(text=element_text(size = 20))
 dev.off()
 
+p <- lapply(1:6, function(x){
+  dat <- data.frame(
+    Length = dge.pure$genes$Length,
+    Count = dge.pure$counts[,x]
+  )
+  p <- ggplot(dat, aes(x = Length, y = Count))+
+    stat_binhex() +
+    geom_smooth(formula = y~x, method="lm") +
+    scale_fill_viridis(trans = "log10", option = "A")+
+    scale_x_continuous(trans = "log10") +
+    scale_y_continuous(trans = "log10") +
+    annotate(geom="text", x=max(dat$Length) * 0.05, y=max(dat$Count) * 0.8,
+             label=paste0("Pearson's r=", round(cor(dat$Length, dat$Count), 3)),
+             size=7)+
+    labs(x = "Transcript length",
+         y = "Total read count"
+    ) +
+    theme_bw() +
+    theme(text=element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1))
+  return(p)
+})
+pdf("plots/longLenBiasSamp.pdf", height = 9, width = 16)
+plot_grid(p[[1]], p[[2]], p[[3]], p[[4]], p[[5]], p[[6]],
+          labels = paste(rep(c("H1975", "HCC827"), c(3, 3)), c(1, 2, 3, 1, 2, 5), sep = "-"))
+dev.off()
+
 dge.short.pure$genes$totalCount <- rowSums(dge.short.pure$counts)
 lm.short <- lm(dge.short.pure$genes$totalCount~dge.short.pure$genes$Length)
 summary(lm.short)
@@ -305,6 +333,7 @@ summary(lm.short)
 pdf("plots/shortLenBias.pdf", height = 5, width = 8)
 ggplot(dge.short.pure$genes, aes(x = Length, y = totalCount))+
   stat_binhex() +
+  geom_smooth(formula = y~x, method="lm") +
   scale_fill_viridis(trans = "log10", option = "A")+
   scale_x_continuous(trans = "log10") +
   scale_y_continuous(trans = "log10") +
@@ -316,4 +345,30 @@ ggplot(dge.short.pure$genes, aes(x = Length, y = totalCount))+
   ) +
   theme_bw() +
   theme(text=element_text(size = 20))
+dev.off()
+
+p <- lapply(1:6, function(x){
+  dat <- data.frame(
+    Length = dge.short.pure$genes$Length,
+    Count = dge.short.pure$counts[,x]
+  )
+  p <- ggplot(dat, aes(x = Length, y = Count))+
+    stat_binhex() +
+    geom_smooth(formula = y~x, method="lm") +
+    scale_fill_viridis(trans = "log10", option = "A")+
+    scale_x_continuous(trans = "log10") +
+    scale_y_continuous(trans = "log10") +
+    annotate(geom="text", x=max(dat$Length) * 0.05, y=max(dat$Count) * 0.8,
+             label=paste0("Pearson's r=", round(cor(dat$Length, dat$Count), 3)),
+             size=7)+
+    labs(x = "Transcript length",
+         y = "Total read count"
+    ) +
+    theme_bw() +
+    theme(text=element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1))
+  return(p)
+})
+pdf("plots/ShortLenBiasSamp.pdf", height = 9, width = 16)
+plot_grid(p[[1]], p[[2]], p[[3]], p[[4]], p[[5]], p[[6]],
+          labels = paste(rep(c("H1975", "HCC827"), c(3, 3)), c(1, 2, 3, 1, 2, 5), sep = "-"))
 dev.off()
