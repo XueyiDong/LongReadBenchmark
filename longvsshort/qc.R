@@ -276,3 +276,44 @@ pheatmap(cormat3,
          display_numbers = TRUE,
          number_color = "black"
 )
+
+#--------------------length bias plot
+dge.pure$genes$totalCount <- rowSums(dge.pure$counts)
+lm.long <- lm(dge.pure$genes$totalCount~dge.pure$genes$Length)
+summary(lm.long)
+# Multiple R-squared:  0.0007356,	Adjusted R-squared:  0.0007191 
+pdf("plots/longLenBias.pdf", height = 5, width = 8)
+ggplot(dge.pure$genes, aes(x = Length, y = totalCount))+
+  stat_binhex() +
+  scale_fill_viridis(trans = "log10", option = "A")+
+  scale_x_continuous(trans = "log10") +
+  scale_y_continuous(trans = "log10") +
+  annotate(geom="text", x=max(dge.pure$genes$Length) * 0.1, y=max(dge.pure$genes$totalCount) * 0.8,
+           label=paste0("Pearson's r=", round(cor(dge.pure$genes$Length, dge.pure$genes$totalCount), 3)),
+           size=7)+
+  labs(x = "Transcript length",
+       y = "Total read count"
+  ) +
+  theme_bw() +
+  theme(text=element_text(size = 20))
+dev.off()
+
+dge.short.pure$genes$totalCount <- rowSums(dge.short.pure$counts)
+lm.short <- lm(dge.short.pure$genes$totalCount~dge.short.pure$genes$Length)
+summary(lm.short)
+# Multiple R-squared:  3.275e-06,	Adjusted R-squared:  -2.818e-05
+pdf("plots/shortLenBias.pdf", height = 5, width = 8)
+ggplot(dge.short.pure$genes, aes(x = Length, y = totalCount))+
+  stat_binhex() +
+  scale_fill_viridis(trans = "log10", option = "A")+
+  scale_x_continuous(trans = "log10") +
+  scale_y_continuous(trans = "log10") +
+  annotate(geom="text", x=max(dge.short.pure$genes$Length) * 0.1, y=max(dge.short.pure$genes$totalCount) * 0.8,
+           label=paste0("Pearson's r=", round(cor(dge.short.pure$genes$Length, dge.short.pure$genes$totalCount), 3)),
+           size=7)+
+  labs(x = "Transcript length",
+       y = "Total read count"
+  ) +
+  theme_bw() +
+  theme(text=element_text(size = 20))
+dev.off()

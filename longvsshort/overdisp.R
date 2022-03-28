@@ -70,10 +70,10 @@ overdisp2$nTxGroup <- Hmisc::cut2(overdisp2$numberTranscript, cuts = c(1, 2, 6, 
 # my_xlab <- paste(levels(overdisp2$nTxGroup),"\n(N=",table(overdisp2$nTxGroup),")",sep="")
 pdf("plots/overdispBox.pdf", height = 6, width = 5)
 ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
-  geom_boxplot(varwidth = TRUE, alpha=0.4) +
+  geom_boxplot(varwidth = TRUE, alpha=0.4, outlier.shape = NA) +
   # geom_violin(alpha=0) +
   # geom_jitter() +
-  labs(x = "Number of transcripts per gene") +
+  labs(x = "Number of transcripts per gene", y = "Assignment ambiguity") +
   scale_y_continuous(trans = "log10") +
   theme_bw()+
   theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1),
@@ -103,6 +103,22 @@ dev.off()
 #   theme_bw()
 # dev.off()
 
+# overdispersion vs length
+maxLength <- max(overdisp2$Length)
+overdisp2$lengthGroup <- Hmisc::cut2(overdisp2$Length, cuts = c(0, 500, 1000, 2000, maxLength))
+pdf("plots/overdispLength.pdf", height = 6, width = 5)
+ggplot(overdisp2, aes(x=lengthGroup, y=Overdispersion, fill=Data, colour=Data)) +
+  geom_boxplot(varwidth = TRUE, alpha=0.4, outlier.shape = NA) +
+  # geom_violin(alpha=0) +
+  # geom_jitter() +
+  labs(x = "Annotated transcript length", y = "Assignment ambiguity") +
+  scale_y_continuous(trans = "log10") +
+  theme_bw()+
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = "bottom") +
+  scale_fill_manual(values = c("#FCB344", "#438DAC")) +
+  scale_colour_manual(values = c("#FCB344", "#438DAC"))
+dev.off()
 
 # explore ONT or Illumina only findings
 DE.human.illumina.100vs000 <- readRDS("DE.human.illumina.100vs000.RDS")
