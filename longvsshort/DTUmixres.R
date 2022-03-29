@@ -1,3 +1,8 @@
+library(ggplot2)
+library(UpSetR)
+
+DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
+
 DTU.gene.human.ONT <- readRDS("../ONT/DTUmix/DTU.gene.human.RDS")
 DTU.gene.sequin.ONT <- readRDS("../ONT/DTUmix/DTU.gene.sequin.RDS")
 DTU.tx.human.ONT <- readRDS("../ONT/DTUmix/DTU.tx.human.RDS")
@@ -6,6 +11,7 @@ DTU.gene.human.illumina <- readRDS("../illumina/DTUmix/DTU.gene.human.RDS")
 DTU.gene.sequin.illumina <- readRDS("../illumina/DTUmix/DTU.gene.sequin.RDS")
 DTU.tx.human.illumina <- readRDS("../illumina/DTUmix/DTU.tx.human.RDS")
 DTU.tx.sequin.illumina <- readRDS("../illumina/DTUmix/DTU.tx.sequin.RDS")
+
 
 DTUgenecomp <- data.frame(
   method = character(0),
@@ -79,7 +85,6 @@ DTU.gene.human.ONT.100vs000 <- lapply(DTU.gene.human.ONT, function(x){
   return(x[[1]])
 })
 names(DTU.gene.human.ONT.100vs000) <- paste(c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn"), "ONT", sep = "_")
-library(UpSetR)
 pdf("plots/DTUgenehumanUpset.pdf", height = 5, width = 11)
 upset(fromList(append(DTU.gene.human.illumina.100vs000, DTU.gene.human.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
@@ -101,6 +106,52 @@ upset(fromList(append(DTU.gene.sequin.illumina.100vs000, DTU.gene.sequin.ONT.100
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
       sets.bar.color = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227")[c(2, 1, 5, 4, 3, 2, 5, 1, 4, 3)])
+dev.off()
+
+# human and sequin
+DTU.gene.illumina.100vs000 <- DTU.gene.human.illumina.100vs000
+DTU.gene.ONT.100vs000 <- DTU.gene.human.ONT.100vs000
+for(i in 1:5){
+  DTU.gene.illumina.100vs000[[i]] <- c(DTU.gene.illumina.100vs000[[i]], DTU.gene.sequin.illumina.100vs000[[i]])
+  DTU.gene.ONT.100vs000[[i]] <- c(DTU.gene.ONT.100vs000[[i]], DTU.gene.sequin.ONT.100vs000[[i]])
+}
+pdf("plots/DTUgeneUpset.pdf", height = 5, width = 11)
+upset(fromList(append(DTU.gene.illumina.100vs000, DTU.gene.ONT.100vs000)), 
+      nsets=10, nintersects = 25, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
+      sets.bar.color = rep(c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"), 2)[order(sapply(append(DTU.gene.illumina.100vs000, DTU.gene.ONT.100vs000), length, simplify=T), decreasing = T)])
+dev.off()
+
+# gene tested by all methods only
+gene.human.ONT <- readRDS(file.path(DIR, "ONT/DTUmix/gene.human.RDS"))
+gene.sequin.ONT <- readRDS(file.path(DIR, "ONT/DTUmix/gene.sequin.RDS"))
+gene.human.illumina <- readRDS(file.path(DIR, "illumina/DTUmix/gene.human.RDS"))
+gene.sequin.illumina <- readRDS(file.path(DIR, "illumina/DTUmix/gene.sequin.RDS"))
+gene.human.ONT.100vs000 <- lapply(gene.human.ONT, function(x){
+  return(x[[1]])
+})
+gene.sequin.ONT.100vs000 <- lapply(gene.sequin.ONT, function(x){
+  return(x[[1]])
+})
+gene.human.illumina.100vs000 <- lapply(gene.human.illumina, function(x){
+  return(x[[1]])
+})
+gene.sequin.illumina.100vs000 <- lapply(gene.sequin.illumina, function(x){
+  return(x[[1]])
+})
+gene.human <- Reduce(intersect, append(gene.human.ONT.100vs000, gene.human.illumina.100vs000))
+gene.sequin <- Reduce(intersect, append(gene.sequin.ONT.100vs000, gene.sequin.illumina.100vs000))
+DTU.gene.illumina.100vs000.filt <- lapply(DTU.gene.illumina.100vs000, function(x){
+  return(x[x %in% c(gene.human, gene.sequin)])
+})
+DTU.gene.ONT.100vs000.filt <- lapply(DTU.gene.ONT.100vs000, function(x){
+  return(x[x %in% c(gene.human, gene.sequin)])
+})
+pdf("plots/DTUgeneUpsetFilt.pdf", height = 5, width = 11)
+upset(fromList(append(DTU.gene.illumina.100vs000.filt, DTU.gene.ONT.100vs000.filt)), 
+      nsets=10, nintersects = 25, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
+      sets.bar.color = rep(c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"), 2)[order(sapply(append(DTU.gene.illumina.100vs000.filt, DTU.gene.ONT.100vs000.filt), length, simplify=T), decreasing = T)])
 dev.off()
 
 # some further exploration
