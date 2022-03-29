@@ -121,6 +121,12 @@ DTU.gene.human.DRIMSeq <- lapply(drres.human, function(x){
 DTU.tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
   na.omit(x$feature_id[x$adj_pvalue < 0.05])
 })
+gene.human.DRIMSeq <- lapply(drres.human, function(x){
+  return(x$gene_id)
+})
+tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
+  return(x$feature_id)
+})
 ```
 
 ```{r DRIMSeq2, echo=FALSE, eval=TRUE}
@@ -161,6 +167,12 @@ DTU.gene.human.DRIMSeq <- lapply(drres.human, function(x){
 DTU.tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
   na.omit(x$feature_id[x$adj_pvalue < 0.05])
 })
+gene.human.DRIMSeq <- lapply(drres.human, function(x){
+  return(x$gene_id)
+})
+tx.human.DRIMSeq <- lapply(drres.txp.human, function(x){
+  return(x$feature_id)
+})
 ```
 
 
@@ -199,6 +211,12 @@ DTU.gene.sequin.DRIMSeq <- lapply(drres.sequin, function(x){
 })
 DTU.tx.sequin.DRIMSeq <- lapply(drres.txp.sequin, function(x){
   na.omit(x$feature_id[x$adj_pvalue < 0.05])
+})
+gene.sequin.DRIMSeq <- lapply(drres.sequin, function(x){
+  return(x$gene_id)
+})
+tx.sequin.DRIMSeq <- lapply(drres.txp.sequin, function(x){
+  return(x$feature_id)
 })
 ```
 
@@ -254,6 +272,12 @@ DTU.gene.human.DEXSeq <- lapply(dxr.g.human, function(x){
 DTU.tx.human.DEXSeq <- lapply(dxr.human, function(x){
   x$featureID[x$padj < 0.05]
 })
+gene.human.DEXSeq <- lapply(dxr.g.human, function(x){
+  return(x$gene)
+})
+tx.human.DEXSeq <- lapply(dxr.human, function(x){
+  return(x$featureID)
+})
 ```
 
 ### sequin
@@ -303,6 +327,12 @@ DTU.gene.sequin.DEXSeq <- lapply(dxr.g.sequin, function(x){
 DTU.tx.sequin.DEXSeq <- lapply(dxr.sequin, function(x){
   x$featureID[x$padj < 0.05]
 })
+gene.sequin.DEXSeq <- lapply(dxr.g.sequin, function(x){
+  return(x$gene)
+})
+tx.sequin.DEXSeq <- lapply(dxr.sequin, function(x){
+  return(x$featureID)
+})
 ```
 
 ## limma
@@ -350,6 +380,12 @@ DTU.gene.human.limma <- lapply(ts.human, function(x){
 DTU.tx.human.limma <- lapply(ts.human.tx, function(x){
   x$ExonID[x$FDR < 0.05]
 })
+gene.human.limma <- lapply(ts.human, function(x){
+  return(x$GeneID)
+})
+tx.human.limma <- lapply(ts.human.tx, function(x){
+  return(x$ExonID)
+})
 ```
 
 ### sequin
@@ -395,6 +431,12 @@ DTU.gene.sequin.limma <- lapply(ts.sequin, function(x){
 DTU.tx.sequin.limma <- lapply(ts.sequin.tx, function(x){
   x$ExonID[x$FDR < 0.05]
 })
+gene.sequin.limma <- lapply(ts.sequin, function(x){
+  return(x$GeneID)
+})
+tx.sequin.limma <- lapply(ts.sequin.tx, function(x){
+  return(x$ExonID)
+})
 ```
 
 ## edgeR
@@ -427,6 +469,12 @@ DTU.gene.human.edgeR <- lapply(tsdge.human, function(x){
 DTU.tx.human.edgeR <- lapply(tsdge.human.tx, function(x){
   x$ExonID[x$FDR < 0.05]
 })
+gene.human.edgeR <- lapply(tsdge.human, function(x){
+  return(x$GeneID)
+})
+tx.human.edgeR <- lapply(tsdge.human.tx, function(x){
+  return(x$ExonID)
+})
 ```
 ### sequin
 
@@ -455,6 +503,12 @@ DTU.gene.sequin.edgeR <- lapply(tsdge.sequin, function(x){
 })
 DTU.tx.sequin.edgeR <- lapply(tsdge.sequin.tx, function(x){
   x$ExonID[x$FDR < 0.05]
+})
+gene.sequin.edgeR <- lapply(tsdge.sequin, function(x){
+  return(x$GeneID)
+})
+tx.sequin.edgeR <- lapply(tsdge.sequin.tx, function(x){
+  return(x$ExonID)
 })
 ```
 
@@ -521,6 +575,12 @@ DTU.gene.human.satuRn <- lapply(qScreen.human, function(x){
 DTU.tx.human.satuRn <- lapply(saturnres.human, function(x){
   rownames(x)[x$regular_FDR<0.05]
 })
+gene.human.satuRn <- lapply(qScreen.human, function(x){
+  return(names(x))
+})
+tx.human.satuRn <- lapply(saturnres.human, function(x){
+  return(rownames(x))
+})
 ```
 
 ### sequin
@@ -584,6 +644,12 @@ DTU.gene.sequin.satuRn <- lapply(qScreen.sequin, function(x){
 DTU.tx.sequin.satuRn <- lapply(saturnres.sequin, function(x){
   rownames(x)[x$regular_FDR<0.05]
 })
+gene.sequin.satuRn <- lapply(qScreen.sequin, function(x){
+  return(names(x))
+})
+tx.sequin.satuRn <- lapply(saturnres.sequin, function(x){
+  return(rownames(x))
+})
 ```
 
 ## Compare results
@@ -601,6 +667,18 @@ DTU.gene.sequin <- list(
 )
 DTU.tx.sequin <- list(
   DTU.tx.sequin.DEXSeq, DTU.tx.sequin.DRIMSeq, DTU.tx.sequin.edgeR, DTU.tx.sequin.limma, DTU.tx.sequin.satuRn
+)
+gene.human <- list(
+  gene.human.DEXSeq, gene.human.DRIMSeq, gene.human.edgeR, gene.human.limma, gene.human.satuRn
+)
+tx.human <- list(
+  tx.human.DEXSeq, tx.human.DRIMSeq, tx.human.edgeR, tx.human.limma, tx.human.satuRn
+  )
+gene.sequin <- list(
+  gene.sequin.DEXSeq, gene.sequin.DRIMSeq, gene.sequin.edgeR, gene.sequin.limma, gene.sequin.satuRn
+)
+tx.sequin <- list(
+  tx.sequin.DEXSeq, tx.sequin.DRIMSeq, tx.sequin.edgeR, tx.sequin.limma, tx.sequin.satuRn
 )
 ```
 
@@ -987,6 +1065,11 @@ saveRDS(DTU.gene.human, file = file.path(OUT, "DTU.gene.human.RDS"))
 saveRDS(DTU.tx.human, file.path(OUT, "DTU.tx.human.RDS"))
 saveRDS(DTU.gene.sequin, file.path(OUT, "DTU.gene.sequin.RDS"))
 saveRDS(DTU.tx.sequin, file.path(OUT, "DTU.tx.sequin.RDS"))
+
+saveRDS(gene.human, file = file.path(OUT, "gene.human.RDS"))
+saveRDS(tx.human, file.path(OUT, "tx.human.RDS"))
+saveRDS(gene.sequin, file.path(OUT, "gene.sequin.RDS"))
+saveRDS(tx.sequin, file.path(OUT, "tx.sequin.RDS"))
 ```
 
 
