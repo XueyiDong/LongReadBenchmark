@@ -128,6 +128,20 @@ upset(fromList(append(DE.sequin.illumina.100vs000, DE.sequin.ONT.100vs000)),
       sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2)[order(sapply(append(DE.sequin.illumina.100vs000, DE.sequin.ONT.100vs000), length, simplify = T), decreasing = TRUE)])
 dev.off()
 
+# human and sequin
+DE.illumina.100vs000 <- DE.human.illumina.100vs000
+DE.ONT.100vs000 <- DE.human.ONT.100vs000
+for(i in 1:5){
+  DE.illumina.100vs000[[i]] <- c(DE.illumina.100vs000[[i]], DE.sequin.illumina.100vs000[[i]])
+  DE.ONT.100vs000[[i]] <- c(DE.ONT.100vs000[[i]], DE.sequin.ONT.100vs000[[i]])
+}
+pdf("plots/DTEUpset.pdf", height = 5, width = 11)
+upset(fromList(append(DE.illumina.100vs000, DE.ONT.100vs000)), 
+      nsets=10, nintersects = 25, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
+      sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2)[order(sapply(append(DE.illumina.100vs000, DE.ONT.100vs000), length, simplify = T), decreasing = TRUE)])
+dev.off()
+
 # long vs short t
 tt.human.ONT <- read.table(file.path(DIR, "ONT/DTEmix/topTableHumanc100vs0.tsv"), sep = "\t", header = T)
 tt.human.illumina <- read.table(file.path(DIR, "illumina/DTEmix/topTableHumanc100vs0.tsv"), sep = "\t", header = T)
