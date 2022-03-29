@@ -105,7 +105,7 @@ pdf("plots/DTUgenesequinUpset.pdf", height = 5, width = 11)
 upset(fromList(append(DTU.gene.sequin.illumina.100vs000, DTU.gene.sequin.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
-      sets.bar.color = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227")[c(2, 1, 5, 4, 3, 2, 5, 1, 4, 3)])
+      sets.bar.color = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227")[c(2, 1, 2, 5, 4, 3, 4, 1, 5, 3)])
 dev.off()
 
 # human and sequin
