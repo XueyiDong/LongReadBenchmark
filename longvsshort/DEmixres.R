@@ -192,10 +192,10 @@ t$z.long <- limma::zscoreT(t$t.long, df=4)
 t$z.short <- limma::zscoreT(t$t.short, df = 4)
 t <- na.omit(t)
 
-t.lm <- lm(t$t.short ~ t$t.long)
-summary(t.lm)
-z.lm <- lm(t$z.short ~ t$z.long)
-summary(z.lm)
+# t.lm <- lm(t$t.short ~ t$t.long)
+# summary(t.lm)
+# z.lm <- lm(t$z.short ~ t$z.long)
+# summary(z.lm)
 
 pdf("plots/t.pdf", height = 5, width = 8)
 ggplot(t, aes(x=t.long, y=t.short)) +
@@ -203,8 +203,9 @@ ggplot(t, aes(x=t.long, y=t.short)) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
   labs(x="ONT t-statistic", y = "Illumina t-statistic", fill = "Density:\nnumber of \ntranscripts") +
-  annotate(geom="text", x=40, y=100, label="Adj R2 = 0.56\np-value < 2.2e-16", size=6) +
-  scale_fill_viridis(direction = -1, option="A", trans = "log10") +
+  annotate(geom="text", x = max(t$t.long) * 0.6, y=max(t$t.short) * 0.9, 
+           label=paste0("Pearson's r=", round(cor(t$t.long, t$t.short), 3)), size=7) +
+  scale_fill_viridis(direction = 1, option="A", trans = "log10") +
   theme(text=element_text(size = 20)) 
 dev.off()
 
@@ -214,7 +215,8 @@ ggplot(t, aes(x=z.long, y=z.short)) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
   labs(x="ONT z-score", y = "Illumina z-score", fill = "Density:\nnumber of \ntranscripts") +
-  annotate(geom="text", x = 3, y = 5, label="Adj R2 = 0.59\np-value < 2.2e-16", size=6) +
-  scale_fill_viridis(direction = -1, option="A", trans = "log10") +
+  annotate(geom="text", x = max(t$z.long) * 0.6, y = max(t$z.short) * 0.9, 
+           label=paste0("Pearson's r=", round(cor(t$z.long, t$z.short), 3)), size=7) +
+  scale_fill_viridis(direction = 1, option="A", trans = "log10") +
   theme(text=element_text(size = 20)) 
 dev.off()
