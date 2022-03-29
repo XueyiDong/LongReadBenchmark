@@ -142,6 +142,14 @@ upset(fromList(append(DE.illumina.100vs000, DE.ONT.100vs000)),
       sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2)[order(sapply(append(DE.illumina.100vs000, DE.ONT.100vs000), length, simplify = T), decreasing = TRUE)])
 dev.off()
 
+# tx tested by all methods only
+tx.human.ONT <- readRDS(file.path(DIR, "ONT/DTEmix/tx.DE.human.RDS"))
+tx.sequin.ONT <- readRDS(file.path(DIR, "ONT/DTEmix/tx.DE.sequin.RDS"))
+tx.human.illumina <- readRDS(file.path(DIR, "illumina/DTEmix/tx.DE.human.RDS"))
+tx.sequin.illumina <- readRDS(file.path(DIR, "illumina/DTEmix/tx.DE.sequin.RDS"))
+
+
+
 # long vs short t
 tt.human.ONT <- read.table(file.path(DIR, "ONT/DTEmix/topTableHumanc100vs0.tsv"), sep = "\t", header = T)
 tt.human.illumina <- read.table(file.path(DIR, "illumina/DTEmix/topTableHumanc100vs0.tsv"), sep = "\t", header = T)

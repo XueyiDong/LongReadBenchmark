@@ -180,6 +180,12 @@ DE.human.limma <- lapply(tt.human, function(x){
 DE.sequin.limma <- lapply(tt.sequin, function(x){
   rownames(x)[x$adj.P.Val < 0.05]
 })
+tx.human.limma <- lapply(tt.human, function(x){
+  return(x$TXNAME)
+})
+tx.sequin.limma <- lapply(tt.sequin, function(x){
+  return(x$TXNAME)
+})
 ```
 
 
@@ -213,6 +219,9 @@ ttag.human <- lapply(comparison, function(x){
 DE.human.edgeR <- lapply(ttag.human, function(x){
   x$TXNAME[x$FDR < 0.05]
 })
+tx.human.edgeR <- lapply(ttag.human, function(x){
+  return(x$TXNAME)
+})
 ```
 
 
@@ -236,6 +245,9 @@ ttag.sequin <- lapply(comparison, function(x){
 
 DE.sequin.edgeR <- lapply(ttag.sequin, function(x){
   x$TXNAME[x$FDR < 0.05]
+})
+tx.sequin.edgeR <- lapply(ttag.sequin, function(x){
+  return(x$TXNAME)
 })
 ```
 
@@ -281,6 +293,12 @@ DE.sequin.DESeq2 <- lapply(deres.sequin, function(x){
   x <- na.omit(x)
   rownames(x)[x$padj < 0.05]
 })
+tx.human.DESeq2 <- lapply(deres.human, function(x){
+  return(rownames(x))
+})
+tx.sequin.DESeq2 <- lapply(deres.sequin, function(x){
+  return(rownames(x))
+})
 ```
 
 ## DE analysis using EBSeq
@@ -321,6 +339,12 @@ GeneFC.sequin = lapply(EBOut.sequin, PostFC)
 
 DE.human.EBSeq <- lapply(EBDERes.human, function(x){x$DEfound})
 DE.sequin.EBSeq <- lapply(EBDERes.sequin, function(x){x$DEfound})
+tx.human.EBSeq <- lapply(EBDERes.human, function(x){
+  names(x$Status)[x$Status %in% c("DE", "EE")]
+})
+tx.sequin.EBSeq <- lapply(EBDERes.sequin, function(x){
+  names(x$Status)[x$Status %in% c("DE", "EE")]
+})
 ```
 
 
@@ -367,6 +391,12 @@ DE.human.NOISeq <- lapply(noires.human, function(x){
 DE.sequin.NOISeq <- lapply(noires.sequin, function(x){
   rownames(x)[x$FDR < 0.05]
 })
+tx.human.NOISeq <- lapply(noires.human, function(x){
+  return(rownames(x))
+})
+tx.sequin.NOISeq <- lapply(noires.sequin, function(x){
+  return(rownames(x))
+})
 ```
 
 ## Results
@@ -376,6 +406,11 @@ DE.human <- list(DE.human.limma, DE.human.edgeR, DE.human.DESeq2, DE.human.EBSeq
 DE.sequin <- list(DE.sequin.limma, DE.sequin.edgeR, DE.sequin.DESeq2, DE.sequin.EBSeq, DE.sequin.NOISeq)
 saveRDS(DE.human, file.path(OUT, "DE.human.RDS"))
 saveRDS(DE.sequin, file.path(OUT, "DE.sequin.RDS"))
+# see which tx were used in analysis
+tx.human <- list(tx.human.limma, tx.human.edgeR, tx.human.DESeq2, tx.human.EBSeq, tx.human.NOISeq)
+tx.sequin <- list(tx.sequin.limma, tx.sequin.edgeR, tx.sequin.DESeq2, tx.sequin.EBSeq, tx.sequin.NOISeq)
+saveRDS(tx.human, file.path(OUT, "tx.DE.human.RDS"))
+saveRDS(tx.sequin, file.path(OUT, "tx.DE.sequin.RDS"))
 ```
 
 
