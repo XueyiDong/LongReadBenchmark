@@ -262,8 +262,16 @@ pheatmap(cormat2,
          fontsize_number = 12
 )
 dev.off()
-# log scale
-cormat3 <- cor(log(quant.all + 0.5))
+
+# filter by biotype
+tx.sel <- names(biotype)[biotype %in% c("protein_coding", "lncRNA")]
+dge.pure.sel <- dge.pure[substr(rownames(dge.pure), 1, 15) %in% tx.sel, ]
+dge.short.pure.sel <- dge.short.pure[substr(rownames(dge.short.pure), 1, 15) %in% tx.sel, ]
+cpm.sel <- cpm(dge.pure.sel)
+tpm.sel <- tpm3(dge.short.pure.sel$counts, dge.short.pure.sel$genes$Length)
+quant.all.sel <- cbind(cpm.sel[match(rownames(tpm.sel), rownames(cpm.sel)), ], tpm.sel) %>% na.omit
+cormat3 <- cor(quant.all.sel)
+pdf("plots/corHeatmapCoding.pdf", height = 8, width = 9)
 pheatmap(cormat3,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
          cluster_cols = FALSE,
@@ -275,8 +283,38 @@ pheatmap(cormat3,
          annotation_colors = anno_colours,
          scale = "none",
          display_numbers = TRUE,
-         number_color = "black"
+         number_color = "black",
+         fontsize = 16,
+         fontsize_number = 12
 )
+dev.off()
+
+tx.sel <- names(biotype)[!(biotype %in% c("protein_coding", "lncRNA"))]
+dge.pure.sel <- dge.pure[substr(rownames(dge.pure), 1, 15) %in% tx.sel, ]
+dge.short.pure.sel <- dge.short.pure[substr(rownames(dge.short.pure), 1, 15) %in% tx.sel, ]
+cpm.sel <- cpm(dge.pure.sel)
+tpm.sel <- tpm3(dge.short.pure.sel$counts, dge.short.pure.sel$genes$Length)
+quant.all.sel <- cbind(cpm.sel[match(rownames(tpm.sel), rownames(cpm.sel)), ], tpm.sel) %>% na.omit
+cormat3 <- cor(quant.all.sel)
+pdf("plots/corHeatmapOther.pdf", height = 8, width = 9)
+pheatmap(cormat3,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE,
+         number_color = "black",
+         fontsize = 16,
+         fontsize_number = 12
+)
+dev.off()
+
+
 
 #--------------------length bias plot
 dge.pure$genes$totalCount <- rowSums(dge.pure$counts)
