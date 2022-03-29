@@ -113,6 +113,7 @@ biotype<- mapIds(
   keytype = "TXID",
   column = "TXBIOTYPE")
 dge.short.human$genes$biotype <- biotype
+saveRDS(biotype, "biotype.RDS")
 # deal with biotype
 dge.short.human$genes$biotype[grepl("pseudogene$", dge.short.human$genes$biotype)] <- "pseudogene"
 dge.short.human$genes$biotype[grepl("^TR", dge.short.human$genes$biotype)] <- "IG_or_TR_gene"
