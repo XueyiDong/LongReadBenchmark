@@ -147,8 +147,32 @@ tx.human.ONT <- readRDS(file.path(DIR, "ONT/DTEmix/tx.DE.human.RDS"))
 tx.sequin.ONT <- readRDS(file.path(DIR, "ONT/DTEmix/tx.DE.sequin.RDS"))
 tx.human.illumina <- readRDS(file.path(DIR, "illumina/DTEmix/tx.DE.human.RDS"))
 tx.sequin.illumina <- readRDS(file.path(DIR, "illumina/DTEmix/tx.DE.sequin.RDS"))
-
-
+tx.human.ONT.100vs000 <- lapply(tx.human.ONT, function(x){
+  return(x[[1]])
+})
+tx.sequin.ONT.100vs000 <- lapply(tx.sequin.ONT, function(x){
+  return(x[[1]])
+})
+tx.human.illumina.100vs000 <- lapply(tx.human.illumina, function(x){
+  return(x[[1]])
+})
+tx.sequin.illumina.100vs000 <- lapply(tx.sequin.illumina, function(x){
+  return(x[[1]])
+})
+tx.human <- Reduce(intersect, append(tx.human.ONT.100vs000, tx.human.illumina.100vs000))
+tx.sequin <- Reduce(intersect, append(tx.sequin.ONT.100vs000, tx.sequin.illumina.100vs000))
+DE.illumina.100vs000.filt <- lapply(DE.illumina.100vs000, function(x){
+  return(x[x %in% c(tx.human, tx.sequin)])
+})
+DE.ONT.100vs000.filt <- lapply(DE.ONT.100vs000, function(x){
+  return(x[x %in% c(tx.human, tx.sequin)])
+})
+pdf("plots/DTEUpsetFilt.pdf", height = 5, width = 11)
+upset(fromList(append(DE.illumina.100vs000.filt, DE.ONT.100vs000.filt)), 
+      nsets=10, nintersects = 25, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
+      sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2)[order(sapply(append(DE.illumina.100vs000.filt, DE.ONT.100vs000.filt), length, simplify = T), decreasing = TRUE)])
+dev.off()
 
 # long vs short t
 tt.human.ONT <- read.table(file.path(DIR, "ONT/DTEmix/topTableHumanc100vs0.tsv"), sep = "\t", header = T)
