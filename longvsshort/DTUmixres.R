@@ -250,11 +250,13 @@ DTU.gene.human.100vs000 <- data.frame(
   dataset = rep(rep(c("ONT", "Illumina"), c(5, 5)),
                 sapply(append(DTU.gene.human.ONT.100vs000, DTU.gene.human.illumina.100vs000), length, simplify = TRUE))
 )
-DTU.gene.human.100vs000$length <- c(txInfo.long$Length[match(DTU.gene.human.100vs000$gene[DTU.gene.human.100vs000$dataset=="ONT"],
-                                                             strsplit2(rownames(txInfo.long), "\\|")[,2])],
-                                    txInfo.short$Length[match(DTU.gene.human.100vs000$gene[DTU.gene.human.100vs000$dataset=="Illumina"],
-                                                              strsplit2(rownames(txInfo.short), "\\|")[,2])]
-)
+library("GenomicFeatures")
+gtf <- "/wehisan/home/allstaff/d/dong.x/annotation/HumanSequins/gencode.v33.sequins.gtf"
+gtf_txdb <- makeTxDbFromGFF(gtf)
+gene_list <- genes(gtf_txdb)
+gene_list <- as.data.frame(gene_list)
+saveRDS(gene_list, file="gene_list.RDS")
+DTU.gene.human.100vs000$length <- gene_list[DTU.gene.human.100vs000$gene, "width"]
 library(AnnotationHub)
 ah <- AnnotationHub()
 EnsDb.Hsapiens.v104 <- query(ah, c("EnsDb", "Homo Sapiens", 104))[[1]]
@@ -278,7 +280,6 @@ ggplot(DTU.gene.human.100vs000, aes(x = method, fill=biotype))+
   labs(fill = "Gene biotype", x = "Method", y = "Proportion of DTU gene")
 dev.off()
 
-# Note: to do: use gene length to replace tx length
 library(ggridges)
 pdf("plots/DTU/DTUlengthGene.pdf", height = 5, width = 8)
 ggplot(DTU.gene.human.100vs000, aes(x = length, y=method, fill=method)) +
