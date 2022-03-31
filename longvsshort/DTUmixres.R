@@ -147,10 +147,10 @@ DTU.gene.illumina.100vs000.filt <- lapply(DTU.gene.illumina.100vs000, function(x
 DTU.gene.ONT.100vs000.filt <- lapply(DTU.gene.ONT.100vs000, function(x){
   return(x[x %in% c(gene.human, gene.sequin)])
 })
-pdf("plots/DTU/DTUgeneUpsetFilt.pdf", height = 5, width = 11)
+pdf("plots/DTU/DTUgeneUpsetFilt.pdf", height = 7, width = 16)
 upset(fromList(append(DTU.gene.illumina.100vs000.filt, DTU.gene.ONT.100vs000.filt)), 
       nsets=10, nintersects = 25, order.by = "freq",
-      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
+      text.scale = c(2, 2, 2, 1.75, 1.8, 2),
       sets.bar.color = rep(c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"), 2)[order(sapply(append(DTU.gene.illumina.100vs000.filt, DTU.gene.ONT.100vs000.filt), length, simplify=T), decreasing = T)])
 dev.off()
 

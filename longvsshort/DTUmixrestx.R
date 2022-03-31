@@ -146,10 +146,10 @@ DTU.tx.illumina.100vs000.filt <- lapply(DTU.tx.illumina.100vs000, function(x){
 DTU.tx.ONT.100vs000.filt <- lapply(DTU.tx.ONT.100vs000, function(x){
   return(x[x %in% c(tx.human, tx.sequin)])
 })
-pdf("plots/DTU/DTUtxUpsetFilt.pdf", height = 5, width = 11)
+pdf("plots/DTU/DTUtxUpsetFilt.pdf", height = 7, width = 16)
 upset(fromList(append(DTU.tx.illumina.100vs000.filt, DTU.tx.ONT.100vs000.filt)), 
       nsets=10, nintersects = 25, order.by = "freq",
-      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
+      text.scale = c(2, 2, 2, 1.75, 1.8, 2),
       sets.bar.color = rep(c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"), 2)[order(sapply(append(DTU.tx.illumina.100vs000.filt, DTU.tx.ONT.100vs000.filt), length, simplify=T), decreasing = T)])
 dev.off()
 

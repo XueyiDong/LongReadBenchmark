@@ -167,10 +167,10 @@ DE.illumina.100vs000.filt <- lapply(DE.illumina.100vs000, function(x){
 DE.ONT.100vs000.filt <- lapply(DE.ONT.100vs000, function(x){
   return(x[x %in% c(tx.human, tx.sequin)])
 })
-pdf("plots/DTE/DTEUpsetFilt.pdf", height = 5, width = 11)
+pdf("plots/DTE/DTEUpsetFilt.pdf", height = 7, width = 16)
 upset(fromList(append(DE.illumina.100vs000.filt, DE.ONT.100vs000.filt)), 
       nsets=10, nintersects = 25, order.by = "freq",
-      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
+      text.scale = c(2, 2, 2, 1.75, 1.8, 2),
       sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2)[order(sapply(append(DE.illumina.100vs000.filt, DE.ONT.100vs000.filt), length, simplify = T), decreasing = TRUE)])
 dev.off()
 
