@@ -237,7 +237,8 @@ ggplot(DTU.tx.human.100vs000, aes(x = length, y=method, fill=method)) +
   geom_density_ridges(alpha = .7) +
   scale_fill_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
   scale_x_continuous(trans = "log10") +
+  labs(x = "Annotated transcript length") +
   facet_grid(rows=vars(dataset)) +
   theme_bw() +
-  theme(text = element_text(size = 20))
+  theme(text = element_text(size = 20), legend.position = "NA")
 dev.off()

@@ -258,3 +258,48 @@ ggplot(t.filt2, aes(x=z.long, y=z.short)) +
   scale_fill_viridis(direction = 1, option="A", trans = "log10") +
   theme(text=element_text(size = 20))
 dev.off()
+
+# biotype and length of DTEs
+txInfo.long <- readRDS("txInfo.long.RDS")
+txInfo.short <- readRDS("txInfo.short.RDS")
+DE.human.100vs000 <- data.frame(
+  tx = unlist(append(DE.human.ONT.100vs000, DE.human.illumina.100vs000), use.names = TRUE),
+  method = rep(rep(c("limma", "edgeR", "DESeq2", "EBSeq", "NOISeq"), 2),
+               sapply(append(DE.human.ONT.100vs000, DE.human.illumina.100vs000), length, simplify = TRUE)),
+  dataset = rep(rep(c("ONT", "Illumina"), c(5, 5)),
+                sapply(append(DE.human.ONT.100vs000, DE.human.illumina.100vs000), length, simplify = TRUE))
+)
+DE.human.100vs000$biotype <- c(txInfo.long$biotype[match(DE.human.100vs000$tx[DE.human.100vs000$dataset=="ONT"],
+                                                         strsplit2(rownames(txInfo.long), "\\|")[,1])],
+                               txInfo.short$biotype[match(DE.human.100vs000$tx[DE.human.100vs000$dataset=="Illumina"],
+                                                          strsplit2(rownames(txInfo.short), "\\|")[,1])]
+)
+DE.human.100vs000$length <- c(txInfo.long$Length[match(DE.human.100vs000$tx[DE.human.100vs000$dataset=="ONT"],
+                                                       strsplit2(rownames(txInfo.long), "\\|")[,1])],
+                              txInfo.short$Length[match(DE.human.100vs000$tx[DE.human.100vs000$dataset=="Illumina"],
+                                                        strsplit2(rownames(txInfo.short), "\\|")[,1])]
+)
+DE.human.100vs000 <- na.omit(DE.human.100vs000)
+col <- brewer.pal(10, "Set3")
+pdf("plots/DTE/DTEbiotype.pdf", height = 5, width = 8)
+ggplot(DE.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.1)))+
+  geom_bar(position = "fill")+
+  facet_grid(cols=vars(dataset)) +
+  theme_bw() +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
+  scale_fill_brewer(palette="Set3") +
+  # scale_fill_manual(values = col[-1]) +
+  labs(fill = "Transcript biotype", x = "Method", y = "Proportion of DTE transcripts")
+dev.off()
+
+library(ggridges)
+pdf("plots/DTE/DTElength.pdf", height = 5, width = 8)
+ggplot(DE.human.100vs000, aes(x = length, y=method, fill=method)) +
+  geom_density_ridges(alpha = .7) +
+  scale_fill_manual(values = c( "#D5A2CB", "#708FA6", "#476937", "#D96A70", "#9FC675"))+
+  scale_x_continuous(trans = "log10") +
+  labs(x = "Annotated transcript length") +
+  facet_grid(rows=vars(dataset)) +
+  theme_bw() +
+  theme(text = element_text(size = 20), legend.position = "NA")
+dev.off()

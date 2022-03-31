@@ -260,13 +260,12 @@ ah <- AnnotationHub()
 EnsDb.Hsapiens.v104 <- query(ah, c("EnsDb", "Homo Sapiens", 104))[[1]]
 DTU.gene.human.100vs000$biotype <- mapIds(
   x = EnsDb.Hsapiens.v104,
-  # NOTE: Need to remove gene version number prior to lookup.
   keys = substr(DTU.gene.human.100vs000$gene, 1, 15),
   keytype = "GENEID",
   column = "GENEBIOTYPE")
 
 # deal with biotype
-# DTU.gene.human.100vs000$biotype[grepl("pseudogene$", DTU.gene.human.100vs000$biotype)] <- "pseudogene"
+DTU.gene.human.100vs000$biotype[grepl("pseudogene$", DTU.gene.human.100vs000$biotype)] <- "pseudogene"
 DTU.gene.human.100vs000 <- na.omit(DTU.gene.human.100vs000)
 
 pdf("plots/DTU/DTUbiotypeGene.pdf", height = 5, width = 8)
@@ -279,6 +278,7 @@ ggplot(DTU.gene.human.100vs000, aes(x = method, fill=biotype))+
   labs(fill = "Gene biotype", x = "Method", y = "Proportion of DTU gene")
 dev.off()
 
+# Note: to do: use gene length to replace tx length
 library(ggridges)
 pdf("plots/DTU/DTUlengthGene.pdf", height = 5, width = 8)
 ggplot(DTU.gene.human.100vs000, aes(x = length, y=method, fill=method)) +
@@ -287,5 +287,5 @@ ggplot(DTU.gene.human.100vs000, aes(x = length, y=method, fill=method)) +
   scale_x_continuous(trans = "log10") +
   facet_grid(rows=vars(dataset)) +
   theme_bw() +
-  theme(text = element_text(size = 20))
+  theme(text = element_text(size = 20), legend.position = "NA")
 dev.off()
