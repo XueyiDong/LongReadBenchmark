@@ -72,6 +72,7 @@ dge.human$genes$biotype[dge.human$genes$biotype %in% c("miRNA", "misc_RNA",
                                                        "sRNA", "Mt_rRNA", "Mt_tRNA",
                                                        "ribozyme"
                                                        )] <- "ncRNA"
+saveRDS(dge.human$genes, "txInfo.long.RDS")
 
 # for each sample
 biotype_sum <- sapply(1:6, function(x){
@@ -92,8 +93,8 @@ ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord
   theme_bw() +
   theme(text = element_text(size = 20), axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_fill_brewer(palette = "Set3") +
-  labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
-dev.off()  
+  labs(fill = "Transcript biotype", x = "Sample", y = "Proportion of count")
+dev.off()
 
 #---- calculate proportion for ONT
 biotype_sum$proportion <- sapply(1:nrow(biotype_sum), function(x){
@@ -125,6 +126,7 @@ dge.short.human$genes$biotype[dge.short.human$genes$biotype %in% c("miRNA", "mis
                                                        "sRNA", "Mt_rRNA", "Mt_tRNA",
                                                        "ribozyme"
 )] <- "ncRNA"
+saveRDS(dge.short.human$genes, "txInfo.short.RDS")
 
 # for each sample
 biotype_sum.short <- sapply(1:6, function(x){
@@ -146,7 +148,7 @@ ggplot(biotype_sum.short, aes(x=sample, y=total_count, fill=factor(biotype, leve
   theme_bw() +
   theme(text = element_text(size = 20), axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_fill_brewer(palette = "Set3") +
-  labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
+  labs(fill = "Transcript biotype", x = "Sample", y = "Proportion of count")
 dev.off()
 
 #---- calculate proportion for Illumina
@@ -167,7 +169,7 @@ ggplot(biotype_sum.all, aes(x=sample, y=total_count, fill=factor(biotype, levels
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) +
   scale_fill_brewer(palette = "Set3") +
-  labs(fill = "Transcript biotype", x = "Sample", y = "Total count")
+  labs(fill = "Transcript biotype", x = "Sample", y = "Proportion of count")
 dev.off()
 
 #------ long vs short quantification

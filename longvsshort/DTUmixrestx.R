@@ -37,7 +37,7 @@ for(i in 1:5){
 }
 DTUtxcomp$comparison <- factor(DTUtxcomp$comparison, levels=c("100vs000", "075vs025", "050vs025", "075vs050"))
 # bar plot
-pdf("plots/DTUbarGeneHuman.pdf", height = 5, width = 18)
+pdf("plots/DTU/DTUbarGeneHuman.pdf", height = 5, width = 18)
 ggplot(DTUtxcomp, aes(x=method, y=number, fill=comparison))+
   geom_bar(stat="identity", position="dodge") +
   facet_grid(cols=vars(category)) +
@@ -84,7 +84,7 @@ DTU.tx.human.ONT.100vs000 <- lapply(DTU.tx.human.ONT, function(x){
   return(x[[1]])
 })
 names(DTU.tx.human.ONT.100vs000) <- paste(c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn"), "ONT", sep = "_")
-pdf("plots/DTUtxhumanUpset.pdf", height = 5, width = 8)
+pdf("plots/DTU/DTUtxhumanUpset.pdf", height = 5, width = 8)
 upset(fromList(append(DTU.tx.human.illumina.100vs000, DTU.tx.human.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -100,7 +100,7 @@ DTU.tx.sequin.ONT.100vs000 <- lapply(DTU.tx.sequin.ONT, function(x){
   return(x[[1]])
 })
 names(DTU.tx.sequin.ONT.100vs000) <- paste(c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn"), "ONT", sep = "_")
-pdf("plots/DTUtxsequinUpset.pdf", height = 5, width = 8)
+pdf("plots/DTU/DTUtxsequinUpset.pdf", height = 5, width = 8)
 upset(fromList(append(DTU.tx.sequin.illumina.100vs000, DTU.tx.sequin.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -114,7 +114,7 @@ for(i in 1:5){
   DTU.tx.illumina.100vs000[[i]] <- c(DTU.tx.illumina.100vs000[[i]], DTU.tx.sequin.illumina.100vs000[[i]])
   DTU.tx.ONT.100vs000[[i]] <- c(DTU.tx.ONT.100vs000[[i]], DTU.tx.sequin.ONT.100vs000[[i]])
 }
-pdf("plots/DTUtxUpset.pdf", height = 5, width = 11)
+pdf("plots/DTU/DTUtxUpset.pdf", height = 5, width = 11)
 upset(fromList(append(DTU.tx.illumina.100vs000, DTU.tx.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -146,7 +146,7 @@ DTU.tx.illumina.100vs000.filt <- lapply(DTU.tx.illumina.100vs000, function(x){
 DTU.tx.ONT.100vs000.filt <- lapply(DTU.tx.ONT.100vs000, function(x){
   return(x[x %in% c(tx.human, tx.sequin)])
 })
-pdf("plots/DTUtxUpsetFilt.pdf", height = 5, width = 11)
+pdf("plots/DTU/DTUtxUpsetFilt.pdf", height = 5, width = 11)
 upset(fromList(append(DTU.tx.illumina.100vs000.filt, DTU.tx.ONT.100vs000.filt)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -177,7 +177,7 @@ summary(t.lm)
 z.lm <- lm(t$z.short ~ t$z.long)
 summary(z.lm)
 
-pdf("plots/t_DTU.pdf", height = 5, width = 8)
+pdf("plots/DTU/t_DTU.pdf", height = 5, width = 8)
 ggplot(t, aes(x=t.long, y=t.short)) +
   stat_binhex() +
   geom_smooth(method='lm', formula= y~x) +
@@ -188,7 +188,7 @@ ggplot(t, aes(x=t.long, y=t.short)) +
   theme(text=element_text(size = 20)) 
 dev.off()
 
-pdf("plots/z_DTU.pdf", height = 5, width = 8)
+pdf("plots/DTU/z_DTU.pdf", height = 5, width = 8)
 ggplot(t, aes(x=z.long, y=z.short)) +
   stat_binhex() +
   geom_smooth(method='lm', formula= y~x) +
@@ -198,3 +198,38 @@ ggplot(t, aes(x=z.long, y=z.short)) +
   scale_fill_viridis(direction = -1, option="A", trans = "log10") +
   theme(text=element_text(size = 20)) 
 dev.off()
+
+# biotype and length of DTUs
+txInfo.long <- readRDS("txInfo.long.RDS")
+txInfo.short <- readRDS("txInfo.short.RDS")
+DTU.tx.human.100vs000 <- data.frame(
+  tx = unlist(append(DTU.tx.human.ONT.100vs000, DTU.tx.human.illumina.100vs000), use.names = TRUE),
+  method = rep(rep(c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn"), 2),
+               sapply(append(DTU.tx.human.ONT.100vs000, DTU.tx.human.illumina.100vs000), length, simplify = TRUE)),
+  dataset = rep(rep(c("ONT", "Illumina"), c(5, 5)),
+                sapply(append(DTU.tx.human.ONT.100vs000, DTU.tx.human.illumina.100vs000), length, simplify = TRUE))
+)
+DTU.tx.human.100vs000$biotype <- c(txInfo.long$biotype[match(DTU.tx.human.100vs000$tx[DTU.tx.human.100vs000$dataset=="ONT"],
+                                                         strsplit2(rownames(txInfo.long), "\\|")[,1])],
+                               txInfo.short$biotype[match(DTU.tx.human.100vs000$tx[DTU.tx.human.100vs000$dataset=="Illumina"],
+                                                          strsplit2(rownames(txInfo.short), "\\|")[,1])]
+)
+DTU.tx.human.100vs000$length <- c(txInfo.long$Length[match(DTU.tx.human.100vs000$tx[DTU.tx.human.100vs000$dataset=="ONT"],
+                                                         strsplit2(rownames(txInfo.long), "\\|")[,1])],
+                               txInfo.short$Length[match(DTU.tx.human.100vs000$tx[DTU.tx.human.100vs000$dataset=="Illumina"],
+                                                          strsplit2(rownames(txInfo.short), "\\|")[,1])]
+)
+DTU.tx.human.100vs000 <- na.omit(DTU.tx.human.100vs000)
+col <- brewer.pal(10, "Set3")
+pdf("plots/DTU/DTUbiotypeTx.pdf", height = 5, width = 8)
+ggplot(DTU.tx.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.1)))+
+  geom_bar(position = "fill")+
+  facet_grid(cols=vars(dataset)) +
+  theme_bw() +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
+  scale_fill_manual(values = col[-1]) +
+  labs(fill = "Transcript biotype", x = "Method", y = "Proportion of DTU transcripts")
+dev.off()
+
+
+  

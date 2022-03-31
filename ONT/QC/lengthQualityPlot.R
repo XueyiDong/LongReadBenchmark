@@ -25,7 +25,7 @@ stat_box_data <- function(y, upper_limit = max(qcdata$Qscore) * 1.15) {
   )
 }
 
-pdf("plots/lengthQualityViolin.pdf", height = 4, width = 5)
+pdf("plots/lengthQualityViolin.pdf", height = 6, width = 5)
 ggplot(qcdata.filt, aes(x=LengthGroup, y=Qscore, fill=LengthGroup, colour = LengthGroup)) +
   geom_violin(alpha = 0.4) +
   geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
