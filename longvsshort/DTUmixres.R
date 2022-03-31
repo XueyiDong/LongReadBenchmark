@@ -250,25 +250,42 @@ DTU.gene.human.100vs000 <- data.frame(
   dataset = rep(rep(c("ONT", "Illumina"), c(5, 5)),
                 sapply(append(DTU.gene.human.ONT.100vs000, DTU.gene.human.illumina.100vs000), length, simplify = TRUE))
 )
-DTU.gene.human.100vs000$biotype <- c(txInfo.long$biotype[match(DTU.gene.human.100vs000$gene[DTU.gene.human.100vs000$dataset=="ONT"],
-                                                               strsplit2(rownames(txInfo.long), "\\|")[,2])],
-                                     txInfo.short$biotype[match(DTU.gene.human.100vs000$gene[DTU.gene.human.100vs000$dataset=="Illumina"],
-                                                                strsplit2(rownames(txInfo.short), "\\|")[,2])]
-)
 DTU.gene.human.100vs000$length <- c(txInfo.long$Length[match(DTU.gene.human.100vs000$gene[DTU.gene.human.100vs000$dataset=="ONT"],
                                                              strsplit2(rownames(txInfo.long), "\\|")[,2])],
                                     txInfo.short$Length[match(DTU.gene.human.100vs000$gene[DTU.gene.human.100vs000$dataset=="Illumina"],
                                                               strsplit2(rownames(txInfo.short), "\\|")[,2])]
 )
+library(AnnotationHub)
+ah <- AnnotationHub()
+EnsDb.Hsapiens.v104 <- query(ah, c("EnsDb", "Homo Sapiens", 104))[[1]]
+DTU.gene.human.100vs000$biotype <- mapIds(
+  x = EnsDb.Hsapiens.v104,
+  # NOTE: Need to remove gene version number prior to lookup.
+  keys = substr(DTU.gene.human.100vs000$gene, 1, 15),
+  keytype = "GENEID",
+  column = "GENEBIOTYPE")
+
+# deal with biotype
+# DTU.gene.human.100vs000$biotype[grepl("pseudogene$", DTU.gene.human.100vs000$biotype)] <- "pseudogene"
 DTU.gene.human.100vs000 <- na.omit(DTU.gene.human.100vs000)
-col <- brewer.pal(10, "Set3")
-# note: need to update biotype to use gene biotype information instead of tx biotype.
-pdf("plots/DTU/DTUbiotypeTx.pdf", height = 5, width = 8)
-ggplot(DTU.gene.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.1)))+
+
+pdf("plots/DTU/DTUbiotypeGene.pdf", height = 5, width = 8)
+ggplot(DTU.gene.human.100vs000, aes(x = method, fill=biotype))+
   geom_bar(position = "fill")+
   facet_grid(cols=vars(dataset)) +
   theme_bw() +
   theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
-  scale_fill_manual(values = col[-1]) +
-  labs(fill = "Transcript biotype", x = "Method", y = "Proportion of DTU gene")
+  scale_fill_brewer(palette="Set2") +
+  labs(fill = "Gene biotype", x = "Method", y = "Proportion of DTU gene")
+dev.off()
+
+library(ggridges)
+pdf("plots/DTU/DTUlengthGene.pdf", height = 5, width = 8)
+ggplot(DTU.gene.human.100vs000, aes(x = length, y=method, fill=method)) +
+  geom_density_ridges(alpha = .7) +
+  scale_fill_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  scale_x_continuous(trans = "log10") +
+  facet_grid(rows=vars(dataset)) +
+  theme_bw() +
+  theme(text = element_text(size = 20))
 dev.off()

@@ -231,5 +231,13 @@ ggplot(DTU.tx.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Gr
   labs(fill = "Transcript biotype", x = "Method", y = "Proportion of DTU transcripts")
 dev.off()
 
-
-  
+library(ggridges)
+pdf("plots/DTU/DTUlengthTx.pdf", height = 5, width = 8)
+ggplot(DTU.tx.human.100vs000, aes(x = length, y=method, fill=method)) +
+  geom_density_ridges(alpha = .7) +
+  scale_fill_manual(values = c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"))+
+  scale_x_continuous(trans = "log10") +
+  facet_grid(rows=vars(dataset)) +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
