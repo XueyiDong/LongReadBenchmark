@@ -38,7 +38,7 @@ for(i in 1:5){
 }
 DTUgenecomp$comparison <- factor(DTUgenecomp$comparison, levels=c("100vs000", "075vs025", "050vs025", "075vs050"))
 # bar plot
-pdf("plots/DTUbarGeneHuman.pdf", height = 5, width = 18)
+pdf("plots/DTU/DTUbarGeneHuman.pdf", height = 5, width = 18)
 ggplot(DTUgenecomp, aes(x=method, y=number, fill=comparison))+
   geom_bar(stat="identity", position="dodge") +
   facet_grid(cols=vars(category)) +
@@ -85,7 +85,7 @@ DTU.gene.human.ONT.100vs000 <- lapply(DTU.gene.human.ONT, function(x){
   return(x[[1]])
 })
 names(DTU.gene.human.ONT.100vs000) <- paste(c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn"), "ONT", sep = "_")
-pdf("plots/DTUgenehumanUpset.pdf", height = 5, width = 11)
+pdf("plots/DTU/DTUgenehumanUpset.pdf", height = 5, width = 11)
 upset(fromList(append(DTU.gene.human.illumina.100vs000, DTU.gene.human.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -115,7 +115,7 @@ for(i in 1:5){
   DTU.gene.illumina.100vs000[[i]] <- c(DTU.gene.illumina.100vs000[[i]], DTU.gene.sequin.illumina.100vs000[[i]])
   DTU.gene.ONT.100vs000[[i]] <- c(DTU.gene.ONT.100vs000[[i]], DTU.gene.sequin.ONT.100vs000[[i]])
 }
-pdf("plots/DTUgeneUpset.pdf", height = 5, width = 11)
+pdf("plots/DTU/DTUgeneUpset.pdf", height = 5, width = 11)
 upset(fromList(append(DTU.gene.illumina.100vs000, DTU.gene.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -147,7 +147,7 @@ DTU.gene.illumina.100vs000.filt <- lapply(DTU.gene.illumina.100vs000, function(x
 DTU.gene.ONT.100vs000.filt <- lapply(DTU.gene.ONT.100vs000, function(x){
   return(x[x %in% c(gene.human, gene.sequin)])
 })
-pdf("plots/DTUgeneUpsetFilt.pdf", height = 5, width = 11)
+pdf("plots/DTU/DTUgeneUpsetFilt.pdf", height = 5, width = 11)
 upset(fromList(append(DTU.gene.illumina.100vs000.filt, DTU.gene.ONT.100vs000.filt)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -197,7 +197,7 @@ dge$genes$totalCount <- rowSums(dge$counts)
 dge.short$genes$totalCount <- rowSums(dge.short$counts)
 dge$genes$category <- factor(dge$genes$category, levels = c("Illumina only", "ONT and Illumina", "ONT only", "not DTU"))
 dge.short$genes$category <- factor(dge.short$genes$category, levels = c("Illumina only", "ONT and Illumina", "ONT only", "not DTU"))
-pdf("plots/DTUcategory.pdf", height = 5, width = 8)
+pdf("plots/DTU/DTUcategory.pdf", height = 5, width = 8)
 ggplot(dge$genes, aes(x=category, y=Length, fill=category)) +
   geom_violin() +
   scale_y_continuous(trans = "log10") +

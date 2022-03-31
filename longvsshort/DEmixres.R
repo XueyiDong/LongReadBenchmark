@@ -38,7 +38,7 @@ for(i in 1:5){
 DEgenecomp$comparison <- factor(DEgenecomp$comparison, levels=c("100vs000", "075vs025", "050vs025", "075vs050"))
 
 # bar plot
-pdf("plots/DTEbarHuman.pdf", height = 5, width = 18)
+pdf("plots/DTE/DTEbarHuman.pdf", height = 5, width = 18)
 ggplot(DEgenecomp, aes(x=method, y=number, fill=comparison))+
   geom_bar(stat="identity", position="dodge") +
   facet_grid(cols=vars(category)) +
@@ -89,18 +89,18 @@ saveRDS(DE.human.illumina.100vs000, "DE.human.illumina.100vs000.RDS")
 saveRDS(DE.human.ONT.100vs000, "DE.human.ONT.100vs000.RDS")
 
 library(UpSetR)
-pdf("plots/DTEhumanUpset.pdf", height = 5, width = 11)
+pdf("plots/DTE/DTEhumanUpset.pdf", height = 5, width = 11)
 upset(fromList(append(DE.human.illumina.100vs000, DE.human.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
       sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2)[order(sapply(append(DE.human.illumina.100vs000, DE.human.ONT.100vs000), length, simplify = T), decreasing = TRUE)])
       # sets.bar.color = rep(c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"), 2))
 dev.off()
-pdf("plots/DTEhumanUpsetONT.pdf", height = 5, width = 8)
+pdf("plots/DTE/DTEhumanUpsetONT.pdf", height = 5, width = 8)
 upset(fromList(DE.human.ONT.100vs000), order.by = "freq",
       sets.bar.color = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675")[order(sapply(DE.human.ONT.100vs000, length, simplify = T), decreasing = T)])
 dev.off()
-pdf("plots/DTEhumanUpsetIllumina.pdf", height = 5, width = 8)
+pdf("plots/DTE/DTEhumanUpsetIllumina.pdf", height = 5, width = 8)
 upset(fromList(DE.human.illumina.100vs000), order.by = "freq",
       sets.bar.color = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675")[order(sapply(DE.human.illumina.100vs000, length, simplify = T), decreasing = T)])
 dev.off()
@@ -121,7 +121,7 @@ names(DE.sequin.ONT.100vs000) <- paste(c("limma", "edgeR", "DESeq2", "EBSeq", "N
 saveRDS(DE.sequin.illumina.100vs000, "DE.sequin.illumina.100vs000.RDS")
 saveRDS(DE.sequin.ONT.100vs000, "DE.sequin.ONT.100vs000.RDS")
 
-pdf("plots/DTEsequinUpset.pdf", height = 5, width = 8)
+pdf("plots/DTE/DTEsequinUpset.pdf", height = 5, width = 8)
 upset(fromList(append(DE.sequin.illumina.100vs000, DE.sequin.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -135,7 +135,7 @@ for(i in 1:5){
   DE.illumina.100vs000[[i]] <- c(DE.illumina.100vs000[[i]], DE.sequin.illumina.100vs000[[i]])
   DE.ONT.100vs000[[i]] <- c(DE.ONT.100vs000[[i]], DE.sequin.ONT.100vs000[[i]])
 }
-pdf("plots/DTEUpset.pdf", height = 5, width = 11)
+pdf("plots/DTE/DTEUpset.pdf", height = 5, width = 11)
 upset(fromList(append(DE.illumina.100vs000, DE.ONT.100vs000)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -167,7 +167,7 @@ DE.illumina.100vs000.filt <- lapply(DE.illumina.100vs000, function(x){
 DE.ONT.100vs000.filt <- lapply(DE.ONT.100vs000, function(x){
   return(x[x %in% c(tx.human, tx.sequin)])
 })
-pdf("plots/DTEUpsetFilt.pdf", height = 5, width = 11)
+pdf("plots/DTE/DTEUpsetFilt.pdf", height = 5, width = 11)
 upset(fromList(append(DE.illumina.100vs000.filt, DE.ONT.100vs000.filt)), 
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5),
@@ -195,7 +195,7 @@ t <- na.omit(t)
 t$biotype <- biotype[match(substr(t$TXNAME, 1, 15), names(biotype))]
 t.filt <- t[t$biotype %in% c("protein_coding", "lncRNA"),]
 t.filt2 <- t[!(t$biotype %in% c("protein_coding", "lncRNA")),]
-pdf("plots/t.pdf", height = 5, width = 8)
+pdf("plots/DTE/t.pdf", height = 5, width = 8)
 ggplot(t, aes(x=t.long, y=t.short)) +
   stat_binhex() +
   geom_smooth(method='lm', formula= y~x) +
@@ -227,7 +227,7 @@ ggplot(t.filt2, aes(x=t.long, y=t.short)) +
   theme(text=element_text(size = 20))
 dev.off()
 
-pdf("plots/z.pdf", height = 5, width = 8)
+pdf("plots/DTE/z.pdf", height = 5, width = 8)
 ggplot(t, aes(x=z.long, y=z.short)) +
   stat_binhex() +
   geom_smooth(method='lm', formula= y~x) +
