@@ -197,7 +197,7 @@ t.filt <- t[t$biotype %in% c("protein_coding", "lncRNA"),]
 t.filt2 <- t[!(t$biotype %in% c("protein_coding", "lncRNA")),]
 pdf("plots/DTE/t.pdf", height = 5, width = 8)
 ggplot(t, aes(x=t.long, y=t.short)) +
-  stat_binhex() +
+  stat_binhex(bins=100) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
   labs(x="ONT t-statistic", y = "Illumina t-statistic", fill = "Density:\nnumber of \ntranscripts") +
@@ -206,7 +206,7 @@ ggplot(t, aes(x=t.long, y=t.short)) +
   scale_fill_viridis(direction = 1, option="A", trans = "log10") +
   theme(text=element_text(size = 20))
 ggplot(t.filt, aes(x=t.long, y=t.short)) +
-  stat_binhex() +
+  stat_binhex(bins=100) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
   labs(x="ONT t-statistic", y = "Illumina t-statistic", fill = "Density:\nnumber of \ntranscripts",
@@ -216,7 +216,7 @@ ggplot(t.filt, aes(x=t.long, y=t.short)) +
   scale_fill_viridis(direction = 1, option="A", trans = "log10") +
   theme(text=element_text(size = 20))
 ggplot(t.filt2, aes(x=t.long, y=t.short)) +
-  stat_binhex() +
+  stat_binhex(bins=100) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
   labs(x="ONT t-statistic", y = "Illumina t-statistic", fill = "Density:\nnumber of \ntranscripts",
@@ -229,29 +229,29 @@ dev.off()
 
 pdf("plots/DTE/z.pdf", height = 5, width = 8)
 ggplot(t, aes(x=z.long, y=z.short)) +
-  stat_binhex() +
+  stat_binhex(bins=100) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
-  labs(x="ONT z-score", y = "Illumina z-score", fill = "Density:\nnumber of \ntranscripts") +
+  labs(x="ONT z-score of t-statistic", y = "Illumina z-score of t-statistic", fill = "Density:\nnumber of \ntranscripts") +
   annotate(geom="text", x = max(t$z.long) * 0.6, y = max(t$z.short) * 0.95, 
            label=paste0("Pearson's r=", round(cor(t$z.long, t$z.short), 3)), size=7) +
   scale_fill_viridis(direction = 1, option="A", trans = "log10") +
   theme(text=element_text(size = 20))
 ggplot(t.filt, aes(x=z.long, y=z.short)) +
-  stat_binhex() +
+  stat_binhex(bins=100) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
-  labs(x="ONT z-score", y = "Illumina z-score", fill = "Density:\nnumber of \ntranscripts",
+  labs(x="ONT z-score of t-statistic", y = "Illumina z-score of t-statistic", fill = "Density:\nnumber of \ntranscripts",
        title = "Protein coding and lncRNA") +
   annotate(geom="text", x = max(t.filt$z.long) * 0.6, y = max(t.filt$z.short) * 0.95, 
            label=paste0("Pearson's r=", round(cor(t.filt$z.long, t.filt$z.short), 3)), size=7) +
   scale_fill_viridis(direction = 1, option="A", trans = "log10") +
   theme(text=element_text(size = 20))
 ggplot(t.filt2, aes(x=z.long, y=z.short)) +
-  stat_binhex() +
+  stat_binhex(bins=100) +
   geom_smooth(method='lm', formula= y~x) +
   theme_bw() +
-  labs(x="ONT z-score", y = "Illumina z-score", fill = "Density:\nnumber of \ntranscripts",
+  labs(x="ONT z-score of t-statistic", y = "Illumina z-score of t-statistic", fill = "Density:\nnumber of \ntranscripts",
        title = "Other biotypes") +
   annotate(geom="text", x = max(t.filt2$z.long) * 0.6, y = max(t.filt2$z.short) * 0.95, 
            label=paste0("Pearson's r=", round(cor(t.filt2$z.long, t.filt2$z.short), 3)), size=7) +

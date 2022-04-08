@@ -174,24 +174,28 @@ p1 <- ggplot(txStat.filt, aes(x=tx_len, y=fl95, colour = log_count))+
 ggMarginal(p1, type = "histogram")
 ggplot(txStat.filt, aes(x=tx_len, y=fl95))+
   scale_x_continuous(trans = "log10") +
-  stat_binhex() +
+  stat_binhex(bins=100) +
   theme_bw() +
   labs(x = "Annotated transcript length", y = "Fraction of full-length") +
-  scale_fill_viridis(trans = "log10")+
+  scale_fill_viridis()+
   theme(text=element_text(size = 20))
+dev.off()
+pdf("plots/meanCov.pdf", height = 5, width = 8)
 ggplot(txStat.filt, aes(x=tx_len, y=mean))+
   scale_x_continuous(trans = "log10") +
-  stat_binhex() +
+  stat_binhex(bins=100) +
   theme_bw() +
   labs(x = "Annotated transcript length", y = "Mean coverage fraction") +
-  scale_fill_viridis(trans = "log10")+
+  scale_fill_viridis()+
   theme(text=element_text(size = 20))
+dev.off()
+pdf("plots/medCov.pdf", height = 5, width = 8)
 ggplot(txStat.filt, aes(x=tx_len, y=median))+
   scale_x_continuous(trans = "log10") +
-  stat_binhex() +
+  stat_binhex(bins=100) +
   theme_bw() +
   labs(x = "Annotated transcript length", y = "Median coverage fraction") +
-  scale_fill_viridis(trans = "log10")+
+  scale_fill_viridis()+
   theme(text=element_text(size = 20))
 dev.off()
 # violin plot
