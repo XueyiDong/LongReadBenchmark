@@ -112,6 +112,8 @@ pdf(file.path(OUT, "mds_sequin.pdf"), height = 5, width = 8)
 plotMDS(cpm.sequin, pch = rep(c(1, 2), c(6, 9)),
         col = rep(col, rep(3, 5)), main = "Illumina sequin",
         cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
+legend("topleft", c("100:0", "75:25", "50:50", "25:75", "0:100"), 
+        text.col = col[c(1, 5, 4, 3, 2)], cex = 1.25, bty = "n")
 dev.off()
 ```
 

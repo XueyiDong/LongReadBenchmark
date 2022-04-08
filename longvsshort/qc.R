@@ -16,7 +16,7 @@ DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_ben
 dge <- readRDS("dge.rds")
 dge.short <- readRDS("dge.short.rds")
 
-#---- read num plot
+# read num plot----
 # organize read num stat 
 read.stat <- data.frame(
   sample = rep(c(paste("H1975", 1:3, sep = "-"),
@@ -44,7 +44,7 @@ ggplot(read.stat, aes(x=variable, y=value, fill=sample, label = value))+
   scale_fill_manual(values = met.brewer("Troy", 6))
 dev.off()
 
-#---- biotype ONT
+# biotype ONT----
 # gene biotype info
 dge.human <- dge[grep("^ENST", rownames(dge)), ]
 txid <- strsplit2(rownames(dge.human$counts), "\\|")[,1]
@@ -96,13 +96,13 @@ ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord
   labs(fill = "Transcript biotype", x = "Sample", y = "Proportion of count")
 dev.off()
 
-#---- calculate proportion for ONT
+# calculate proportion for ONT----
 biotype_sum$proportion <- sapply(1:nrow(biotype_sum), function(x){
   sample.sum = sum(biotype_sum$total_count[biotype_sum$sample == biotype_sum$sample[x]])
   return(biotype_sum$total_count[x] / sample.sum)
 }, simplify = TRUE)
 
-#---- biotype Illumina
+#biotype Illumina---- 
 dge.short.human <- dge[grep("^ENST", rownames(dge.short)), ]
 txid <- strsplit2(rownames(dge.short.human$counts), "\\|")[,1]
 txid <- strsplit2(txid, "\\.")[,1]
@@ -151,13 +151,13 @@ ggplot(biotype_sum.short, aes(x=sample, y=total_count, fill=factor(biotype, leve
   labs(fill = "Transcript biotype", x = "Sample", y = "Proportion of count")
 dev.off()
 
-#---- calculate proportion for Illumina
+# calculate proportion for Illumina----
 biotype_sum.short$proportion <- sapply(1:nrow(biotype_sum.short), function(x){
   sample.sum = sum(biotype_sum.short$total_count[biotype_sum.short$sample == biotype_sum.short$sample[x]])
   return(biotype_sum.short$total_count[x] / sample.sum)
 }, simplify = TRUE)
 
-#---- biotype long and short
+#biotype long and short---- 
 biotype_sum.all <- rbind(biotype_sum, biotype_sum.short)
 biotype_sum.all$dataset <- rep(c("ONT", "Illumina"), c(nrow(biotype_sum), nrow(biotype_sum.short)))
 pdf("plots/biotype_all.pdf", height = 5, width = 8)
@@ -172,7 +172,7 @@ ggplot(biotype_sum.all, aes(x=sample, y=total_count, fill=factor(biotype, levels
   labs(fill = "Transcript biotype", x = "Sample", y = "Proportion of count")
 dev.off()
 
-#------ long vs short quantification
+# long vs short quantification------
 # long CPM vs short TPM
 # filter
 dge.pure <- dge[,1:6]
@@ -215,7 +215,7 @@ ggplot(quant, aes(x = CPM_long, y = TPM_short))+
   theme(text=element_text(size = 20))
 dev.off()
 
-#------- quantification correlation matrix heatmap
+# quantification correlation matrix heatmap-------
 m <- match(rownames(dge.short), rownames(dge))
 table(is.na(m))
 dge.all <- DGEList(counts = cbind(dge$counts[m, 1:6], dge.short$counts[, 1:6]))
@@ -317,9 +317,27 @@ pheatmap(cormat3,
 )
 dev.off()
 
+# sequins
+cormat4 <- cor(quant.all[grepl("^R", rownames(quant.all)),])
+pdf("plots/corHeatmapSequin.pdf", height = 8, width = 9)
+pheatmap(cormat4,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE,
+         number_color = "black",
+         fontsize = 16,
+         fontsize_number = 12
+)
+dev.off()
 
-
-#--------------------length bias plot
+# length bias plot--------------------
 dge.pure$genes$totalCount <- rowSums(dge.pure$counts)
 lm.long <- lm(dge.pure$genes$totalCount~dge.pure$genes$Length)
 summary(lm.long)
