@@ -994,7 +994,7 @@ FDR.sequin.gene <- as.data.frame(sapply(
 colnames(FDR.sequin.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
 FDR.sequin.gene <- melt(FDR.sequin.gene, variable.name = "Method", value.name = "False discovery rate")
 FDR.sequin.gene$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
-pdf(file.path(OUT, "sequinGeneFDR.pdf"), height = 4)
+pdf(file.path(OUT, "sequinGeneFDR.pdf"), height = 5, width = 8)
 ggplot(FDR.sequin.gene, aes(x=Comparison, y=`False discovery rate`, colour=Method, group=Method)) +
   geom_line() +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
@@ -1011,7 +1011,7 @@ FDR.sequin.tx <- as.data.frame(sapply(
 colnames(FDR.sequin.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
 FDR.sequin.tx <- melt(FDR.sequin.tx, variable.name = "Method", value.name = "False discovery rate")
 FDR.sequin.tx$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
-pdf(file.path(OUT, "sequinTranscriptFDR.pdf"), height = 4)
+pdf(file.path(OUT, "sequinTranscriptFDR.pdf"), height = 5, width = 8)
 ggplot(FDR.sequin.tx, aes(x=Comparison, y=`False discovery rate`, colour=Method, group=Method)) +
   geom_line() +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
@@ -1037,7 +1037,7 @@ TPR.sequin.gene <- as.data.frame(sapply(
 colnames(TPR.sequin.gene) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
 TPR.sequin.gene <- melt(TPR.sequin.gene, variable.name = "Method", value.name = "True positive rate")
 TPR.sequin.gene$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
-pdf(file.path(OUT, "sequinGeneTPR.pdf"), height = 4)
+pdf(file.path(OUT, "sequinGeneTPR.pdf"), height = 5, width = 8)
 ggplot(TPR.sequin.gene, aes(x=Comparison, y=`True positive rate`, colour=Method, group=Method)) +
   geom_line() +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
@@ -1054,7 +1054,7 @@ TPR.sequin.tx <- as.data.frame(sapply(
 colnames(TPR.sequin.tx) <- c("DEXSeq", "DRIMSeq", "edgeR", "limma", "satuRn")
 TPR.sequin.tx <- melt(TPR.sequin.tx, variable.name = "Method", value.name = "True positive rate")
 TPR.sequin.tx$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
-pdf(file.path(OUT, "sequinTranscriptTPR.pdf"), height = 4)
+pdf(file.path(OUT, "sequinTranscriptTPR.pdf"), height = 5, width = 8)
 ggplot(TPR.sequin.tx, aes(x=Comparison, y=`True positive rate`, colour=Method, group=Method)) +
   geom_line() +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +

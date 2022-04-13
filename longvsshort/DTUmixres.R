@@ -1,5 +1,6 @@
 library(ggplot2)
 library(UpSetR)
+library(ggvenn)
 
 DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
 
@@ -122,6 +123,14 @@ upset(fromList(append(DTU.gene.illumina.100vs000, DTU.gene.ONT.100vs000)),
       sets.bar.color = rep(c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"), 2)[order(sapply(append(DTU.gene.illumina.100vs000, DTU.gene.ONT.100vs000), length, simplify=T), decreasing = T)])
 dev.off()
 
+x <-list(
+  ONT = Reduce(union, DTU.gene.ONT.100vs000),
+  Illumina = Reduce(union,DTU.gene.illumina.100vs000)
+)
+pdf("plots/DTU/DTUgeneVenn.pdf", height = 5, width = 8)
+ggvenn(x, fill_color = c("#438DAC", "#FCB344"))
+dev.off()
+
 # gene tested by all methods only
 gene.human.ONT <- readRDS(file.path(DIR, "ONT/DTUmix/gene.human.RDS"))
 gene.sequin.ONT <- readRDS(file.path(DIR, "ONT/DTUmix/gene.sequin.RDS"))
@@ -152,6 +161,16 @@ upset(fromList(append(DTU.gene.illumina.100vs000.filt, DTU.gene.ONT.100vs000.fil
       nsets=10, nintersects = 25, order.by = "freq",
       text.scale = c(2, 2, 2, 1.75, 1.8, 2),
       sets.bar.color = rep(c("#ECD98B", "#AAAAC2",  "#03875C", "#9A4C43", "#4E3227"), 2)[order(sapply(append(DTU.gene.illumina.100vs000.filt, DTU.gene.ONT.100vs000.filt), length, simplify=T), decreasing = T)])
+dev.off()
+
+
+# venn diagram
+x <-list(
+  ONT = Reduce(union, DTU.gene.ONT.100vs000.filt),
+  Illumina = Reduce(union, DTU.gene.illumina.100vs000.filt)
+)
+pdf("plots/DTU/DTUgeneVennFilt.pdf", height = 5, width = 8)
+ggvenn(x, fill_color = c("#438DAC", "#FCB344"))
 dev.off()
 
 # some further exploration

@@ -85,7 +85,7 @@ colnames(biotype_sum) <- c("biotype", "total_count", "sample")
 # order the bars
 ord = aggregate(biotype_sum$total_count, by = list(biotype_sum$biotype), FUN = sum, simplify = TRUE)
 ord = ord[order(ord$x), ]
-
+saveRDS(ord, "ord.RDS")
 
 pdf("plots/biotype.pdf", height = 5, width = 8)
 ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
@@ -201,9 +201,9 @@ quant <- na.omit(quant)
 cor(quant$TPM_short, quant$CPM_long)
 cor(quant$TPM_short[quant$group=="H1975"], quant$CPM_long[quant$group=="H1975"])
 cor(quant$TPM_short[quant$group=="HCC827"], quant$CPM_long[quant$group=="HCC827"])
-pdf("plots/longVsShortQuant.pdf", height = 5, width = 5)
+pdf("plots/longVsShortQuant.pdf", height = 8, width = 9)
 ggplot(quant, aes(x = CPM_long, y = TPM_short))+
-  stat_binhex() +
+  stat_binhex(bins=100) +
   scale_fill_viridis(trans = "log10", option = "A")+
   annotate(geom="text", x=3, y=12,
            label=paste0("Pearson's r=", round(cor(quant$TPM_short, quant$CPM_long), 3)),

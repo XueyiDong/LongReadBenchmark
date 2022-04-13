@@ -281,6 +281,7 @@ DE.human.100vs000$length <- c(txInfo.long$Length[match(DE.human.100vs000$tx[DE.h
 )
 DE.human.100vs000 <- na.omit(DE.human.100vs000)
 col <- brewer.pal(10, "Set3")
+ord <- readRDS("ord.RDS")
 pdf("plots/DTE/DTEbiotype.pdf", height = 5, width = 8)
 ggplot(DE.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.1)))+
   geom_bar(position = "fill")+
@@ -290,6 +291,17 @@ ggplot(DE.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.
   scale_fill_brewer(palette="Set3") +
   # scale_fill_manual(values = col[-1]) +
   labs(fill = "Transcript biotype", x = "Method", y = "Proportion of DTE transcripts")
+dev.off()
+
+pdf("plots/DTE/DTEbiotypeCount.pdf", height = 5, width = 8)
+ggplot(DE.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.1)))+
+  geom_bar(position = "stack")+
+  facet_grid(cols=vars(dataset)) +
+  theme_bw() +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
+  scale_fill_brewer(palette="Set3") +
+  # scale_fill_manual(values = col[-1]) +
+  labs(fill = "Transcript biotype", x = "Method", y = "Number of DTE transcripts")
 dev.off()
 
 library(ggridges)
