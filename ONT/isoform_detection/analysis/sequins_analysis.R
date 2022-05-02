@@ -49,7 +49,7 @@ s_talon <- na.omit(s_talon)
 s_known_bambu <- s_bambu[str_detect(s_bambu$V9, paste(c(s$NAME),collapse="|")),]
 s_known_flair <- s_flair[str_detect(s_flair$V9, paste(c(s$NAME),collapse="|")),]
 s_known_flames <- s_flames[str_detect(s_flames$V9, paste0(c(s$NAME),";",collapse="|")),]
-s_known_sqanti <- unique(s_sqanti_class[str_detect(s_sqanti_class$associated_transcript, paste(c(s$NAME),collapse="|")),"associated_transcript"])
+s_known_sqanti <- unique(s_sqanti[str_detect(s_sqanti$associated_transcript, paste(c(s$NAME),collapse="|")),"associated_transcript"])
 s_known_stringtie <- s_stringtie[str_detect(s_stringtie$V9, paste(c(s$NAME),collapse="|")),]
 s_known_talon <- s_talon[s_talon$V2=="Sequin",]
 
@@ -57,13 +57,13 @@ s_known_talon <- s_talon[s_talon$V2=="Sequin",]
 s_novel_bambu <- s_bambu[!str_detect(s_bambu$V9, paste(c(s$NAME),collapse="|")),]
 s_novel_flair <- s_flair[!str_detect(s_flair$V9, paste(c(s$NAME),collapse="|")),]
 s_novel_flames <- s_flames[!str_detect(s_flames$V9, paste0(c(s$NAME),";",collapse="|")),]
-s_novel_sqanti <- s_sqanti_class[s_sqanti_class$associated_transcript=="novel",]
+s_novel_sqanti <- s_sqanti[s_sqanti$associated_transcript=="novel",]
 s_novel_stringtie <- s_stringtie[!str_detect(s_stringtie$V9, paste(c(s$NAME),collapse="|")),]
 s_novel_talon <- s_talon[s_talon$V2=="TALON",]
 
 # summary table
 summary <- data.frame(tool = c("bambu", "FLAIR", "FLAMES","SQANTI3", "StringTie2", "TALON"), 
-                          seq_related_annot = c(nrow(s_bambu), nrow(s_flair), nrow(s_flames),nrow(s_sqanti_class),nrow(s_stringtie), nrow(s_talon)),
+                          seq_related_annot = c(nrow(s_bambu), nrow(s_flair), nrow(s_flames),nrow(s_sqanti),nrow(s_stringtie), nrow(s_talon)),
                           known_seq_160 = c(nrow(s_known_bambu), nrow(s_known_flair), nrow(s_known_flames), length(s_known_sqanti),nrow(s_known_stringtie), nrow(s_known_talon)),
                           novel_annot = c(nrow(s_novel_bambu), nrow(s_novel_flair), nrow(s_novel_flames), nrow(s_novel_sqanti),nrow(s_novel_stringtie), nrow(s_novel_talon)))
 
@@ -80,7 +80,8 @@ seq_all <- ggbarplot(data, "tool", "count",
   scale_y_continuous(breaks = c(0,80,160,seq(240,12000,480)),expand=c(0,0)) +
   scale_x_discrete(expand=c(0,0)) +
   facet_zoom(ylim=c(0,160)) +
-  theme(legend.text=element_text(size=12),axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) 
+  theme(legend.text=element_text(size=15),axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=15),
+        axis.text.y = element_text(size=13), axis.title = element_text(size=15)) 
 
 #pdf("plots","sequins_ONT_filtered.pdf",width=16, height=12)
 seq_all
@@ -93,13 +94,13 @@ gtf_removedseq <- data.frame(gtf[str_detect(gtf$V9, paste(c(str_trim(remove_seq_
 
 # load annotations
 sub_annot_loc <- here("plots","readcount_cor","ONT_annotations","ONT_sub")
-bambu_sub_annot <- read.delim(paste0(ont_sub_annot_loc, "/ONT_sub_10_extended_annotations.gtf"), header = FALSE) 
-flair_sub_annot <- read.delim(paste0(ont_sub_annot_loc,"/flair.collapse.isoforms.gtf"), header = FALSE)
-flames_sub_annot <- read.delim(paste0(ont_sub_annot_loc,"/isoform_annotated.filtered.gff3"), header = FALSE)
-sqanti_sub_annot <- read.delim(paste0(ont_sub_annot_loc,"/merged_ont_sub_0.95.collapsed_corrected.gtf"), header = FALSE)
-sqanti_class_sub <- read.delim(paste0(ont_sub_annot_loc,"/merged_ont_sub_0.95.collapsed_classification.txt"))
-stringtie_sub_annot <- read.delim(paste0(ont_sub_annot_loc,"/ONT_stringtie_merged_sub.gtf"), header = FALSE)
-talon_sub_annot <- read.delim(paste0(ont_sub_annot_loc, "/ONT_sub_filtered_annot_talon.gtf"), header = FALSE)
+bambu_sub_annot <- read.delim(paste0(sub_annot_loc, "/ONT_sub_10_extended_annotations.gtf"), header = FALSE) 
+flair_sub_annot <- read.delim(paste0(sub_annot_loc,"/flair.collapse.isoforms.gtf"), header = FALSE)
+flames_sub_annot <- read.delim(paste0(sub_annot_loc,"/isoform_annotated.filtered.gff3"), header = FALSE)
+sqanti_sub_annot <- read.delim(paste0(sub_annot_loc,"/merged_ont_sub_0.95.collapsed_corrected.gtf"), header = FALSE)
+sqanti_class_sub <- read.delim(paste0(sub_annot_loc,"/merged_ont_sub_0.95.collapsed_classification.txt"))
+stringtie_sub_annot <- read.delim(paste0(sub_annot_loc,"/ONT_stringtie_merged_sub.gtf"), header = FALSE)
+talon_sub_annot <- read.delim(paste0(sub_annot_loc, "/ONT_sub_filtered_annot_talon.gtf"), header = FALSE)
 
 # load counts
 sub_counts_loc <- here("plots","readcount_cor","counts","ONT","ONT_sub")
@@ -164,7 +165,8 @@ seq_recovered <- ggbarplot(data_sub, "tool", "count",
   scale_y_continuous(breaks = c(0,40,80,120,seq(240,2800,240)), expand=c(0,0)) +
   scale_x_discrete(expand=c(0,0)) +
   facet_zoom(ylim=c(0,120)) +
-  theme(legend.text=element_text(size=12),axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) 
+  theme(legend.text=element_text(size=15),axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=15),
+        axis.text.y = element_text(size=13), axis.title = element_text(size=15))
 
 #pdf("plots","sequins_recovered_ONT_filtered.pdf",width=16, height=12)
 seq_recovered

@@ -73,19 +73,19 @@ log_mat <- rbind(log_mat_bambu,
                  log_mat_sqanti,
                  log_mat_stringtie, 
                  log_mat_talon)
-log_mat$tool <- as.factor(log_mat_ont$tool)
+log_mat$tool <- as.factor(log_mat$tool)
 
 # hex bin scatter plot
 # display feature number 
-features <- data.frame(x=11.2, 
-                       y= 16.5, 
+features <- data.frame(x=11.5, 
+                       y= 16.4, 
                        label = c(paste("n =",nrow(log_mat_bambu)),
                                  paste("n =",nrow(log_mat_flair)),
                                  paste("n =",nrow(log_mat_flames)),
                                  paste("n =",nrow(log_mat_sqanti)),
                                  paste("n =",nrow(log_mat_stringtie)),
                                  paste("n =",nrow(log_mat_talon))),
-                       tool = unique(log_mat_ont$tool))
+                       tool = unique(log_mat$tool))
 
 # plot
 hp <- ggplot(log_mat, aes(x=ONT,y=Illumina)) + 
@@ -96,9 +96,11 @@ hp <- ggplot(log_mat, aes(x=ONT,y=Illumina)) +
   labs(fill=expression("log"[10]*" counts")) +
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), panel.border = element_blank(),axis.line = element_line(colour = "black")) +
-  geom_text(data = features, aes(x,y,label=label)) +
-  geom_smooth(method = "lm",se = FALSE,color = "orange") + stat_cor()+ border() + facet_wrap(.~tool)
+        panel.background = element_blank(), panel.border = element_blank(),axis.line = element_line(colour = "black"),
+        text = element_text(size = 15)) +
+  geom_text(data = features, aes(x,y,label=label), size=4.5) +
+  geom_smooth(method = "lm",se = FALSE,color = "orange") + stat_cor(size=4.5)+ border() + 
+  facet_wrap(.~tool) + theme(strip.text = element_text(size=13))
 
 #pdf(here("plots","readcount_cor","logCPM_hex_ont_illumina_fig.pdf"), height = 6, width = 10)
 hp

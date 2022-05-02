@@ -33,7 +33,8 @@ rp_filtered <- ggplot(log_mat_filtered, aes(x=Illumina, y = tool, fill = tool)) 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), panel.border = element_blank(),
         axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(),
-        axis.line.x = element_line(size=0.1),axis.ticks.length=unit(0.25,"cm")) 
+        axis.line.x = element_line(size=0.1),axis.ticks.length=unit(0.25,"cm"), axis.text.x = element_text(size=12),
+        text = element_text(size=15), legend.text = element_text(size=15)) 
 #pdf(here("plots","ont_illumina_readcount_dist_filtered_fig.pdf"),width=4, height=4)
 rp_filtered
 #dev.off()

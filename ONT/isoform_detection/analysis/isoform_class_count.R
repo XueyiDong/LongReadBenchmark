@@ -1,11 +1,11 @@
 # Visualising SQANTI3-classified isoform structural categories and read counts 
-# Authors: Mei Du, Xueyi Dong
+# Authors: Xueyi Dong, Mei Du
 
 library(tidyverse)
 library(here)
 
 # load SQANTI3 classifications
-sqanti_dir <- here("SQANTI3")
+sqanti_dir <- ("/stornext/General/data/user_managed/grpu_mritchie_0/Mei/long_read_benchmark/SQANTI3")
 isoClass_bambu <- read.delim(paste0(sqanti_dir,"/bambu/ONT_extended_annotations_edited_classification.txt"), stringsAsFactors = FALSE)
 isoClass_bambu$method <- "bambu"
 isoClass_flair <- read.delim(paste0(sqanti_dir,"/FLAIR/flair.collapse.isoforms_classification.txt"), stringsAsFactors = FALSE)

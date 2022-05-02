@@ -94,11 +94,11 @@ cpm.human <- cpm(x[human.gene, ], log=TRUE)
 cpm.sequin <- cpm(x[sequin.gene, ], log=TRUE)
 # par(mfrow=c(1,2))
 pdf(file.path(OUT, "mds_human.pdf"), height = 5, width = 8)
-par(mar=c(5.1, 4.1, 3.1, 7.1), xpd=TRUE)
+par(mar=c(5.1, 5.1, 3.1, 6.1), xpd=TRUE)
 plotMDS(cpm.human, pch = rep(c(1, 2), c(6, 9)),
         col = rep(col, rep(3, 5)), main="ONT human",
         cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
-legend("topright", inset=c(-0.23,0), c("100:000", "075:025", "050:050", "025:075", "000:100"), 
+legend("topright", inset=c(-0.16,0), c("000", "025", "050", "075", "100"), 
        pch = c(1, 2, 2, 2, 1),
        col = col[c(1, 5, 4, 3, 2)],
        title = "Group", title.col = "black",
@@ -108,7 +108,7 @@ pdf(file.path(OUT, "mds_sequin.pdf"), height = 5, width = 8)
 plotMDS(cpm.sequin, pch = rep(c(1, 2), c(6, 9)),
         col = rep(col, rep(3, 5)), main = "ONT sequin",
         cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
-legend("topleft", c("100:0", "75:25", "50:50", "25:75", "0:100"), 
+legend("topleft", c("000", "025", "050", "075", "100"), 
         text.col = col[c(1, 5, 4, 3, 2)], cex = 1.25, bty = "n")
 dev.off()
 ```

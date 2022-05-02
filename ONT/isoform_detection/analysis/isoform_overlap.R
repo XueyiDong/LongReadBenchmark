@@ -57,7 +57,7 @@ overlap <- list(bambu = bambu_overlap,
 tool <- c("bambu","FLAIR","FLAMES","SQANTI3","StringTie2","TALON")
 bin_mat <- fromList(overlap)
 upset <- ComplexUpset::upset(bin_mat[,order(ncol(bin_mat):1)], 
-                             tool_official[order(length(tool_official):1)], 
+                             tool[order(length(tool):1)], 
                              n_intersections=20, 
                              width_ratio=0.2,
                              sort_sets=FALSE,
@@ -66,10 +66,13 @@ upset <- ComplexUpset::upset(bin_mat[,order(ncol(bin_mat):1)],
                                  intersection_size()
                                  + theme(plot.background = element_blank(),
                                          panel.grid.major = element_blank(),
-                                         panel.grid.minor = element_blank()))
+                                         panel.grid.minor = element_blank(),
+                                         axis.title = element_text(size=13),
+                                         axis.text = element_text(size=13)))
                                + ylab('Regions with common isoform coordinates')),
                              themes=upset_modify_themes(
-                               list('intersections_matrix'=theme(text=element_text(size=14), axis.title.x = element_blank()))))
+                               list('intersections_matrix'=theme(text=element_text(size=16), axis.title.x = element_blank()),
+                                    'overall_sizes'=theme(axis.text.x=element_text(size=15), axis.title.x = element_text(size=15)))))
 
 #pdf(here("plots","isoform_overlap_ont_filtered_fig.pdf"),width=8, height=4.5)
 upset
