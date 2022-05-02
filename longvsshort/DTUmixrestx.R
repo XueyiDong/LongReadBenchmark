@@ -286,7 +286,7 @@ ggplot(DTU.tx.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Gr
   geom_bar(position = "fill")+
   facet_grid(cols=vars(dataset)) +
   theme_bw() +
-  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_manual(values = col[-1]) +
   labs(fill = "Transcript biotype", x = "Method", y = "Proportion of DTU transcripts")
 dev.off()

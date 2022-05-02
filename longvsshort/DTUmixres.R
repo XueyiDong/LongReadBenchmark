@@ -270,11 +270,12 @@ DTU.gene.human.100vs000 <- data.frame(
                 sapply(append(DTU.gene.human.ONT.100vs000, DTU.gene.human.illumina.100vs000), length, simplify = TRUE))
 )
 library("GenomicFeatures")
-gtf <- "/wehisan/home/allstaff/d/dong.x/annotation/HumanSequins/gencode.v33.sequins.gtf"
-gtf_txdb <- makeTxDbFromGFF(gtf)
-gene_list <- genes(gtf_txdb)
-gene_list <- as.data.frame(gene_list)
-saveRDS(gene_list, file="gene_list.RDS")
+# gtf <- "/wehisan/home/allstaff/d/dong.x/annotation/HumanSequins/gencode.v33.sequins.gtf"
+# gtf_txdb <- makeTxDbFromGFF(gtf)
+# gene_list <- genes(gtf_txdb)
+# gene_list <- as.data.frame(gene_list)
+# saveRDS(gene_list, file="gene_list.RDS")
+gene_list <- readRDS("gene_list.RDS")
 DTU.gene.human.100vs000$length <- gene_list[DTU.gene.human.100vs000$gene, "width"]
 library(AnnotationHub)
 ah <- AnnotationHub()
@@ -294,7 +295,7 @@ ggplot(DTU.gene.human.100vs000, aes(x = method, fill=biotype))+
   geom_bar(position = "fill")+
   facet_grid(cols=vars(dataset)) +
   theme_bw() +
-  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_brewer(palette="Set2") +
   labs(fill = "Gene biotype", x = "Method", y = "Proportion of DTU gene")
 dev.off()

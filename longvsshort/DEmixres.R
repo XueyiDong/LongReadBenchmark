@@ -287,7 +287,7 @@ ggplot(DE.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.
   geom_bar(position = "fill")+
   facet_grid(cols=vars(dataset)) +
   theme_bw() +
-  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_brewer(palette="Set3") +
   # scale_fill_manual(values = col[-1]) +
   labs(fill = "Transcript biotype", x = "Method", y = "Proportion of DTE transcripts")
@@ -298,7 +298,7 @@ ggplot(DE.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.
   geom_bar(position = "stack")+
   facet_grid(cols=vars(dataset)) +
   theme_bw() +
-  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 30, hjust = 1)) +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_brewer(palette="Set3") +
   # scale_fill_manual(values = col[-1]) +
   labs(fill = "Transcript biotype", x = "Method", y = "Number of DTE transcripts")
