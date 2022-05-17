@@ -80,7 +80,7 @@ biotype_sum <- sapply(1:6, function(x){
   return(typesum)
 }, simplify=FALSE)
 biotype_sum <- do.call("rbind", biotype_sum)
-biotype_sum$sample <- rep(paste0("barcode0", 1:6), rep(10, 6))
+biotype_sum$sample <- rep(c("H1975-1", "H1975-2", "H1975-3", "HCC827-1", "HCC827-2", "HCC827-5"), rep(10, 6))
 colnames(biotype_sum) <- c("biotype", "total_count", "sample")
 # order the bars
 ord = aggregate(biotype_sum$total_count, by = list(biotype_sum$biotype), FUN = sum, simplify = TRUE)
@@ -135,8 +135,8 @@ biotype_sum.short <- sapply(1:6, function(x){
 }, simplify=FALSE)
 biotype_sum.short <- do.call("rbind", biotype_sum.short)
 
-# biotype_sum.short$sample <- rep(c("H1975-1", "H1975-2", "H1975-3", "HCC827-1", "HCC827-2", "HCC827-5"), rep(10, 6))
-biotype_sum.short$sample <- rep(paste0("barcode0", 1:6), rep(10, 6))
+biotype_sum.short$sample <- rep(c("H1975-1", "H1975-2", "H1975-3", "HCC827-1", "HCC827-2", "HCC827-5"), rep(10, 6))
+# biotype_sum.short$sample <- rep(paste0("barcode0", 1:6), rep(10, 6))
 colnames(biotype_sum.short) <- c("biotype", "total_count", "sample")
 # order the bars
 ord = aggregate(biotype_sum$total_count, by = list(biotype_sum$biotype), FUN = sum, simplify = TRUE)
@@ -160,14 +160,15 @@ biotype_sum.short$proportion <- sapply(1:nrow(biotype_sum.short), function(x){
 #biotype long and short---- 
 biotype_sum.all <- rbind(biotype_sum, biotype_sum.short)
 biotype_sum.all$dataset <- rep(c("ONT", "Illumina"), c(nrow(biotype_sum), nrow(biotype_sum.short)))
+
 pdf("plots/biotype_all.pdf", height = 5, width = 8)
 ggplot(biotype_sum.all, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
   geom_bar(stat="identity", position = "fill") +
   facet_grid(cols=vars(dataset)) +
   theme_bw() +
   theme(text = element_text(size = 20), 
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank()) +
+        axis.text.x = element_text(angle = 90, vjust = 0.5),
+        ) +
   scale_fill_brewer(palette = "Set3") +
   labs(fill = "Transcript biotype", x = "Sample", y = "Proportion of count")
 dev.off()
