@@ -1,0 +1,132 @@
+---
+title: "in silico RNA mixing"
+author: "Xueyi Dong"
+date: "12/02/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Arrange sample information
+
+We aim to mix the reads from different samples in silico and see whether these in silico mixed samples look similar enough to the ones obtained via physical mixing of RNA in the lab. The mixture proportions are 25:75, 50:50, 75:25.
+
+In the original paper, FASTQ files from the same libraries were merged and aligned to the hg19 build of the human reference genome using the Subread and Subjunc software (version 1.4.6) with default settings.
+
+For each sample, we take the first X% of the reads from each lane and combine them to create the in silico mixture. Then, we use the similar mapping and counting strategy comparing to the paper.
+
+Here, we arrange mixed sample information.
+```{r mixinfo}
+dir <- "/stornext/General/data/user_managed/grpu_mritchie_1/Mixture/MainStudy"
+mixinfo <- data.frame(
+  rep = c(rep("R1", 3), rep("R2", 3), rep("R3", 3)),
+  prop = rep(c("025", "050", "075"), 3)
+)
+mixinfo$file <- paste(mixinfo$rep, "-", mixinfo$prop, "sub.fastq", sep="")
+mixinfo$bam <- paste(mixinfo$rep, "-", mixinfo$prop, "sub.bam", sep="")
+mixinfo$bampath <- paste(dir, mixinfo$bam, sep="/")
+mixinfo
+```
+
+Arrange raw sample counts info
+
+```{r sampleinfo}
+sampleinfo <- data.frame(
+  rep = c(rep("R1", 5), rep("R2", 5), rep("R3", 5)),
+  prop = rep(c("000", "025", "050", "075", "100"), 3)
+)
+sampleinfo$bam <- paste(sampleinfo$rep, "-", sampleinfo$prop, ".bam", sep="")
+sampleinfo$bampath <- paste(dir, sampleinfo$bam, sep="/")
+sampleinfo
+```
+
+## Alignment and counting
+
+We merged data from different lanes and performed sampling using shell scripts. Then we perform alignment and feature count to hg19. The hg19 index have already built in the past, so we can directly use it.
+
+<!-- To speed up the alignment procedure, we proceed it using shell script so that it can be run on multiple servers meanwhile. -->
+<!-- R1: unix306 -->
+<!-- R2: unix307 -->
+<!-- R3: unix308 -->
+
+```{r subread, eval=FALSE}
+library(Rsubread)
+# index <- "/wehisan/home/allstaff/d/dong.x/personal/index/hg19/hg19_index"
+fc <- featureCounts(c(mixinfo$bampath, sampleinfo$bampath), annot.inbuilt = "hg19", nthreads = 24)
+save(fc, file="featureCountsResult.RData")
+```
+
+```{r echo=FALSE}
+load("featureCountsResult.RData")
+```
+
+
+```{r savefc}
+counts <- fc$counts
+colnames(counts) <- c(mixinfo$bam, sampleinfo$bam)
+```
+
+## Data pre-processing
+
+read in count data from txt files using **edgeR**
+
+```{r lib}
+library(edgeR)
+library(limma)
+```
+
+```{r DGE}
+x <- DGEList(counts = counts)
+dim(x)
+x$samples$rep <- c(mixinfo$rep, sampleinfo$rep)
+x$samples$prop <- c(as.character(mixinfo$prop), as.character(sampleinfo$prop))
+x$samples$source <- c(rep("mix", 9), rep("seq", 15))
+x$samples$group <- paste(x$samples$source, x$samples$prop, sep="_")
+x$samples
+```
+
+Filter out lowly expressed genes
+
+```{r filter}
+keep.exprs <- filterByExpr(x, group=x$samples$group)
+x <- x[keep.exprs,, keep.lib.sizes=FALSE]
+dim(x)
+```
+
+Normalization using TMM
+
+```{r norm}
+x <- calcNormFactors(x, method = "TMM")
+x$samples$norm.factors
+```
+
+## MDS plot
+```{r}
+lcpm <- cpm(x, log=TRUE)
+library(Glimma)
+glMDSPlot(lcpm, labels=colnames(x), 
+          groups=x$samples[,c(1,5,6,2)], launch=FALSE)
+```
+
+[Interactive MDS plot](glimma-plots/MDS-Plot.html)
+
+PDF version MDS plot
+
+```{r}
+library(RColorBrewer)
+col <- brewer.pal(5, "Set1")[c(1, 5, 4, 3, 2)]
+pdf("MDS_pilot.pdf", height = 5, width = 8)
+plotMDS(lcpm, 
+        pch = rep(c(2, 1), c(9, 15)),
+        col = col[c(rep(2:4, 3), rep(1:5, 3))], 
+        cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
+legend("bottomleft", c("000", "025", "050", "075", "100", "pure RNA samples", "in silico mixture"), 
+        text.col = c(col, "black", "black"), cex = 1.25, bty = "n",
+       pch = c(rep(NA, 5), 1, 2))
+# legend("bottomright", c("pure RNA samples", "in silico mixture samples"),
+       # pch = c(1, 2), cex = 1.25, bty = "n")
+dev.off()
+```
+
