@@ -85,7 +85,6 @@ colnames(biotype_sum) <- c("biotype", "total_count", "sample")
 # order the bars
 ord = aggregate(biotype_sum$total_count, by = list(biotype_sum$biotype), FUN = sum, simplify = TRUE)
 ord = ord[order(ord$x), ]
-saveRDS(ord, "ord.RDS")
 
 pdf("plots/biotype.pdf", height = 5, width = 8)
 ggplot(biotype_sum, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
@@ -161,13 +160,13 @@ biotype_sum.short$proportion <- sapply(1:nrow(biotype_sum.short), function(x){
 biotype_sum.all <- rbind(biotype_sum, biotype_sum.short)
 biotype_sum.all$dataset <- rep(c("ONT", "Illumina"), c(nrow(biotype_sum), nrow(biotype_sum.short)))
 
-pdf("plots/biotype_all.pdf", height = 5, width = 8)
+pdf("plots/biotype_all.pdf", height = 4, width = 8)
 ggplot(biotype_sum.all, aes(x=sample, y=total_count, fill=factor(biotype, levels=ord$Group.1))) +
   geom_bar(stat="identity", position = "fill") +
   facet_grid(cols=vars(dataset)) +
   theme_bw() +
   theme(text = element_text(size = 20), 
-        axis.text.x = element_text(angle = 90, vjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1),
         ) +
   scale_fill_brewer(palette = "Set3") +
   labs(fill = "Transcript biotype", x = "Sample", y = "Proportion of count")
@@ -275,7 +274,7 @@ cpm.sel <- cpm(dge.pure.sel)
 tpm.sel <- tpm3(dge.short.pure.sel$counts, dge.short.pure.sel$genes$Length)
 quant.all.sel <- cbind(cpm.sel[match(rownames(tpm.sel), rownames(cpm.sel)), ], tpm.sel) %>% na.omit
 cormat3 <- cor(quant.all.sel)
-pdf("plots/corHeatmapCoding.pdf", height = 8, width = 9)
+pdf("plots/corHeatmapCoding.pdf", height = 7, width = 8)
 pheatmap(cormat3,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
          cluster_cols = FALSE,

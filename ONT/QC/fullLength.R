@@ -180,7 +180,7 @@ ggplot(txStat.filt, aes(x=tx_len, y=fl95))+
   scale_fill_viridis()+
   theme(text=element_text(size = 20))
 dev.off()
-pdf("plots/meanCov.pdf", height = 5, width = 8)
+pdf("plots/meanCov.pdf", height = 4, width = 8)
 ggplot(txStat.filt, aes(x=tx_len, y=mean))+
   scale_x_continuous(trans = "log10") +
   stat_binhex(bins=100) +
@@ -189,7 +189,7 @@ ggplot(txStat.filt, aes(x=tx_len, y=mean))+
   scale_fill_viridis()+
   theme(text=element_text(size = 20))
 dev.off()
-pdf("plots/medCov.pdf", height = 5, width = 8)
+pdf("plots/medCov.pdf", height = 4, width = 8)
 ggplot(txStat.filt, aes(x=tx_len, y=median))+
   scale_x_continuous(trans = "log10") +
   stat_binhex(bins=100) +
