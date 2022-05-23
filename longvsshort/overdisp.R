@@ -150,8 +150,17 @@ dev.off()
 # plot overdispersion together ----
 library(cowplot)
 pdf("plots/overdispBoxAll.pdf", height = 4, width = 8)
-plot_grid(p.ovd + ggtitle("All"),
-          p.ovd.se + ggtitle("Sequins"),
+plot_grid(p.ovd +
+            ggtitle("All transcripts") +
+            geom_hline(yintercept = 10^layer_scales(p.ovd.se)$y$get_limits()[2],
+                       alpha = 0.3,
+                       linetype = "dashed") +
+            geom_hline(yintercept = 1,
+                       alpha = 0.3,
+                       linetype = "dashed"),
+          p.ovd.se +
+            ggtitle("Sequins") +
+            theme(axis.title.y = element_blank()),
           ncol = 2,
           rel_widths = c(2,1))
 dev.off()

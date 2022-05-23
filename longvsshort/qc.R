@@ -215,13 +215,15 @@ ggplot(quant, aes(x = CPM_long, y = TPM_short))+
   theme(text=element_text(size = 20))
 dev.off()
 
-# quantification correlation matrix heatmap-------
+# quantification correlation matrix heatmap by biotype-------
+## use raw count -----
 m <- match(rownames(dge.short), rownames(dge))
 table(is.na(m))
 dge.all <- DGEList(counts = cbind(dge$counts[m, 1:6], dge.short$counts[, 1:6]))
 dge.all$samples$group <- rep(c("H1975_long", "HCC827_long", "H1975_short", "HCC827_short"), c(3, 3, 3, 3))
 filt <- filterByExpr(dge.all)
 dge.all <- dge.all[filt,]
+dge.all$genes <- dge.short$genes[match(rownames(dge.all), rownames(dge.short)),]
 cormat <- cor(dge.all$counts)
 library(pheatmap)
 anno <- data.frame(
@@ -244,6 +246,8 @@ pheatmap(cormat,
          scale = "none",
          display_numbers = TRUE
          )
+## use long cpm vs short tpm----
+### all----
 cpm <- cpm(dge.all[, 1:6])
 tpm <- tpm3(dge.all$counts[, 7:12], dge.short$genes$Length[match(rownames(dge.all), rownames(dge.short))])
 quant.all <- cbind(cpm, tpm)
@@ -265,7 +269,7 @@ pheatmap(cormat2,
          fontsize_number = 12
 )
 dev.off()
-
+### coding----
 # filter by biotype
 tx.sel <- names(biotype)[biotype %in% c("protein_coding", "lncRNA")]
 dge.pure.sel <- dge.pure[substr(rownames(dge.pure), 1, 15) %in% tx.sel, ]
@@ -292,6 +296,7 @@ pheatmap(cormat3,
 )
 dev.off()
 
+### other----
 tx.sel <- names(biotype)[!(biotype %in% c("protein_coding", "lncRNA"))]
 dge.pure.sel <- dge.pure[substr(rownames(dge.pure), 1, 15) %in% tx.sel, ]
 dge.short.pure.sel <- dge.short.pure[substr(rownames(dge.short.pure), 1, 15) %in% tx.sel, ]
@@ -317,10 +322,71 @@ pheatmap(cormat3,
 )
 dev.off()
 
-# sequins
+### sequins----
 cormat4 <- cor(quant.all[grepl("^R", rownames(quant.all)),])
 pdf("plots/corHeatmapSequin.pdf", height = 8, width = 9)
 pheatmap(cormat4,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE,
+         number_color = "black",
+         fontsize = 16,
+         fontsize_number = 12
+)
+dev.off()
+
+## by number of tx-------
+### 1----
+cormat.tx1 <- cor(quant.all[dge.all$genes$nTranscript==1,])
+pdf("plots/corHeatmaptx1.pdf", height = 8, width = 9)
+pheatmap(cormat.tx1,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE,
+         number_color = "black",
+         fontsize = 16,
+         fontsize_number = 12
+)
+dev.off()
+
+### 2 - 5----
+cormat.tx2_5 <- cor(quant.all[dge.all$genes$nTranscript>=2 & dge.all$genes$nTranscript <= 5,])
+pdf("plots/corHeatmaptx2_5.pdf", height = 8, width = 9)
+pheatmap(cormat.tx2_5,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE,
+         number_color = "black",
+         fontsize = 16,
+         fontsize_number = 12
+)
+dev.off()
+
+### > 5----
+cormat.tx5 <- cor(quant.all[dge.all$genes$nTranscript > 5,])
+pdf("plots/corHeatmaptx5.pdf", height = 8, width = 9)
+pheatmap(cormat.tx5,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
          cluster_cols = FALSE,
          cluster_rows = FALSE,
