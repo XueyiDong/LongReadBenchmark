@@ -10,7 +10,7 @@ dge <- DGEList(counts=s$counts/s$annotation$Overdispersion, genes=s$annotation)
 s.short <- catchSalmon(file.path(DIR, "illumina/salmon_bs", list.files(file.path(DIR, "illumina/salmon_bs"))))
 dge.short <- DGEList(counts = s.short$counts/s.short$annotation$Overdispersion, genes = s.short$annotation)
 
-# long vs short scatter plot
+# long vs short scatter plot ----
 m <- match(rownames(dge.short), rownames(dge))
 overdisp <- data.frame(
   Overdispersion.long = dge$genes$Overdispersion[m],
@@ -21,7 +21,7 @@ ggplot(overdisp, aes(x = Overdispersion.short, y = Overdispersion.long)) +
 # cor(overdisp$Overdispersion.long, overdisp$Overdispersion.short, use = "complete.obs")
 # not correlated
 
-# calculate number of tx per gene
+# calculate number of tx per gene ----
 calcTxNum <- function(genes, isSequin){
   geneid = rep(NA, length(genes))
   genes.sequin = strsplit2(genes[isSequin], "_", fixed = TRUE)
@@ -68,8 +68,9 @@ overdisp2$nTxGroup <- Hmisc::cut2(overdisp2$numberTranscript, cuts = c(1, 2, 6, 
 # }
 #DEPRECATED: to add number on X axis
 # my_xlab <- paste(levels(overdisp2$nTxGroup),"\n(N=",table(overdisp2$nTxGroup),")",sep="")
+# overdisp box plot ----
 pdf("plots/overdispBox.pdf", height = 4, width = 8)
-ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
+p.ovd <- ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
   geom_boxplot(varwidth = TRUE, alpha=0.4, outlier.shape = NA) +
   # geom_violin(alpha=0) +
   # geom_jitter() +
@@ -80,6 +81,7 @@ ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
         legend.position = "bottom") +
   scale_fill_manual(values = c("#FCB344", "#438DAC")) +
   scale_colour_manual(values = c("#FCB344", "#438DAC"))
+plot(p.ovd)
 # +
 #   stat_summary(
 #     fun.data = stat_box_data, 
@@ -103,7 +105,7 @@ dev.off()
 #   theme_bw()
 # dev.off()
 
-# overdispersion vs length
+# overdispersion vs length ----
 maxLength <- max(overdisp2$Length)
 overdisp2$lengthGroup <- Hmisc::cut2(overdisp2$Length, cuts = c(0, 500, 1000, 2000, maxLength))
 pdf("plots/overdispLength.pdf", height = 5, width = 8)
@@ -120,7 +122,42 @@ ggplot(overdisp2, aes(x=lengthGroup, y=Overdispersion, fill=Data, colour=Data)) 
   scale_colour_manual(values = c("#FCB344", "#438DAC"))
 dev.off()
 
-# explore ONT or Illumina only findings
+# sequin overdisp ----
+# overdisp.sequin <- overdisp[grep("^R", rownames(dge.short)), ]
+m = grepl("^R", rownames(dge))
+m2 = grepl("^R", rownames(dge.short))
+overdisp2.sequin <- data.frame(
+  Overdispersion = c(dge$genes$Overdispersion[m], dge.short$genes$Overdispersion[m2]),
+  Length = c(dge$genes$Length[m], dge.short$genes$Length[m2]),
+  Data = rep(c("ONT", "Illumina"), c(160, 160)),
+  Gene = c(rownames(dge)[m], rownames(dge.short)[m2]),
+  AveExpr = c(rowSums(dge$counts)[m], rowSums(dge.short$counts)[m2]),
+  numberTranscript = c(dge$genes$nTranscript[m], dge.short$genes$nTranscript[m2])
+)
+pdf("plots/overdispBoxSequin.pdf", height = 4, width = 4)
+p.ovd.se <- ggplot(overdisp2.sequin, aes(x=as.character(numberTranscript), y=Overdispersion, fill=Data, colour=Data)) +
+  geom_boxplot(varwidth = TRUE, alpha=0.4) +
+  labs(x = "Number of transcripts per gene", y = "Assignment ambiguity") +
+  scale_y_continuous(trans = "log10") +
+  theme_bw()+
+  theme(text = element_text(size = 20),
+        legend.position = "bottom") +
+  scale_fill_manual(values = c("#FCB344", "#438DAC")) +
+  scale_colour_manual(values = c("#FCB344", "#438DAC"))
+plot(p.ovd.se)
+dev.off()
+
+# plot overdispersion together ----
+library(cowplot)
+pdf("plots/overdispBoxAll.pdf", height = 4, width = 8)
+plot_grid(p.ovd + ggtitle("All"),
+          p.ovd.se + ggtitle("Sequins"),
+          ncol = 2,
+          rel_widths = c(2,1))
+dev.off()
+
+
+# explore ONT or Illumina only DE findings ----
 DE.human.illumina.100vs000 <- readRDS("DE.human.illumina.100vs000.RDS")
 DE.human.ONT.100vs000 <- readRDS( "DE.human.ONT.100vs000.RDS")
 DE.sequin.illumina.100vs000 <- readRDS("DE.sequin.illumina.100vs000.RDS")
