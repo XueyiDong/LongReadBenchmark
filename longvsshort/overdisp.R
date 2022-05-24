@@ -129,7 +129,7 @@ m2 = grepl("^R", rownames(dge.short))
 overdisp2.sequin <- data.frame(
   Overdispersion = c(dge$genes$Overdispersion[m], dge.short$genes$Overdispersion[m2]),
   Length = c(dge$genes$Length[m], dge.short$genes$Length[m2]),
-  Data = rep(c("ONT", "Illumina"), c(160, 160)),
+  Data = rep(c("ONT", "Illumina"), c(sum(m), sum(m2))),
   Gene = c(rownames(dge)[m], rownames(dge.short)[m2]),
   AveExpr = c(rowSums(dge$counts)[m], rowSums(dge.short$counts)[m2]),
   numberTranscript = c(dge$genes$nTranscript[m], dge.short$genes$nTranscript[m2])
@@ -147,11 +147,34 @@ p.ovd.se <- ggplot(overdisp2.sequin, aes(x=as.character(numberTranscript), y=Ove
 plot(p.ovd.se)
 dev.off()
 
+# human overdisp ----
+overdisp2.human <- data.frame(
+  Overdispersion = c(dge$genes$Overdispersion[!m], dge.short$genes$Overdispersion[!m2]),
+  Length = c(dge$genes$Length[!m], dge.short$genes$Length[!m2]),
+  Data = rep(c("ONT", "Illumina"), c(sum(!m), sum(!m2))),
+  Gene = c(rownames(dge)[!m], rownames(dge.short)[!m2]),
+  AveExpr = c(rowSums(dge$counts)[!m], rowSums(dge.short$counts)[!m2]),
+  numberTranscript = c(dge$genes$nTranscript[!m], dge.short$genes$nTranscript[!m2])
+)
+maxnum <- max(overdisp2.human$numberTranscript)
+overdisp2.human$nTxGroup <- Hmisc::cut2(overdisp2.human$numberTranscript, cuts = c(1, 2, 6, 11, 21, 51, maxnum))
+p.ovd.hu <- ggplot(overdisp2.human, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
+  geom_boxplot(varwidth = TRUE, alpha=0.4, outlier.shape = NA) +
+  labs(x = "Number of transcripts per gene", y = "Assignment ambiguity") +
+  scale_y_continuous(trans = "log10") +
+  theme_bw()+
+  theme(text = element_text(size = 20),
+        axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = "bottom") +
+  scale_fill_manual(values = c("#FCB344", "#438DAC")) +
+  scale_colour_manual(values = c("#FCB344", "#438DAC"))
+plot(p.ovd.hu)
+
 # plot overdispersion together ----
 library(cowplot)
-pdf("plots/overdispBoxAll.pdf", height = 4, width = 8)
-plot_grid(p.ovd +
-            ggtitle("All transcripts") +
+pdf("plots/overdispBoxAll2.pdf", height = 4, width = 8)
+plot_grid(p.ovd.hu +
+            ggtitle("Human transcripts") +
             geom_hline(yintercept = 10^layer_scales(p.ovd.se)$y$get_limits()[2],
                        alpha = 0.3,
                        linetype = "dashed") +
