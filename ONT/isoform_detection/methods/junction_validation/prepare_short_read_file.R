@@ -11,3 +11,14 @@ write.table(short_fq, "shortRead.fofn",
             col.names=FALSE,
             sep = " ",
             quote = FALSE)
+
+bam.dir = "/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/illumina/bam"
+bam.sorted = list.files(bam.dir, "sorted.bam$")
+bam = data.frame(
+  bam = file.path(bam.dir, bam.sorted[c(-6, -7)])
+)
+write.table(bam, "shortBam.fofn",
+            row.names=FALSE,
+            col.names=FALSE,
+            sep = " ",
+            quote = FALSE)
