@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --time=48:00:00
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=200G
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=50G
 #SBATCH --job-name=SQANTI3
 #SBATCH --mail-user=dong.x@wehi.edu.au
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -24,5 +24,6 @@ python ~/Programs/SQANTI3-5.0/sqanti3_qc.py \
 /stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/plots/readcount_cor/ONT_annotations/$1 \
 /stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references/genome_rnasequin_decoychr_2.4_edited.gtf \
 /stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references/genome_rnasequin_decoychr_2.4.fa \
---cpus 16 --skipORF --short_reads ../../shortRead.fofn > sqanti_$2.out
+--cpus 4 --skipORF -c ../STAR_mapping/ > sqanti_$2.out
 # --SR_bam ../../shortBam.fofn \
+# --short_reads ../../shortRead.fofn
