@@ -17,25 +17,82 @@ junc <- lapply(junc_files,
                  #                                             paste0("ont_", method, "_counts")))[,1]
                  return(junc_count)
                })
-names(junc) <- strsplit2(junc_files, "/")[,1]
+names(junc) <- limma::strsplit2(junc_files, "/")[,1]
+saveRDS(junc, "junc_unfiltered.RDS")
+lapply(junc, function(x){
+  length(unique(x$isoform))
+})
+# $bambu
+# [1] 261917
+# 
+# $flair
+# [1] 224055
+# 
+# $flames
+# [1] 75843
+# 
+# $sqanti
+# [1] 1292439
+# 
+# $stringtie2
+# [1] 204605
+# 
+# $talon
+# [1] 200800
 
 # filter out lowly expressed transcripts
 table(junc$bambu$isoform %in% ont_bambu_counts$TXNAME)
+# FALSE   TRUE 
+# 631796 643252
 junc$bambu <- junc$bambu[junc$bambu$isoform %in% ont_bambu_counts$TXNAME, ]
-flair_ids <- strsplit2(ont_flair_counts$ids, "_")[ ,1]
+
+flair_ids <- limma::strsplit2(ont_flair_counts$ids, "_")[ ,1]
 table(junc$flair$isoform %in% flair_ids)
+# FALSE    TRUE 
+# 736728 1016318
 junc$flair <- junc$flair[junc$flair$isoform %in% flair_ids, ]
+
 flames_ids <- paste0("transcript:", ont_flames_counts$transcript_id)
 table(junc$flames$isoform %in% flames_ids)
+# TRUE 
+# 492562 
 junc$flames <- junc$flames[junc$flames$isoform %in% flames_ids, ]
+
 table(junc$sqanti$isoform %in% ont_sqanti_counts$Name)
+# FALSE    TRUE 
+# 5550600 1037009 
 junc$sqanti <- junc$sqanti[junc$sqanti$isoform %in% ont_sqanti_counts$Name, ]
+
 table(junc$stringtie2$isoform %in% ont_stringtie_counts$Name)
+# FALSE   TRUE 
+# 772705 428661
 junc$stringtie2 <- junc$stringtie2[junc$stringtie2$isoform %in% ont_stringtie_counts$Name, ]
+
 table(junc$talon$isoform %in% ont_talon_counts$annot_transcript_id)
+# FALSE   TRUE 
+# 934563 123270 
 junc$talon <- junc$talon[junc$talon$isoform %in% ont_talon_counts$annot_transcript_id, ]
 saveRDS(junc, "junc.RDS")
-
+lapply(junc, function(x){
+  length(unique(x$isoform))
+})
+# $bambu
+# [1] 112452
+# 
+# $flair
+# [1] 131583
+# 
+# $flames
+# [1] 75843
+# 
+# $sqanti
+# [1] 166196
+# 
+# $stringtie2
+# [1] 53959
+# 
+# $talon
+# [1] 22844
 # deal with redundant junction information
 junc_no_dup <- lapply(junc, function(x){
   x$junction = paste(x$chrom, x$genomic_start_coord, x$genomic_end_coord, sep = "_")
@@ -45,22 +102,9 @@ junc_df <- Reduce(rbind, junc_no_dup)
 junc_df$Tool <- rep(c("bambu", "FLAIR", "FLAMES", "SQANTI3", "StringTie2", "TALON"), 
                     sapply(junc_no_dup, nrow, simplify = TRUE))
 
-# plot distribution
-# stat_box_data <- function(x, upper_limit = max(junc_df$total_coverage_unique) * 1.15) {
-#   return(
-#     data.frame(
-#       x = 0.95 * upper_limit,
-#       label = length(x)
-#     )
-#   )
-# }
 pdf("plots/juncCovDistr.pdf", height = 4, width = 8)
 ggplot(junc_df, aes(x=(total_coverage_unique + 0.5), y=Tool, fill = Tool)) +
-  geom_density_ridges(size = 0.1, scale = 3) +
-  # stat_summary(
-  #   fun.data = stat_box_data,
-  #   geom = "text"
-  # ) +
+  geom_density_ridges(size = 0.3, scale = 3) +
   guides(fill=guide_legend(reverse = TRUE)) +
   scale_x_continuous(trans = "log10") +
   scale_y_discrete(expand=c(0,0))+
@@ -73,7 +117,21 @@ ggplot(junc_df, aes(x=(total_coverage_unique + 0.5), y=Tool, fill = Tool)) +
         axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(),
         axis.line.x = element_line(size=0.1),axis.ticks.length=unit(0.25,"cm"), axis.text.x = element_text(size=12),
         text = element_text(size=15), legend.text = element_text(size=15)) 
-
+dev.off()
+pdf("plots/juncCovDistr2.pdf", height = 4, width = 8)
+ggplot(junc_df, aes(x=(total_coverage_unique + 0.5), y=Tool, fill = Tool)) +
+  geom_density_ridges(size = 0.3, scale = 3) +
+  guides(fill=guide_legend(reverse = TRUE)) +
+  scale_x_continuous(trans = "log10") +
+  scale_y_discrete(expand=c(0,0))+
+  scale_fill_jama(alpha = 0.3) +
+  labs(x="Junction Illumina read count") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), panel.border = element_blank(),
+        axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(),
+        axis.line.x = element_line(size=0.1),axis.ticks.length=unit(0.25,"cm"), axis.text.x = element_text(size=12),
+        text = element_text(size=15), legend.text = element_text(size=15)) 
 dev.off()
 # to do: add observation number
 
@@ -83,7 +141,7 @@ junc_df2 <- Reduce(rbind, junc)
 junc_df2$Tool <- rep(c("bambu", "FLAIR", "FLAMES", "SQANTI3", "StringTie2", "TALON"), 
                     sapply(junc, nrow, simplify = TRUE))
 
-# calculate stats per isoform
+# stats per isoform----
 junc_df2$isoform_tool <- paste(junc_df2$isoform, junc_df2$Tool, sep = "_")
 junc_df2$isDup <- duplicated(junc_df2$isoform_tool)
 iso_stat <- data.frame(
@@ -130,7 +188,7 @@ ggplot(iso_stat, aes(x=tool, y=junc_support_frac, fill=tool)) +
     hjust = 0.5,
     vjust = 0.9
   )  +
-  theme(text = element_text(size=20), legend.position = "none",
+  theme(text = element_text(size=18), legend.position = "none",
         axis.text.x = element_text(angle = 30, hjust = 1))
 dev.off()
 
@@ -139,6 +197,56 @@ ggplot(iso_stat, aes(x=tool, fill=all_supported)) +
   geom_bar() +
   labs(x = "Tool", y = "Number of transcripts", fill = "All junctions\nsupported by\nshort reads") +
   theme_bw() +
-  theme(text = element_text(size=20), 
+  theme(text = element_text(size=18), 
         axis.text.x = element_text(angle = 30, hjust = 1))
+dev.off()
+
+# Look into isoform classification ----
+class_files <- list.files("./out", "classification.txt", recursive = TRUE)
+class <- lapply(class_files,
+               function(x){
+                 class = read.delim(file.path("./out", x))
+                 return(class)
+               })
+names(class) <- limma::strsplit2(class_files, "/")[,1]
+
+# remove FSM and remove redundant junction
+junc_df3 = data.frame()
+for(i in 1:6){
+  tmp <- junc[[i]][class[[i]]$structural_category[match(junc[[i]]$isoform, class[[i]]$isoform)] != "full-splice_match", ]
+  tmp$Tool = unique(junc_df2$Tool)[i]
+  tmp$junction = paste(tmp$chrom, tmp$genomic_start_coord, tmp$genomic_end_coord, sep = "_")
+  tmp <- tmp[!duplicated(tmp$junction), ]
+  junc_df3 = rbind(junc_df3, tmp)
+}
+pdf("plots/juncCovDistrNoFSM.pdf", height = 4, width = 8)
+ggplot(junc_df3, aes(x=(total_coverage_unique + 0.5), y=Tool, fill = Tool)) +
+  geom_density_ridges(size = 0.3, scale = 3) +
+  guides(fill=guide_legend(reverse = TRUE)) +
+  scale_x_continuous(trans = "log10") +
+  scale_y_discrete(expand=c(0,0))+
+  facet_grid(rows = vars(junction_category)) +
+  scale_fill_jama(alpha = 0.3) +
+  labs(x="Splice junction Illumina read count") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), panel.border = element_blank(),
+        axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(),
+        axis.line.x = element_line(size=0.1),axis.ticks.length=unit(0.25,"cm"), axis.text.x = element_text(size=12),
+        text = element_text(size=15), legend.text = element_text(size=15)) 
+dev.off()
+pdf("plots/juncCovDistrNoFSM2.pdf", height = 4, width = 4)
+ggplot(junc_df3, aes(x=(total_coverage_unique + 0.5), y=Tool, fill = Tool)) +
+  geom_density_ridges(size = 0.3, scale = 3) +
+  guides(fill=guide_legend(reverse = TRUE)) +
+  scale_x_continuous(trans = "log10") +
+  scale_y_discrete(expand=c(0,0))+
+  scale_fill_jama(alpha = 0.3) +
+  labs(x="Junction Illumina read count") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), panel.border = element_blank(),
+        axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(),
+        axis.line.x = element_line(size=0.1),axis.ticks.length=unit(0.25,"cm"), axis.text.x = element_text(size=12),
+        text = element_text(size=15), legend.text = element_text(size=15)) 
 dev.off()
