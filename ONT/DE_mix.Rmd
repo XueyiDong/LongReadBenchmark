@@ -484,12 +484,14 @@ inc.human <- melt(inc.human, variable.name = "Method", value.name = "Inconsistan
 inc.human$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
 pdf(file.path(OUT, "humanInconsistancy.pdf"), height = 5, width = 8)
-ggplot(inc.human, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, group=Method)) +
-  geom_line(linetype=rep(c("solid", "longdash", "solid", "solid", "dashed"), rep(4, 5))) +
+humanInc <- 
+  ggplot(inc.human, aes(x=Comparison, y=`Inconsistancy rate`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
   scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
   theme(text = element_text(size = 20))
+print(humanInc)
 dev.off()
 
 inc.sequin <- as.data.frame(sapply(DE.sequin,
@@ -524,12 +526,14 @@ power.human <- melt(power.human, variable.name = "Method", value.name = "Number 
 power.human$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
 pdf(file.path(OUT, "humanPower.pdf"), height = 5, width = 8)
-ggplot(power.human, aes(x=Comparison, y=`Number of DE transcripts`, colour=Method, group=Method)) +
+humanPow <- 
+  ggplot(power.human, aes(x=Comparison, y=`Number of DE transcripts`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "longdash", "dashed", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
   scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
   theme(text = element_text(size = 20))
+print(humanPow)
 dev.off()
 ```
 
@@ -574,12 +578,14 @@ FDR.sequin <- melt(FDR.sequin, variable.name = "Method", value.name = "False dis
 FDR.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
 pdf(file.path(OUT, "sequinFDR.pdf"), height = 5, width = 8)
-ggplot(FDR.sequin, aes(x=Comparison, y=`False discovery rate`, colour=Method, group=Method)) +
+sequinFDR <- 
+  ggplot(FDR.sequin, aes(x=Comparison, y=`False discovery rate`, colour=Method, group=Method)) +
   geom_line(linetype=rep(c("solid", "dashed", "solid", "longdash", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
   scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
   theme(text = element_text(size = 20))
+print(sequinFDR)
 dev.off()
 ```
 
@@ -603,14 +609,37 @@ TPR.sequin <- melt(TPR.sequin, variable.name = "Method", value.name = "True posi
 TPR.sequin$Comparison <- factor(rep(c("100vs000", "075vs025", "050vs025", "075vs050"), 5), levels = c("100vs000", "075vs025", "050vs025", "075vs050"))
 
 pdf(file.path(OUT, "sequinTPR.pdf"), height = 5, width = 8)
-ggplot(TPR.sequin, aes(x=Comparison, y=`True positive rate`, colour=Method, group=Method)) +
-  geom_line(linetype=rep(c("solid", "dashed", "solid", "longdash", "solid"), rep(4, 5))) +
+sequinTPR <- 
+  ggplot(TPR.sequin, aes(x=Comparison, y=`True positive rate`, colour=Method, group=Method)) +
+  geom_line(linetype=rep(c("solid", "dashed", "longdash", "solid", "solid"), rep(4, 5))) +
   geom_point(size=3, shape=rep(c(1, 2, 3, 4, 5), rep(4, 5))) +
   theme_bw() +
   scale_colour_manual(values = c("#D96A70", "#476937",  "#D5A2CB", "#708FA6", "#9FC675"))+
   theme(text = element_text(size = 20))
+print(sequinTPR)
 dev.off()
 ```
+### Compose figure to be used in main figure
+
+```{r}
+library(cowplot)
+leg <- get_legend(humanPow + theme(legend.position = "bottom", text = element_text(size = 20)))
+pdf(file.path(OUT, "analysisMix.pdf"), height = 8, width = 16)
+plot_grid(
+  humanPow + theme(legend.position = "none"),
+  humanInc + theme(legend.position = "none"),
+  sequinTPR + theme(legend.position = "none"),
+  sequinFDR + theme(legend.position = "none"),
+  leg,
+  ncol = 2,
+  rel_heights = c(1, 1, 0.1),
+  labels = c("d", "e", "f", "g", ""),
+  label_size = 24
+)
+dev.off()
+```
+
+
 ### Sequin logFC expected vs estimated
 
 Only calculate for pure samples comparisons

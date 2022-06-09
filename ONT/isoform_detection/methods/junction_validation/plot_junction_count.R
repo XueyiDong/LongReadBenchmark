@@ -6,93 +6,79 @@ library(ggridges)
 library(ggsci)
 library(parallel)
 
-# prepare data
-load("ont_counts_filtered.RData")
-junc_files <- list.files("./out", "junctions.txt", recursive = TRUE)
-junc <- lapply(junc_files,
-               function(x){
-                 junc_count = read.delim(file.path("./out", x))
-                 # method = strsplit2(x, "/")[1]
-                 # filt = junc_count$isoform %in% eval(parse(text = 
-                 #                                             paste0("ont_", method, "_counts")))[,1]
-                 return(junc_count)
-               })
-names(junc) <- limma::strsplit2(junc_files, "/")[,1]
-saveRDS(junc, "junc_unfiltered.RDS")
+# prepare data----
+# load("ont_counts_filtered.RData")
+# junc_files <- list.files("./out", "junctions.txt", recursive = TRUE)
+# junc <- lapply(junc_files,
+#                function(x){
+#                  junc_count = read.delim(file.path("./out", x))
+#                  # method = strsplit2(x, "/")[1]
+#                  # filt = junc_count$isoform %in% eval(parse(text = 
+#                  #                                             paste0("ont_", method, "_counts")))[,1]
+#                  return(junc_count)
+#                })
+# names(junc) <- limma::strsplit2(junc_files, "/")[,1]
+# saveRDS(junc, "junc_unfiltered.RDS")
+# lapply(junc, function(x){
+#   length(unique(x$isoform))
+# })
+# # $bambu
+# # [1] 261917
+# # 
+# # $flair
+# # [1] 224055
+# # 
+# # $flames
+# # [1] 75843
+# # 
+# # $sqanti
+# # [1] 1292439
+# # 
+# # $stringtie2
+# # [1] 204605
+# # 
+# # $talon
+# # [1] 200800
+# 
+# # filter out lowly expressed transcripts
+# table(junc$bambu$isoform %in% ont_bambu_counts$TXNAME)
+# # FALSE   TRUE 
+# # 631796 643252
+# junc$bambu <- junc$bambu[junc$bambu$isoform %in% ont_bambu_counts$TXNAME, ]
+# 
+# flair_ids <- limma::strsplit2(ont_flair_counts$ids, "_")[ ,1]
+# table(junc$flair$isoform %in% flair_ids)
+# # FALSE    TRUE 
+# # 736728 1016318
+# junc$flair <- junc$flair[junc$flair$isoform %in% flair_ids, ]
+# 
+# flames_ids <- paste0("transcript:", ont_flames_counts$transcript_id)
+# table(junc$flames$isoform %in% flames_ids)
+# # TRUE 
+# # 492562 
+# junc$flames <- junc$flames[junc$flames$isoform %in% flames_ids, ]
+# 
+# table(junc$sqanti$isoform %in% ont_sqanti_counts$Name)
+# # FALSE    TRUE 
+# # 5550600 1037009 
+# junc$sqanti <- junc$sqanti[junc$sqanti$isoform %in% ont_sqanti_counts$Name, ]
+# 
+# table(junc$stringtie2$isoform %in% ont_stringtie_counts$Name)
+# # FALSE   TRUE 
+# # 772705 428661
+# junc$stringtie2 <- junc$stringtie2[junc$stringtie2$isoform %in% ont_stringtie_counts$Name, ]
+# 
+# table(junc$talon$isoform %in% ont_talon_counts$annot_transcript_id)
+# # FALSE   TRUE 
+# # 934563 123270 
+# junc$talon <- junc$talon[junc$talon$isoform %in% ont_talon_counts$annot_transcript_id, ]
+# saveRDS(junc, "junc.RDS")
+
+# plot junction count distribution ---- 
+junc <- readRDS("junc.RDS")
 lapply(junc, function(x){
   length(unique(x$isoform))
 })
-# $bambu
-# [1] 261917
-# 
-# $flair
-# [1] 224055
-# 
-# $flames
-# [1] 75843
-# 
-# $sqanti
-# [1] 1292439
-# 
-# $stringtie2
-# [1] 204605
-# 
-# $talon
-# [1] 200800
-
-# filter out lowly expressed transcripts
-table(junc$bambu$isoform %in% ont_bambu_counts$TXNAME)
-# FALSE   TRUE 
-# 631796 643252
-junc$bambu <- junc$bambu[junc$bambu$isoform %in% ont_bambu_counts$TXNAME, ]
-
-flair_ids <- limma::strsplit2(ont_flair_counts$ids, "_")[ ,1]
-table(junc$flair$isoform %in% flair_ids)
-# FALSE    TRUE 
-# 736728 1016318
-junc$flair <- junc$flair[junc$flair$isoform %in% flair_ids, ]
-
-flames_ids <- paste0("transcript:", ont_flames_counts$transcript_id)
-table(junc$flames$isoform %in% flames_ids)
-# TRUE 
-# 492562 
-junc$flames <- junc$flames[junc$flames$isoform %in% flames_ids, ]
-
-table(junc$sqanti$isoform %in% ont_sqanti_counts$Name)
-# FALSE    TRUE 
-# 5550600 1037009 
-junc$sqanti <- junc$sqanti[junc$sqanti$isoform %in% ont_sqanti_counts$Name, ]
-
-table(junc$stringtie2$isoform %in% ont_stringtie_counts$Name)
-# FALSE   TRUE 
-# 772705 428661
-junc$stringtie2 <- junc$stringtie2[junc$stringtie2$isoform %in% ont_stringtie_counts$Name, ]
-
-table(junc$talon$isoform %in% ont_talon_counts$annot_transcript_id)
-# FALSE   TRUE 
-# 934563 123270 
-junc$talon <- junc$talon[junc$talon$isoform %in% ont_talon_counts$annot_transcript_id, ]
-saveRDS(junc, "junc.RDS")
-lapply(junc, function(x){
-  length(unique(x$isoform))
-})
-# $bambu
-# [1] 112452
-# 
-# $flair
-# [1] 131583
-# 
-# $flames
-# [1] 75843
-# 
-# $sqanti
-# [1] 166196
-# 
-# $stringtie2
-# [1] 53959
-# 
-# $talon
-# [1] 22844
 # deal with redundant junction information
 junc_no_dup <- lapply(junc, function(x){
   x$junction = paste(x$chrom, x$genomic_start_coord, x$genomic_end_coord, sep = "_")
@@ -118,7 +104,7 @@ ggplot(junc_df, aes(x=(total_coverage_unique + 0.5), y=Tool, fill = Tool)) +
         axis.line.x = element_line(size=0.1),axis.ticks.length=unit(0.25,"cm"), axis.text.x = element_text(size=12),
         text = element_text(size=15), legend.text = element_text(size=15)) 
 dev.off()
-pdf("plots/juncCovDistr2.pdf", height = 4, width = 8)
+pdf("plots/juncCovDistr2.pdf", height = 4, width = 4)
 ggplot(junc_df, aes(x=(total_coverage_unique + 0.5), y=Tool, fill = Tool)) +
   geom_density_ridges(size = 0.3, scale = 3) +
   guides(fill=guide_legend(reverse = TRUE)) +
@@ -156,7 +142,7 @@ iso_stat$junc_count = idx2 - idx
 junc_df2$supported = junc_df2$total_coverage_unique >= 10
 iso_w_unsupported_junc = junc_df2$isoform_tool[!junc_df2$supported]
 iso_stat$all_supported = !(iso_stat$isoform_tool %in% iso_w_unsupported_junc)
-# calculate unsupported number for each junc
+# calculate unsupported number for each isoform
 idx = which(!duplicated(iso_w_unsupported_junc))
 idx2 = c(idx[-1], length(iso_w_unsupported_junc) + 1)
 unsupport_info <- data.frame(
@@ -202,15 +188,17 @@ ggplot(iso_stat, aes(x=tool, fill=all_supported)) +
 dev.off()
 
 # Look into isoform classification ----
-class_files <- list.files("./out", "classification.txt", recursive = TRUE)
-class <- lapply(class_files,
-               function(x){
-                 class = read.delim(file.path("./out", x))
-                 return(class)
-               })
-names(class) <- limma::strsplit2(class_files, "/")[,1]
+# class_files <- list.files("./out", "classification.txt", recursive = TRUE)
+# class <- lapply(class_files,
+#                function(x){
+#                  class = read.delim(file.path("./out", x))
+#                  return(class)
+#                })
+# names(class) <- limma::strsplit2(class_files, "/")[,1]
+# saveRDS(class, "class.RDS")
+class <- readRDS("class.RDS")
 
-# remove FSM and remove redundant junction
+# remove FSM and remove redundant junction ----
 junc_df3 = data.frame()
 for(i in 1:6){
   tmp <- junc[[i]][class[[i]]$structural_category[match(junc[[i]]$isoform, class[[i]]$isoform)] != "full-splice_match", ]
@@ -250,3 +238,14 @@ ggplot(junc_df3, aes(x=(total_coverage_unique + 0.5), y=Tool, fill = Tool)) +
         axis.line.x = element_line(size=0.1),axis.ticks.length=unit(0.25,"cm"), axis.text.x = element_text(size=12),
         text = element_text(size=15), legend.text = element_text(size=15)) 
 dev.off()
+
+# calculate stats ----
+lapply(unique(junc_df3$Tool), function(x){
+  tb = table(junc_df3[junc_df3$Tool==x, "total_coverage_unique"] >= 10)
+  tb["TRUE"] / (tb["TRUE"] + tb["FALSE"])
+})
+
+lapply(unique(junc_df3$Tool), function(x){
+  tb = table(junc_df3[junc_df3$Tool==x, "total_coverage_unique"] == 0)
+  tb["TRUE"] / (tb["TRUE"] + tb["FALSE"])
+})
