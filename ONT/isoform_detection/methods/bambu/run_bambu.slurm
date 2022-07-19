@@ -9,6 +9,7 @@
 
 # Author: Mei Du
 # Using bambu version 1.0.3 (https://github.com/GoekeLab/bambu)
+# Run on the full dataset
 
 cd /stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/bambu/outputs
 

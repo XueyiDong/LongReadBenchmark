@@ -1,5 +1,6 @@
 # Author: Mei Du
 # Using TranscriptClean version 2.0.2 (https://github.com/mortazavilab/TranscriptClean)
+# Run on the downsampled dataset
 
 # trimmed FASTA headers first after TranscriptClean error
 # cut -d ' ' -f1 genome_rnasequin_decoychr_2.4.fa > genome_rnasequin_decoychr_2.4_trimmed.fa

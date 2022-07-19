@@ -8,6 +8,7 @@
 
 # Author: Mei Du
 # Using FLAIR version 1.5.0 (https://github.com/BrooksLabUCSC/flair)
+# Run on the full dataset
 
 module load anaconda3
 source activate

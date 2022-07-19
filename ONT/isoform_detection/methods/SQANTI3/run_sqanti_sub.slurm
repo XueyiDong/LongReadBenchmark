@@ -9,10 +9,11 @@
 
 # Author: Mei Du
 # Using SQANTI3 version 1.6.0 (https://github.com/ConesaLab/SQANTI3)
+# Run on the downsampled dataset
 
 module load anaconda3
 
-ANNOT=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references/genome_rnasequin_decoychr_2.4_edited_seqremoved.gtf
+ANNOT=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references/genome_rnasequin_decoychr_2.4_edited.gtf
 GENOME=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references/genome_rnasequin_decoychr_2.4.fa
 
 source activate /stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/SQANTI3/SQANTI3_env
@@ -20,7 +21,7 @@ export PYTHONPATH=$PYTHONPATH:/stornext/General/data/user_managed/grpu_mritchie_
 export PYTHONPATH=$PYTHONPATH:/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/SQANTI3/cDNA_Cupcake/
 
 python /stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/SQANTI3/sqanti3_qc.py \
---gtf SQANTI3/merged_ont_sub_0.95.collapsed.gff \
+--gtf SQANTI3/merged_ont_sub.collapsed.gff \
 $ANNOT \
 $GENOME \
 -d SQANTI3 > SQANTI3/sqanti_ont_sub.out

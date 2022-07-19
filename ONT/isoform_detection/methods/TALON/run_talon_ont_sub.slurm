@@ -9,6 +9,7 @@
 
 # Author: Mei Du
 # Using TALON version 5.0.0 (https://github.com/mortazavilab/TALON/)
+# Run on the downsampled dataset
 
 REF_DIR=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references
 SAM_DIR=/vast/scratch/users/du.m/subsample/TALON
@@ -19,7 +20,7 @@ module load bedtools
 
 # database initialisation
 talon_initialize_database \
-	--f ${REF_DIR}/genome_rnasequin_decoychr_2.4_edited_seqremoved.gtf \
+	--f ${REF_DIR}/genome_rnasequin_decoychr_2.4_edited.gtf \
 	--a REF_annot \
 	--g REF \
 	--o ONT_sub_talon

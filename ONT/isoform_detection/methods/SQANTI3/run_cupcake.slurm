@@ -8,6 +8,7 @@
 
 # Author: Mei Du
 # Using cDNA_Cupcake version 25.2.0 (https://github.com/Magdoll/cDNA_Cupcake)
+# Run on the full dataset
 
 SQANTI=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/SQANTI3
 CUPCAKE=/stornext/General/data/user_managed/grpu_mritchie_0/Mei/long_read_benchmark/SQANTI3/cDNA_Cupcake_dev
@@ -18,7 +19,6 @@ export PYTHONPATH=$PYTHONPATH:$CUPCAKE/rarefaction
 
 collapse_isoforms_by_sam.py \
 -b /vast/scratch/users/du.m/SQANTI3/merged_ont_sorted.bam \
--c 0.95 \
 --cpus 46 \
 -o merged_ont
 

@@ -9,6 +9,7 @@
 
 # Author: Mei Du
 # Using bambu version 1.0.3 (https://github.com/GoekeLab/bambu)
+# Run on the downsampled dataset
 
 module load R/4.1.1
 Rscript /stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/bambu/scripts/run_bambu_sub.R

@@ -1,14 +1,15 @@
 #!/bin/bash
 #SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=64
-#SBATCH --mem=100G
+#SBATCH --mem=600G
 #SBATCH --job-name=talon
-#SBATCH --output=talon_ont_filtering.out
+#SBATCH --output=talon_ont.out
 #SBATCH --mail-user=du.m@wehi.edu.au
 #SBATCH --mail-type=END,FAIL
 
 # Author: Mei Du
 # Using TALON version 5.0.0 (https://github.com/mortazavilab/TALON/)
+# Run on the full dataset
 
 REF_DIR=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references
 SAM_DIR=/vast/scratch/users/du.m/TALON
@@ -35,6 +36,7 @@ talon_initialize_database \
 	--o ONT_talon
 
 export TMPDIR=$(mktemp -d --tmpdir=/vast/scratch/users/du.m/TALON)
+
 # annotation - run separately, took 4 days, 64 CPU, 200 threads, 600GB
 talon \
 	--f config.csv \

@@ -12,7 +12,6 @@
 
 SALMON=/stornext/General/data/user_managed/grpu_mritchie_0/Mei/long_read_benchmark/salmon
 REF=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references
-PB_ANNOT=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/plots/readcount_cor/PacBio_annotations
 ONT_ANNOT=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/plots/readcount_cor/ONT_annotations
 CUFFLINKS=/stornext/General/data/user_managed/grpu_mritchie_0/Mei/long_read_benchmark/cufflinks
 FQ=/stornext/Projects/promethion/promethion_access/lab_ritchie/transcr_bench/long_term/transcr_bench/guppy_4_rebasecall_Oct20/barcode01-06
@@ -24,7 +23,7 @@ $CUFFLINKS/gffread -w $CUFFLINKS/ont_sqanti_transcripts.fa -g $REF/genome_rnaseq
 $SALMON/SalmonTools/scripts/generateDecoyTranscriptome.sh \
 -b /stornext/System/data/apps/bedtools/bedtools-2.26.0/bin/bedtools \
 -m $SALMON/mashmap/mashmap \
--a $ONT_ANNOT//merged_ont_0.95.collapsed.gtf \
+-a $ONT_ANNOT//merged_ont.collapsed.gtf \
 -g $REF/genome_rnasequin_decoychr_2.4.fa \
 -t $CUFFLINKS/ont_sqanti_transcripts.fa \
 -o ont_sqanti

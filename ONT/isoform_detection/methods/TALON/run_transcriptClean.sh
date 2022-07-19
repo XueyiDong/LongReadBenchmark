@@ -1,5 +1,6 @@
 # Author: Mei Du
 # Using TranscriptClean version 2.0.2 (https://github.com/mortazavilab/TranscriptClean)
+# Run on the full dataset
 
 # trimmed FASTA headers first after TranscriptClean error
 # cut -d ' ' -f1 genome_rnasequin_decoychr_2.4.fa > genome_rnasequin_decoychr_2.4_trimmed.fa
@@ -10,8 +11,8 @@ slurm_file="transcriptclean_ont_${FILE%'_sorted.sam'*}.slurm"
 
 echo "#!/bin/bash
 #SBATCH --time=48:00:00
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=250G
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=220G
 #SBATCH --job-name=tc
 #SBATCH --output=transcriptclean_ont_${FILE%'_sorted.sam'*}.out
 #SBATCH --mail-user=du.m@wehi.edu.au

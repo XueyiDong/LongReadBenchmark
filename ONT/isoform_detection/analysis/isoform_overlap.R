@@ -22,7 +22,7 @@ bambu_annot <- import(paste0(annot_loc, "/ONT_extended_annotations_edited.gtf"))
 flair_annot <- import(paste0(annot_loc,"/flair.collapse.isoforms.gtf")) %>% .[.$type=="transcript",]
 flames_annot <- import(paste0(annot_loc,"/isoform_annotated.filtered_flames.gff3")) %>% .[.$type=="transcript",]
 seqlevelsStyle(flames_annot) <- "NCBI"
-sqanti_annot <- import(paste0(annot_loc,"/merged_ont_0.95.collapsed_corrected.gtf")) %>% .[.$type=="transcript",]
+sqanti_annot <- import(paste0(annot_loc,"/merged_ont.collapsed_corrected.gtf")) %>% .[.$type=="transcript",]
 stringtie_annot <- import(paste0(annot_loc,"/ONT_stringtie_merged_edited.gtf")) %>% .[.$type=="transcript",]
 talon_annot <- import(paste0(annot_loc, "/ONT_filtered_annot_talon.gtf")) %>% .[.$type=="transcript",]
 
@@ -74,7 +74,7 @@ upset <- ComplexUpset::upset(bin_mat[,order(ncol(bin_mat):1)],
                                list('intersections_matrix'=theme(text=element_text(size=16), axis.title.x = element_blank()),
                                     'overall_sizes'=theme(axis.text.x=element_text(size=15), axis.title.x = element_text(size=15)))))
 
-#pdf(here("plots","isoform_overlap_ont_filtered_fig.pdf"),width=8, height=4.5)
+#pdf(here("plots","isoform_overlap.pdf"),width=16, height=6)
 upset
 #dev.off()
 

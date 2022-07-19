@@ -8,6 +8,7 @@
 
 # Author: Mei Du
 # Using SQANTI3 version 1.6.0 (https://github.com/ConesaLab/SQANTI3)
+# Run on the full dataset
 
 module load anaconda3
 

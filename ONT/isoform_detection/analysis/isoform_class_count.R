@@ -5,19 +5,20 @@ library(tidyverse)
 library(here)
 
 # load SQANTI3 classifications
-sqanti_dir <- ("/stornext/General/data/user_managed/grpu_mritchie_0/Mei/long_read_benchmark/SQANTI3")
-isoClass_bambu <- read.delim(paste0(sqanti_dir,"/bambu/ONT_extended_annotations_edited_classification.txt"), stringsAsFactors = FALSE)
+tool <- c("bambu", "flair", "flames", "sqanti", "stringtie", "talon")
+for (i in 1:6) {
+  assign(paste0("isoClass_",tool[i]),
+         read.delim(list.files(path = "/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/ONT/isoform_detection/methods/junction_validation/out/", 
+                    pattern = "classification.txt", 
+                    recursive = TRUE,
+                    full.names = TRUE)[i]))
+}
 isoClass_bambu$method <- "bambu"
-isoClass_flair <- read.delim(paste0(sqanti_dir,"/FLAIR/flair.collapse.isoforms_classification.txt"), stringsAsFactors = FALSE)
 isoClass_flair$method <- "FLAIR"
-isoClass_flames <- read.delim(paste0(sqanti_dir,"/FLAMES/isoform_annotated.filtered_flames_classification.txt"), stringsAsFactors = FALSE)
-isoClass_flames$isoform <- str_remove_all(isoClass_flames$isoform, "transcript:")
 isoClass_flames$method <- "FLAMES"
-isoClass_sqanti <- read.delim(paste0(sqanti_dir,"/ONT_sqanti/merged_ont_0.95.collapsed_classification.txt"), stringsAsFactors = FALSE)
+isoClass_flames$isoform <- str_remove_all(isoClass_flames$isoform, "transcript:")
 isoClass_sqanti$method <- "SQANTI3"
-isoClass_stringtie <- read.delim(paste0(sqanti_dir,"/stringtie/ONT_stringtie_merged_edited_classification.txt"), stringsAsFactors = FALSE)
 isoClass_stringtie$method <- "StringTie2"
-isoClass_talon <- read.delim(paste0(sqanti_dir,"/TALON/new/ONT_filtered_annot_talon_classification.txt"), stringsAsFactors = FALSE)
 isoClass_talon$method <- "TALON"
 
 # add counts
@@ -62,6 +63,7 @@ plot_isoformCount <- isoClass %>% dplyr::count(method, structural_category, wt =
 
 leg <- plot_grid(NULL,get_legend(plot_isoformCount), rel_widths = c(2.5,1))
 isoform_cc <- plot_grid(plot_isoformClass, plot_isoformCount + theme(legend.position = "none"), leg, nrow=2,rel_heights = c(1, 0.2))
-#pdf(here("plots","ONT_isoformClassAndCount_fig.pdf"), height = 8, width = 16)
+
+#pdf(here("plots","isoform_ClassAndCount.pdf"), height = 5, width = 16)
 isoform_cc
 #dev.off()

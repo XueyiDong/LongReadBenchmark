@@ -12,7 +12,6 @@
 
 SALMON=/stornext/General/data/user_managed/grpu_mritchie_0/Mei/long_read_benchmark/salmon
 REF=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references
-PB_ANNOT=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/plots/readcount_cor/PacBio_annotations
 ONT_ANNOT=/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/plots/readcount_cor/ONT_annotations
 CUFFLINKS=/stornext/General/data/user_managed/grpu_mritchie_0/Mei/long_read_benchmark/cufflinks
 FQ=/stornext/Projects/promethion/promethion_access/lab_ritchie/transcr_bench/long_term/transcr_bench/guppy_4_rebasecall_Oct20/barcode01-06
