@@ -1,10 +1,52 @@
 # Benchmarking long-read RNA-sequencing analysis tools using in *in silico* mixtures
 
-This repository contains the code used to perform the analysis and generate the figures in [this preprint](LINK_TO_BE_UPDATED).
+This repository contains the code used to perform the analysis and generate the figures in [this preprint](https://www.biorxiv.org/content/10.1101/2022.07.22.501076v1).
 
 ## Index
 
+### Pilot study
 
+All scripts are available at [pilot](pilot)
+
+### *In silico* mixture
+
+ONT: [ONT/mix_prepare](ONT/mix_prepare)
+
+Illumina: [illumina/mix_prepare](illumina/mix_prepare)
+
+### Mapping and quantification
+
+ONT: [ONT/preprocess](ONT/preprocess)
+
+Illumina: [Illumina/salmon_map.sh](Illumina/salmon_map.sh)
+
+### Quality control
+
+ONT-specific: [ONT/QC](ONT/QC)
+
+general: [longvsshort/overdisp.R](longvsshort/overdisp.R), [longvsshort/qc.R](longvsshort/qc.R) and [longvsshort/sequinCPMvsAbundance.R]
+
+### Isoform detection
+
+Scripts to run softwares: [ONT/isoform_detection/methods](ONT/isoform_detection/methods)
+
+Results comparison: [ONT/isoform_detecion/analysis](ONT/isoform_detecion/analysis)
+
+### Differential transcript expression
+
+ONT: [ONT/DE_mix.Rmd](ONT/DE_mix.Rmd)
+
+Illumina: [illumina/DE_mix.Rmd](illumina/DE_mix.Rmd)
+
+Results comparison: [longvsshort/DEmixres.R](longvsshort/DEmixres.R)
+
+### Differential transcript usage
+
+ONT: [ONT/DTU_mix.Rmd](ONT/DTU_mix.Rmd)
+
+Illumina: [illumina/DTU_mix.Rmd](illumina/DTU_mix.Rmd)
+
+Results comparison: [longvsshort/DTUmixres.R](longvsshort/DTUmixres.R) and [longvsshort/DTUmixrestx.R](longvsshort/DTUmixrestx.R) 
 
 ## Data Availability
 
