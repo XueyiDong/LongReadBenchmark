@@ -2,9 +2,17 @@
 
 This repository contains the code used to perform the analysis and generate the figures in this preprint:
 
-Benchmarking long-read RNA-sequencing analysis tools using in silico mixtures
+**Benchmarking long-read RNA-sequencing analysis tools using in silico mixtures**
 Xueyi Dong, Mei R. M. Du, Quentin Gouil, Luyi Tian, Pedro L. Baldoni, Gordon K. Smyth, Shanika L. Amarasinghe, Charity W. Law, Matthew E. Ritchie
 bioRxiv 2022.07.22.501076; doi: [https://doi.org/10.1101/2022.07.22.501076](https://doi.org/10.1101/2022.07.22.501076)
+
+![Experimental design](ExpeDesign.png)
+
+## Data Availability
+
+Our RNA-seq data are available from Gene Expression Omnibus (GEO) under accession number [GSE172421](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE172421). 
+
+Please cite [our preprint](https://doi.org/10.1101/2022.07.22.501076) if you use our data in your studies.
 
 ## Index
 
@@ -28,7 +36,7 @@ Illumina: [illumina/salmon_map.sh](illumina/salmon_map.sh)
 
 ONT-specific: [ONT/QC](ONT/QC)
 
-general: [longvsshort/overdisp.R](longvsshort/overdisp.R), [longvsshort/qc.R](longvsshort/qc.R) and [longvsshort/sequinCPMvsAbundance.R](longvsshort/sequinCPMvsAbundance.R)
+General: [longvsshort/overdisp.R](longvsshort/overdisp.R), [longvsshort/qc.R](longvsshort/qc.R) and [longvsshort/sequinCPMvsAbundance.R](longvsshort/sequinCPMvsAbundance.R)
 
 ### Isoform detection
 
@@ -51,7 +59,3 @@ ONT: [ONT/DTU_mix.Rmd](ONT/DTU_mix.Rmd)
 Illumina: [illumina/DTU_mix.Rmd](illumina/DTU_mix.Rmd)
 
 Results comparison: [longvsshort/DTUmixres.R](longvsshort/DTUmixres.R) and [longvsshort/DTUmixrestx.R](longvsshort/DTUmixrestx.R) 
-
-## Data Availability
-
-Our RNA-seq data are available from Gene Expression Omnibus (GEO) under accession number [GSE172421](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE172421).
