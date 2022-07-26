@@ -1,0 +1,9 @@
+sbatch mix.sh barcode01.025 barcode04.075 mix_025075_1
+sbatch mix.sh barcode02.025 barcode05.075 mix_025075_2
+sbatch mix.sh barcode03.025 barcode06.075 mix_025075_3
+sbatch mix.sh barcode01.050 barcode04.050 mix_050050_1
+sbatch mix.sh barcode02.050 barcode05.050 mix_050050_2
+sbatch mix.sh barcode03.050 barcode06.050 mix_050050_3
+sbatch mix.sh barcode01.075 barcode04.025 mix_075025_1
+sbatch mix.sh barcode02.075 barcode05.025 mix_075025_2
+sbatch mix.sh barcode03.075 barcode06.025 mix_075025_3

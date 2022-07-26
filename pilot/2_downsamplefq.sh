@@ -16,7 +16,3 @@ unixhome=/wehisan/home/allstaff/d/dong.xFQ=/stornext/Projects/promethion/prometh
 export PATH=$PATH:/wehisan/home/allstaff/d/dong.x/Programs/seqtk
 
 seqtk sample -s100 $1.fastq.gz $2 | gzip > subsample_fq/$3.fastq.gz
-
-# for SAMPLE in barcode{01..06}
-# do seqtk sample -s100 $SAMPLE.fq.gz 0.2 | gzip > mix_fq/downsample/$SAMPLE.fq.gz
-# done

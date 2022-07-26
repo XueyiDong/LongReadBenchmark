@@ -1,0 +1,9 @@
+sbatch map_ONT_tx.sh mix_025075_1
+sbatch map_ONT_tx.sh mix_025075_2
+sbatch map_ONT_tx.sh mix_025075_3
+sbatch map_ONT_tx.sh mix_050050_1
+sbatch map_ONT_tx.sh mix_050050_2
+sbatch map_ONT_tx.sh mix_050050_3
+sbatch map_ONT_tx.sh mix_075025_1
+sbatch map_ONT_tx.sh mix_075025_2
+sbatch map_ONT_tx.sh mix_075025_3
