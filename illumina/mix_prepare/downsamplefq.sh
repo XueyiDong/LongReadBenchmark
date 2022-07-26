@@ -16,7 +16,3 @@ FQ=/stornext/General/data/user_managed/grpu_mritchie_1/long_RNA_benchmark/Illumi
 export PATH=$PATH:/wehisan/home/allstaff/d/dong.x/Programs/seqtk
 
 seqtk sample -s100 $FQ/$1.fastq.gz $2 | gzip > mix_fq/downsample/$3.fq.gz
-
-# for SAMPLE in barcode{01..06}
-# do seqtk sample -s100 $SAMPLE.fq.gz 0.2 | gzip > mix_fq/downsample/$SAMPLE.fq.gz
-# done

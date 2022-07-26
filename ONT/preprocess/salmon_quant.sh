@@ -13,10 +13,7 @@ module load samtools
 TX=/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/annotation/HumanSequins/gencode.v33.sequins.transcripts.fa
 for SAMPLE in barcode{01..06}
 do 
-# mkdir -p ./salmon/$SAMPLE
-# salmon quant -t $TX -l A -a ./transcriptome_mapping/$SAMPLE.bam -o ./salmon/$SAMPLE
 mkdir -p ./salmon_bs/$SAMPLE
-# salmon quant -t $TX -l A -a ./transcriptome_mapping/$SAMPLE.bam -o ./salmon_bs/$SAMPLE --numBootstraps 100 -p 16
 samtools view -F 256 -b -@ 8 ./transcriptome_mapping/$SAMPLE.bam > ./transcriptome_mapping/$SAMPLE.primary.bam
 salmon quant -t $TX -l A -a ./transcriptome_mapping/$SAMPLE.primary.bam -o ./salmon_bs/$SAMPLE --numBootstraps 100 -p 8
 done
