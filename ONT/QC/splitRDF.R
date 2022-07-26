@@ -17,7 +17,7 @@ cat("reading RDF.", "\n")
 readDF <- readRDS("readDF2.RDS")
 Sys.time()
 cat("RDF loaded.", "\n")
-
+# split read DF by transcript to avoid too large memory usage
 tx <- readRDS("tx.RDS")
 tx <- as.character(tx)
 tx.sel <- tx[(1 + 9283 * (args - 1)) : min((9283 * args), length(tx))]

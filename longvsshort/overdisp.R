@@ -18,8 +18,6 @@ overdisp <- data.frame(
 )
 ggplot(overdisp, aes(x = Overdispersion.short, y = Overdispersion.long)) +
   geom_point()
-# cor(overdisp$Overdispersion.long, overdisp$Overdispersion.short, use = "complete.obs")
-# not correlated
 
 # calculate number of tx per gene ----
 calcTxNum <- function(genes, isSequin){
@@ -55,19 +53,8 @@ overdisp2$numberTranscript <- c(dge$genes$nTranscript, dge.short$genes$nTranscri
 # dev.off()
 
 #stratify by number of transcripts per gene
-# DEPRECATED: to add number of ob on plot
 maxnum <- max(overdisp2$numberTranscript)
 overdisp2$nTxGroup <- Hmisc::cut2(overdisp2$numberTranscript, cuts = c(1, 2, 6, 11, 21, 51, maxnum))
-# stat_box_data <- function(y, upper_limit = max(overdisp2$Overdispersion) * 1.15) {
-#   return( 
-#     data.frame(
-#       y = 0.95 * log10(upper_limit),
-#       label = length(y)
-#     )
-#   )
-# }
-#DEPRECATED: to add number on X axis
-# my_xlab <- paste(levels(overdisp2$nTxGroup),"\n(N=",table(overdisp2$nTxGroup),")",sep="")
 # overdisp box plot ----
 pdf("plots/overdispBox.pdf", height = 4, width = 8)
 p.ovd <- ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
@@ -82,28 +69,7 @@ p.ovd <- ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=D
   scale_fill_manual(values = c("#FCB344", "#438DAC")) +
   scale_colour_manual(values = c("#FCB344", "#438DAC"))
 plot(p.ovd)
-# +
-#   stat_summary(
-#     fun.data = stat_box_data, 
-#     geom = "text", 
-#     hjust = 0.5,
-#     vjust = 0.9
-#   ) 
 dev.off()
-
-# <<<<<<< Updated upstream
-# pdf("plots/overdispLength.pdf", height = 5, width = 8)
-# ggplot(overdisp2[overdisp2$numberTranscript==1,], aes(x=Length, y=Overdispersion)) +
-#   stat_binhex() +
-#   scale_x_continuous(trans = "log10") +
-#   theme_bw()
-# dev.off()
-# pdf("plots/overdispExp.pdf", height = 4)
-# ggplot(overdisp2[overdisp2$numberTranscript==1,], aes(x=AveExpr, y=Overdispersion)) +
-#   stat_binhex() +
-#   scale_x_continuous(trans = "log10") +
-#   theme_bw()
-# dev.off()
 
 # overdispersion vs length ----
 maxLength <- max(overdisp2$Length)
