@@ -1,6 +1,10 @@
 # Benchmarking long-read RNA-sequencing analysis tools using in *in silico* mixtures
 
-This repository contains the code used to perform the analysis and generate the figures in [this preprint](https://www.biorxiv.org/content/10.1101/2022.07.22.501076v1).
+This repository contains the code used to perform the analysis and generate the figures in this preprint:
+
+Benchmarking long-read RNA-sequencing analysis tools using in silico mixtures
+Xueyi Dong, Mei R. M. Du, Quentin Gouil, Luyi Tian, Pedro L. Baldoni, Gordon K. Smyth, Shanika L. Amarasinghe, Charity W. Law, Matthew E. Ritchie
+bioRxiv 2022.07.22.501076; doi: [https://doi.org/10.1101/2022.07.22.501076](https://doi.org/10.1101/2022.07.22.501076)
 
 ## Index
 
@@ -18,19 +22,19 @@ Illumina: [illumina/mix_prepare](illumina/mix_prepare)
 
 ONT: [ONT/preprocess](ONT/preprocess)
 
-Illumina: [Illumina/salmon_map.sh](Illumina/salmon_map.sh)
+Illumina: [illumina/salmon_map.sh](illumina/salmon_map.sh)
 
 ### Quality control
 
 ONT-specific: [ONT/QC](ONT/QC)
 
-general: [longvsshort/overdisp.R](longvsshort/overdisp.R), [longvsshort/qc.R](longvsshort/qc.R) and [longvsshort/sequinCPMvsAbundance.R]
+general: [longvsshort/overdisp.R](longvsshort/overdisp.R), [longvsshort/qc.R](longvsshort/qc.R) and [longvsshort/sequinCPMvsAbundance.R](longvsshort/sequinCPMvsAbundance.R)
 
 ### Isoform detection
 
 Scripts to run softwares: [ONT/isoform_detection/methods](ONT/isoform_detection/methods)
 
-Results comparison: [ONT/isoform_detecion/analysis](ONT/isoform_detecion/analysis)
+Results comparison: [ONT/isoform_detection/analysis](ONT/isoform_detection/analysis)
 
 ### Differential transcript expression
 
@@ -50,4 +54,4 @@ Results comparison: [longvsshort/DTUmixres.R](longvsshort/DTUmixres.R) and [long
 
 ## Data Availability
 
-Our RNA-seq data are available from Gene Expression Omnibus (GEO) under accession number GSE172421.
+Our RNA-seq data are available from Gene Expression Omnibus (GEO) under accession number [GSE172421](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE172421).
