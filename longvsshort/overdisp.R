@@ -231,76 +231,65 @@ dge$genes$totalCount <- rowSums(dge$counts)
 dge.short$genes$totalCount <- rowSums(dge.short$counts)
 dge$genes$category <- factor(dge$genes$category, levels = c("Illumina only", "ONT and Illumina", "ONT only", "Not DTE"))
 dge.short$genes$category <- factor(dge.short$genes$category, levels = c("Illumina only", "ONT and Illumina", "ONT only", "Not DTE"))
-pdf("plots/DTEcategory.pdf", height = 5, width = 8)
+saveRDS(dge$genes, "DTEcategory.RDS")
+saveRDS(dge.short$genes, "DTEcategory.short.RDS")
+
+pdf("plots/DTE/DTEcategory.pdf", height = 5, width = 8)
 ggplot(dge$genes, aes(x=category, y=Length, fill=category)) +
-  geom_violin(alpha = 0, aes(colour=category)) +
-  geom_boxplot() +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))+
   scale_colour_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
-ggplot(dge$genes, aes(x=category, y=Length, fill=category)) +
-  geom_boxplot() +
-  scale_y_continuous(trans = "log10") +
-  theme_bw() +
-  theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge$genes, aes(x=category, y=EffectiveLength, fill=category)) +
-  geom_violin() +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
-ggplot(dge$genes, aes(x=category, y=EffectiveLength, fill=category)) +
-  geom_boxplot() +
-  scale_y_continuous(trans = "log10") +
-  theme_bw() +
-  theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge$genes, aes(x=category, y=Overdispersion, fill=category)) +
-  geom_violin() +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("long read overdispersion") +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge.short$genes, aes(x=category, y=Overdispersion, fill=category)) +
-  geom_violin() +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("short read overdispersion") +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge$genes, aes(x=category, y=nTranscript, fill=category)) +
-  geom_violin() +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge$genes, aes(x=category, y=totalCount, fill=category)) +
-  geom_violin() +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("long read expression") +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
-ggplot(dge$genes, aes(x=category, y=totalCount, fill=category)) +
-  geom_boxplot() +
-  scale_y_continuous(trans = "log10") +
-  theme_bw() +
-  theme(text = element_text(size = 16)) +
-  ggtitle("long read expression") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge.short$genes, aes(x=category, y=totalCount, fill=category)) +
-  geom_violin() +
-  scale_y_continuous(trans = "log10") +
-  theme_bw() +
-  theme(text = element_text(size = 16)) +
-  ggtitle("short read expression") +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
-ggplot(dge.short$genes, aes(x=category, y=totalCount, fill=category)) +
-  geom_boxplot() +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
@@ -310,72 +299,65 @@ dev.off()
 
 dge.sequin <- dge[grepl("^R", rownames(dge)),]
 dge.short.sequin <- dge.short[grepl("^R", rownames(dge.short)),]
-pdf("plots/DTEcategory.sequin.pdf", height = 5, width = 8)
+pdf("plots/DTE/DTEcategory.sequin.pdf", height = 5, width = 8)
 ggplot(dge.sequin$genes, aes(x=category, y=Length, fill=category)) +
-  geom_violin(alpha = 0.5) +
-  geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
-  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+  scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))+
+  scale_colour_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge.sequin$genes, aes(x=category, y=EffectiveLength, fill=category)) +
-  geom_violin(alpha = 0.5) +
-  geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge.sequin$genes, aes(x=category, y=Overdispersion, fill=category)) +
-  geom_violin(alpha = 0.5) +
-  geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("long read overdispersion") +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge.short.sequin$genes, aes(x=category, y=Overdispersion, fill=category)) +
-  geom_violin(alpha = 0.5) +
-  geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("short read overdispersion") +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge.sequin$genes, aes(x=category, y=nTranscript, fill=category)) +
-  geom_violin(alpha = 0.5) +
-  geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge.sequin$genes, aes(x=category, y=totalCount, fill=category)) +
-  geom_violin(alpha = 0.5) +
-  geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("long read expression") +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
+
 ggplot(dge.short.sequin$genes, aes(x=category, y=totalCount, fill=category)) +
-  geom_violin(alpha = 0.5) +
-  geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
   scale_y_continuous(trans = "log10") +
   theme_bw() +
   theme(text = element_text(size = 16)) +
   ggtitle("short read expression") +
   scale_fill_manual(values = c("#FCB344", "#A09F78", "#438DAC", "gray80"))
 dev.off()
-# =======
-# pdf("plots/overdispLength.pdf", height = 5, width = 8)
-# ggplot(overdisp2[overdisp2$numberTranscript==1,], aes(x=Length, y=Overdispersion)) +
-#   stat_binhex() +
-#   scale_x_continuous(trans = "log10") +
-#   theme_bw()
-# dev.off()
-# pdf("plots/overdispExp.pdf", height = 4)
-#   ggplot(overdisp2[overdisp2$numberTranscript==1,], aes(x=AveExpr, y=Overdispersion)) +
-#     stat_binhex() +
-#     scale_x_continuous(trans = "log10") +
-#     theme_bw()
-# dev.of
-# >>>>>>> Stashed changes

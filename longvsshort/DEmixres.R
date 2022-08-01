@@ -280,7 +280,7 @@ DE.human.100vs000$length <- c(txInfo.long$Length[match(DE.human.100vs000$tx[DE.h
                                                         strsplit2(rownames(txInfo.short), "\\|")[,1])]
 )
 DE.human.100vs000 <- na.omit(DE.human.100vs000)
-col <- brewer.pal(10, "Set3")
+col <- RColorBrewer::brewer.pal(10, "Set3")
 ord <- readRDS("ord.RDS")
 pdf("plots/DTE/DTEbiotype.pdf", height = 5, width = 8)
 ggplot(DE.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.1)))+
@@ -304,6 +304,22 @@ ggplot(DE.human.100vs000, aes(x = method, fill=factor(biotype, levels=ord$Group.
   labs(fill = "Transcript biotype", x = "Method", y = "Number of DTE transcripts")
 dev.off()
 
+# explore biotype of long- or short-read only DTE
+category <- readRDS("DTEcategory.RDS")
+category2 <- readRDS("DTEcategory.short.RDS")
+category <- rbind(category, category2)
+DE.human.100vs000$category <- category$category[match(DE.human.100vs000$tx, rownames(category))]
+
+pdf("plots/DTE/DTECategoryBiotype.pdf", height = 5, width = 8)
+ggplot(na.omit(DE.human.100vs000[!duplicated(DE.human.100vs000$tx),]), aes(x = category, fill=factor(biotype, levels=ord$Group.1)))+
+  geom_bar(position = "fill")+
+  theme_bw() +
+  theme(text = element_text(size = 20), axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette="Set3") +
+  # scale_fill_manual(values = col[-1]) +
+  labs(fill = "Transcript biotype", x = "Category", y = "Number of DTE transcripts")
+dev.off()
+
 library(ggridges)
 pdf("plots/DTE/DTElength.pdf", height = 5, width = 8)
 ggplot(DE.human.100vs000, aes(x = length, y=method, fill=method)) +
@@ -315,3 +331,4 @@ ggplot(DE.human.100vs000, aes(x = length, y=method, fill=method)) +
   theme_bw() +
   theme(text = element_text(size = 20), legend.position = "NA")
 dev.off()
+
