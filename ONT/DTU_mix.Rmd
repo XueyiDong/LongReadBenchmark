@@ -69,6 +69,8 @@ counts <- counts[match(txdf$TXNAME, rownames(counts)),]
 counts <- cbind(txdf$GENEID, txdf$TXNAME, counts)
 colnames(counts)[3:ncol(counts)] <- make.names(colnames(counts)[3:ncol(counts)])
 colnames(counts) <- c("gene_id", "feature_id", samples$sample_id)
+# save counts into a table
+write.table(counts, "counts4DTU.tsv", sep = "\t", row.names = FALSE)
 
 comparison <- list(
   c100vs0=c("100", "000"),
