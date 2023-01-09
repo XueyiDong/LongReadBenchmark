@@ -1,2 +1,3 @@
 # copy scripts to vast
- rsync ~/MattLab/XueyiDong/long_read_benchmark/pilot_ONT/scripts/*  /vast/scratch/users/dong.x/long_read_benchmark/pilot_ONT/scripts
+rsync ~/MattLab/XueyiDong/long_read_benchmark/pilot_ONT/scripts/*  /vast/scratch/users/dong.x/long_read_benchmark/pilot_ONT/scripts
+rsync ~/MattLab/XueyiDong/long_read_benchmark/pilot_ONT/scripts/qc/*  /vast/scratch/users/dong.x/long_read_benchmark/pilot_ONT/scripts/qc
