@@ -1,0 +1,14 @@
+17234224
+24298100
+23109436
+17319784
+17429672
+17914944
+18349100
+26085960
+22920608
+10099280
+20
+gzip: /stornext/Projects/promethion/promethion_access/lab_ritchie/Xueyi_cellLine_mixture/long_term/fastq/H1_1-HC_5/20221107_1451_2D_PAK15503_0f50058f/guppy6.2.1_sup_prom/barcode12_sup_q10_pass.fq.gz: No such file or directory
+0
+913388

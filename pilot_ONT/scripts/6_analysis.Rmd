@@ -1,0 +1,116 @@
+---
+title: "in silico RNA mixing"
+author: "Xueyi Dong"
+date: "16/12/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Arrange sample information
+
+We aim to see whether *in silico* mixture samples look similar enough to the ones obtained via physical mixing of RNA in the lab. The mixture proportions are 25:75, 50:50, 75:25.
+
+For each sample, we used seqtk to subsample X, X and X reads from pure samples across all lanes, and combine the reads to create the in silico mixture, X reads each. Then, we use the similar mapping and counting strategy comparing to the paper.
+
+## Alignment and counting
+
+We aligned the reads to reference transcriptome using minimap2 and quantified them using salmon. Details are described in the main text of the paper. 
+
+## Data pre-processing
+
+read in count data from txt files using **edgeR** `catchSalmon`.
+```{r lib}
+library(edgeR)
+library(limma)
+```
+
+
+```{r echo=FALSE}
+DIR="/vast/scratch/users/dong.x/long_read_benchmark/pilot_ONT/salmon"
+counts <- catchSalmon(file.path(DIR, list.files(DIR))[c(1:10, 13:18)])
+```
+
+
+
+
+
+
+```{r DGE}
+x <- DGEList(counts = counts$counts, genes = counts$annotation)
+colnames(x) <- strsplit2(colnames(x), "/")[,9]
+dim(x)
+
+x$samples$rep <- rep(c("rep1", "rep2", "rep1", "rep2"), c(5, 5, 3, 3))
+x$samples$prep <- c(rep(c("000", "025", "050", "075", "100"), 2), 
+                    rep(c("025", "050", "075"), 2))
+x$samples$source <- c(rep("seq", 10), rep("mix", 6))
+x$samples$group <- paste(x$samples$source, x$samples$prop, sep="_")
+x$samples
+```
+
+Filter out lowly expressed genes
+
+```{r filter}
+keep.exprs <- filterByExpr(x, group=x$samples$group)
+x <- x[keep.exprs,, keep.lib.sizes=FALSE]
+dim(x)
+```
+
+Normalization using TMM
+
+```{r norm}
+x <- calcNormFactors(x, method = "TMM")
+x$samples$norm.factors
+```
+
+## MDS plot
+
+```{r}
+lcpm <- cpm(x, log=TRUE)
+plotMDS(lcpm)
+library(RColorBrewer)
+col <- brewer.pal(5, "Set1")[c(1, 5, 4, 3, 2)]
+pdf("MDS_pilot.pdf", height = 5, width = 8)
+plotMDS(lcpm, 
+        pch = rep(c(1, 2), c(10, 6)),
+        col = col[c(rep(1:5, 2), rep(2:4, 2))], 
+        cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
+legend("bottomleft", c("000", "025", "050", "075", "100", "lab-derived samples", "in silico mixture"),
+        text.col = c(col, "black", "black"), cex = 1.25, bty = "n",
+       pch = c(rep(NA, 5), 1, 2))
+dev.off()
+```
+```{r}
+human.gene <- grep("^ENST", rownames(x))
+sequin.gene <- grep("^R", rownames(x))
+cpm.human <- cpm(x[human.gene, ], log=TRUE)
+cpm.sequin <- cpm(x[sequin.gene, ], log=TRUE)
+
+plotMDS(cpm.human, 
+        # pch = rep(c(1, 2), c(10, 6)),
+        col = col[c(rep(1:5, 2), rep(2:4, 2))], 
+        cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5,
+        main = "human")
+# legend("bottomleft", c("000", "025", "050", "075", "100", "lab-derived samples", "in silico mixture"),
+#         text.col = c(col, "black", "black"), cex = 1.25, bty = "n",
+#        pch = c(rep(NA, 5), 1, 2))
+
+plotMDS(cpm.sequin, 
+        # pch = rep(c(1, 2), c(10, 6)),
+        col = col[c(rep(1:5, 2), rep(2:4, 2))], 
+        cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5,
+        main = "sequin")
+plotMDS(cpm.sequin, 
+        pch = rep(c(1, 2), c(10, 6)),
+        col = col[c(rep(1:5, 2), rep(2:4, 2))], 
+        cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5,
+        main = "sequin")
+# legend("bottomleft", c("000", "025", "050", "075", "100", "lab-derived samples", "in silico mixture"),
+#         text.col = c(col, "black", "black"), cex = 1.25, bty = "n",
+#        pch = c(rep(NA, 5), 1, 2))
+```
+
+
