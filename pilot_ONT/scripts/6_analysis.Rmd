@@ -29,7 +29,8 @@ library(limma)
 
 
 ```{r echo=FALSE}
-DIR="/vast/scratch/users/dong.x/long_read_benchmark/pilot_ONT/salmon"
+# DIR="/vast/scratch/users/dong.x/long_read_benchmark/pilot_ONT/salmon"
+DIR = "/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/pilot_ONT/salmon"
 counts <- catchSalmon(file.path(DIR, list.files(DIR))[c(1:10, 13:18)])
 ```
 
@@ -40,7 +41,7 @@ counts <- catchSalmon(file.path(DIR, list.files(DIR))[c(1:10, 13:18)])
 
 ```{r DGE}
 x <- DGEList(counts = counts$counts, genes = counts$annotation)
-colnames(x) <- strsplit2(colnames(x), "/")[,9]
+colnames(x) <- strsplit2(colnames(x), "/")[,11]
 dim(x)
 
 x$samples$rep <- rep(c("rep1", "rep2", "rep1", "rep2"), c(5, 5, 3, 3))
@@ -81,6 +82,11 @@ plotMDS(lcpm,
 legend("bottomleft", c("000", "025", "050", "075", "100", "lab-derived samples", "in silico mixture"),
         text.col = c(col, "black", "black"), cex = 1.25, bty = "n",
        pch = c(rep(NA, 5), 1, 2))
+dev.off()
+pdf("MDS_pilot.pdf", height = 5, width = 8)
+plotMDS(lcpm,
+        col = col[c(rep(1:5, 2), rep(2:4, 2))], 
+        cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
 dev.off()
 ```
 ```{r}
