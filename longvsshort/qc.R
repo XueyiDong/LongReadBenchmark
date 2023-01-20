@@ -198,15 +198,15 @@ quant <- data.frame(
 )
 quant <- na.omit(quant)
 # correlation
-cor(quant$TPM_short, quant$CPM_long)
-cor(quant$TPM_short[quant$group=="H1975"], quant$CPM_long[quant$group=="H1975"])
-cor(quant$TPM_short[quant$group=="HCC827"], quant$CPM_long[quant$group=="HCC827"])
+cor(quant$TPM_short, quant$CPM_long, method = "spearman")
+cor(quant$TPM_short[quant$group=="H1975"], quant$CPM_long[quant$group=="H1975"], method = "spearman")
+cor(quant$TPM_short[quant$group=="HCC827"], quant$CPM_long[quant$group=="HCC827"], method = "spearman")
 pdf("plots/longVsShortQuant.pdf", height = 8, width = 9)
 ggplot(quant, aes(x = CPM_long, y = TPM_short))+
   stat_binhex(bins=100) +
   scale_fill_viridis(trans = "log10", option = "A")+
   annotate(geom="text", x=3, y=12,
-           label=paste0("Pearson's r=", round(cor(quant$TPM_short, quant$CPM_long), 3)),
+           label=paste0("Spearman's rho =", round(cor(quant$TPM_short, quant$CPM_long, method = "spearman"), 3)),
            size=7)+
   labs(x = expression("log"[2]*"CPM ONT read counts"),
        y = expression("log"[2]*"TPM Illumina read counts")
@@ -224,7 +224,7 @@ dge.all$samples$group <- rep(c("H1975_long", "HCC827_long", "H1975_short", "HCC8
 filt <- filterByExpr(dge.all)
 dge.all <- dge.all[filt,]
 dge.all$genes <- dge.short$genes[match(rownames(dge.all), rownames(dge.short)),]
-cormat <- cor(dge.all$counts)
+cormat <- cor(dge.all$counts, method = "spearman")
 library(pheatmap)
 anno <- data.frame(
   cell_type = rep(rep(c("H1975", "HCC827"), c(3, 3)), 2),
@@ -251,7 +251,7 @@ pheatmap(cormat,
 cpm <- cpm(dge.all[, 1:6])
 tpm <- tpm3(dge.all$counts[, 7:12], dge.short$genes$Length[match(rownames(dge.all), rownames(dge.short))])
 quant.all <- cbind(cpm, tpm)
-cormat2 <- cor(quant.all)
+cormat2 <- cor(quant.all, method = "spearman")
 pdf("plots/corHeatmap.pdf", height = 8, width = 9)
 pheatmap(cormat2,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
@@ -277,7 +277,7 @@ dge.short.pure.sel <- dge.short.pure[substr(rownames(dge.short.pure), 1, 15) %in
 cpm.sel <- cpm(dge.pure.sel)
 tpm.sel <- tpm3(dge.short.pure.sel$counts, dge.short.pure.sel$genes$Length)
 quant.all.sel <- cbind(cpm.sel[match(rownames(tpm.sel), rownames(cpm.sel)), ], tpm.sel) %>% na.omit
-cormat3 <- cor(quant.all.sel)
+cormat3 <- cor(quant.all.sel, method = "spearman")
 pdf("plots/corHeatmapCoding.pdf", height = 7, width = 8)
 pheatmap(cormat3,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
@@ -303,7 +303,7 @@ dge.short.pure.sel <- dge.short.pure[substr(rownames(dge.short.pure), 1, 15) %in
 cpm.sel <- cpm(dge.pure.sel)
 tpm.sel <- tpm3(dge.short.pure.sel$counts, dge.short.pure.sel$genes$Length)
 quant.all.sel <- cbind(cpm.sel[match(rownames(tpm.sel), rownames(cpm.sel)), ], tpm.sel) %>% na.omit
-cormat3 <- cor(quant.all.sel)
+cormat3 <- cor(quant.all.sel, method = "spearman")
 pdf("plots/corHeatmapOther.pdf", height = 8, width = 9)
 pheatmap(cormat3,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
@@ -323,7 +323,7 @@ pheatmap(cormat3,
 dev.off()
 
 ### sequins----
-cormat4 <- cor(quant.all[grepl("^R", rownames(quant.all)),])
+cormat4 <- cor(quant.all[grepl("^R", rownames(quant.all)),], method = "spearman")
 pdf("plots/corHeatmapSequin.pdf", height = 8, width = 9)
 pheatmap(cormat4,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
@@ -344,7 +344,7 @@ dev.off()
 
 ## by number of tx-------
 ### 1----
-cormat.tx1 <- cor(quant.all[dge.all$genes$nTranscript==1,])
+cormat.tx1 <- cor(quant.all[dge.all$genes$nTranscript==1,], method = "spearman")
 pdf("plots/corHeatmaptx1.pdf", height = 8, width = 9)
 pheatmap(cormat.tx1,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
@@ -364,7 +364,7 @@ pheatmap(cormat.tx1,
 dev.off()
 
 ### 2 - 5----
-cormat.tx2_5 <- cor(quant.all[dge.all$genes$nTranscript>=2 & dge.all$genes$nTranscript <= 5,])
+cormat.tx2_5 <- cor(quant.all[dge.all$genes$nTranscript>=2 & dge.all$genes$nTranscript <= 5,], method = "spearman")
 pdf("plots/corHeatmaptx2_5.pdf", height = 8, width = 9)
 pheatmap(cormat.tx2_5,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
@@ -384,7 +384,7 @@ pheatmap(cormat.tx2_5,
 dev.off()
 
 ### > 5----
-cormat.tx5 <- cor(quant.all[dge.all$genes$nTranscript > 5,])
+cormat.tx5 <- cor(quant.all[dge.all$genes$nTranscript > 5,], method = "spearman")
 pdf("plots/corHeatmaptx5.pdf", height = 8, width = 9)
 pheatmap(cormat.tx5,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
