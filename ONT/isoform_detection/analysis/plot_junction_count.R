@@ -5,6 +5,8 @@ library(ggplot2)
 library(ggridges)
 library(ggsci)
 library(parallel)
+library(plyr)
+library(dplyr)
 
 # prepare data----
 # load("ont_counts_filtered.RData")
@@ -85,8 +87,33 @@ junc_no_dup <- lapply(junc, function(x){
   x <- x[!duplicated(x$junction), ]
 })
 junc_df <- Reduce(rbind, junc_no_dup)
-junc_df$Tool <- rep(c("bambu", "FLAIR", "FLAMES", "SQANTI3", "StringTie2", "TALON"), 
+junc_df$Tool <- rep(c("bambu", "FLAIR", "FLAMES", "Cupcake", "StringTie2", "TALON"), 
                     sapply(junc_no_dup, nrow, simplify = TRUE))
+
+# plot percentage of novel junctions supported by Illumina
+# defind >10 counts as supported
+junc_df$supported_by_Illumina <- junc_df$total_coverage_unique > 10
+pdf("NovelJuncIlluminaSupport.pdf", height = 5, width = 8)
+junc_df %>% 
+  filter(junction_category == "novel") %>% 
+  count(Tool = factor(Tool), supported_by_Illumina = factor(supported_by_Illumina)) %>% 
+  plyr::ddply(., .(Tool), transform, pct = n / sum(n)) %>% 
+  # mutate(pct = prop.table(n)) %>% 
+  ggplot(aes(x = Tool, y = n, fill = supported_by_Illumina, label = scales::percent(pct))) +
+  geom_bar(stat = "identity") +
+  geom_text(position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#A8D1D1", "#FD8A8A")) +
+  labs(y = "Novel junctions", fill = "Supported by Illumina\n(counts > 10)") +
+  theme_bw()+
+  theme(text = element_text(size = 15))
+dev.off()
+
+
+ggplot(junc_df[junc_df$junction_category == "novel", ], aes(x = Tool, fill = supported_by_Illumina)) +
+  geom_bar() +
+  theme_bw() +
+  theme(text = element_text(size = 15))
+
 
 #pdf("plots/juncCovDistr.pdf", height = 4, width = 8)
 junc_cov <- ggplot(junc_df, aes(x=(total_coverage_unique + 0.5), y=Tool, fill = Tool)) +
