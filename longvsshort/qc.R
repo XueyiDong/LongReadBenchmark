@@ -5,6 +5,7 @@ library(scales)
 library(RColorBrewer)
 library(tidyverse)
 library(cowplot)
+library(viridis)
 
 DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
 # load DGE lists
@@ -496,4 +497,212 @@ p <- lapply(1:6, function(x){
 pdf("plots/ShortLenBiasSamp.pdf", height = 9, width = 16)
 plot_grid(p[[1]], p[[2]], p[[3]], p[[4]], p[[5]], p[[6]],
           labels = paste(rep(c("H1975", "HCC827"), c(3, 3)), c(1, 2, 3, 1, 2, 5), sep = "-"))
+dev.off()
+
+# BCV plots ---------
+## Calculate human and sequin together -----
+### ONT -------
+dge.pure <- dge[, 1:6]
+dge.pure$samples$group = rep(c("H1975", "HCC827"), each = 3)
+dge.pure <- dge.pure[filterByExpr(dge.pure),]
+dge.pure <- dge.pure %>% 
+  calcNormFactors() %>% 
+  estimateDisp()
+
+plotBCV(dge.pure)
+
+dispersion <- data.frame(
+  AveLogCPM = dge.pure$AveLogCPM,
+  common.dispersion = dge.pure$common.dispersion,
+  trended.dispersion = dge.pure$trended.dispersion,
+  tagwise.dispersion = dge.pure$tagwise.dispersion
+)
+rownames(dispersion) <- rownames(dge.pure)
+dispersion <- dispersion[order(dispersion$AveLogCPM), ]
+
+plot.bcv.long <- ggplot() +
+  stat_binhex(data = dispersion[grep("^ENST", rownames(dispersion)), ],
+              aes(x = AveLogCPM, y = sqrt(tagwise.dispersion)), bins = 100) +
+  scale_fill_viridis(option = "magma") +
+  geom_line(data = dispersion[grep("^ENST", rownames(dispersion)), ],
+            aes(x = AveLogCPM, y = sqrt(common.dispersion), colour = "Common")) +
+  geom_line(data = dispersion[grep("^ENST", rownames(dispersion)), ],
+            aes(x = AveLogCPM, y = sqrt(trended.dispersion), colour = "Trend")) +
+  geom_point(data = dispersion[grep("^R", rownames(dispersion)), ],
+             aes(x = AveLogCPM, y = sqrt(tagwise.dispersion),
+                 colour = "Tagwise_sequins")) +
+  scale_colour_manual(name = "BCV",
+                      breaks = c("Common", "Trend", "Tagwise_sequins"),
+                      values = c("Common" = "red", "Trend" = "blue", "Tagwise_sequins" = "green")) +
+  scale_y_continuous(limits = c(0, 0.75)) +
+  theme_bw() +
+  labs(x = "Average log CPM", y = "Bioligical coefficient of variation",
+       fill = "Tagwise BCV\ncount",
+       title = "ONT long-read BCV") +
+  theme(text = element_text(size = 16))
+
+### Illumina ---------
+dge.short.pure <- dge.short[, 1:6]
+dge.short.pure$samples$group = rep(c("H1975", "HCC827"), each = 3)
+dge.short.pure <- dge.short.pure[filterByExpr(dge.short.pure),]
+dge.short.pure <- dge.short.pure %>% 
+  calcNormFactors() %>% 
+  estimateDisp()
+
+plotBCV(dge.short.pure)
+
+dispersion.short <- data.frame(
+  AveLogCPM = dge.short.pure$AveLogCPM,
+  common.dispersion = dge.short.pure$common.dispersion,
+  trended.dispersion = dge.short.pure$trended.dispersion,
+  tagwise.dispersion = dge.short.pure$tagwise.dispersion
+)
+rownames(dispersion.short) <- rownames(dge.short.pure)
+dispersion.short <- dispersion.short[order(dispersion.short$AveLogCPM), ]
+
+plot.bcv.short <- ggplot() +
+  stat_binhex(data = dispersion.short[grep("^ENST", rownames(dispersion.short)), ],
+              aes(x = AveLogCPM, y = sqrt(tagwise.dispersion)), bins = 100) +
+  scale_fill_viridis(option = "magma") +
+  geom_line(data = dispersion.short[grep("^ENST", rownames(dispersion.short)), ],
+            aes(x = AveLogCPM, y = sqrt(common.dispersion), colour = "Common")) +
+  geom_line(data = dispersion.short[grep("^ENST", rownames(dispersion.short)), ],
+            aes(x = AveLogCPM, y = sqrt(trended.dispersion), colour = "Trend")) +
+  geom_point(data = dispersion.short[grep("^R", rownames(dispersion.short)), ],
+             aes(x = AveLogCPM, y = sqrt(tagwise.dispersion),
+                 colour = "Tagwise_sequins")) +
+  scale_colour_manual(name = "BCV",
+                      breaks = c("Common", "Trend", "Tagwise_sequins"),
+                      values = c("Common" = "red", "Trend" = "blue", "Tagwise_sequins" = "green")) +
+  scale_y_continuous(limits = c(0, 0.75)) +
+  theme_bw() +
+  labs(x = "Average log CPM", y = "Bioligical coefficient of variation",
+       fill = "Tagwise BCV\ncount",
+       title = "Illumina short-read BCV") +
+  theme(text = element_text(size = 16))
+
+### PDF ----
+pdf("plots/bcv.pdf", height = 5, width = 15)
+cowplot::plot_grid(plot.bcv.long, plot.bcv.short)
+dev.off()
+
+## Calculate human and sequins separately ----
+### ONT ----
+dge.pure.human <- dge.pure[grepl("^ENST", rownames(dge.pure)), ] %>% 
+  calcNormFactors() %>% 
+  estimateDisp()
+dispersion.human <- data.frame(
+  AveLogCPM = dge.pure.human$AveLogCPM,
+  common.dispersion = dge.pure.human$common.dispersion,
+  trended.dispersion = dge.pure.human$trended.dispersion,
+  tagwise.dispersion = dge.pure.human$tagwise.dispersion
+)
+rownames(dispersion.human) <- rownames(dge.pure.human)
+dispersion.human <- dispersion.human[order(dispersion.human$AveLogCPM), ]
+
+dge.pure.sequin <- dge.pure[grepl("^R", rownames(dge.pure)), ] %>% 
+  calcNormFactors() %>% 
+  estimateDisp()
+dispersion.sequin <- data.frame(
+  AveLogCPM = dge.pure.sequin$AveLogCPM,
+  common.dispersion = dge.pure.sequin$common.dispersion,
+  trended.dispersion = dge.pure.sequin$trended.dispersion,
+  tagwise.dispersion = dge.pure.sequin$tagwise.dispersion
+)
+rownames(dispersion.sequin) <- rownames(dge.pure.sequin)
+dispersion.sequin <- dispersion.sequin[order(dispersion.sequin$AveLogCPM), ]
+
+plot.bcv.long.sep <- 
+  ggplot() +
+  stat_binhex(data =dispersion.human,
+              aes(x = AveLogCPM, y = sqrt(tagwise.dispersion)), bins = 100) +
+  scale_fill_viridis(option = "magma") +
+  geom_line(data = dispersion.human,
+            aes(x = AveLogCPM, y = sqrt(common.dispersion), 
+                colour = "Common", linetype = "Human")) +
+  geom_line(data = dispersion.human,
+            aes(x = AveLogCPM, y = sqrt(trended.dispersion),
+                colour = "Trend", linetype = "Human")) +
+  geom_point(data = dispersion.sequin,
+             aes(x = AveLogCPM, y = sqrt(tagwise.dispersion),
+                 colour = "Tagwise_sequins")) +
+  geom_line(data = dispersion.sequin,
+            aes(x = AveLogCPM, y = sqrt(common.dispersion), 
+                colour = "Common", linetype = "Sequin")) +
+  geom_line(data = dispersion.sequin,
+            aes(x = AveLogCPM, y = sqrt(trended.dispersion),
+                colour = "Trend", linetype = "Sequin")) +
+  scale_colour_manual(name = "BCV",
+                      breaks = c("Common", "Trend", "Tagwise_sequins"),
+                      values = c("Common" = "red", "Trend" = "blue", "Tagwise_sequins" = "green")) +
+  scale_linetype_manual(name = "Source",
+                        breaks = c("Human", "Sequin"),
+                        values = c("Human" = 1, "Sequin" = 2)) +
+  scale_y_continuous(limits = c(0, 0.75)) +
+  theme_bw() +
+  labs(x = "Average log CPM", y = "Bioligical coefficient of variation",
+       fill = "Tagwise BCV\ncount",
+       title = "ONT long-read BCV") +
+  theme(text = element_text(size = 16))
+
+### Illumina -----
+dge.short.pure.human <- dge.short.pure[grepl("^ENST", rownames(dge.short.pure)), ] %>% 
+  calcNormFactors() %>% 
+  estimateDisp()
+dispersion.short.human <- data.frame(
+  AveLogCPM = dge.short.pure.human$AveLogCPM,
+  common.dispersion = dge.short.pure.human$common.dispersion,
+  trended.dispersion = dge.short.pure.human$trended.dispersion,
+  tagwise.dispersion = dge.short.pure.human$tagwise.dispersion
+)
+rownames(dispersion.short.human) <- rownames(dge.short.pure.human)
+dispersion.short.human <- dispersion.short.human[order(dispersion.short.human$AveLogCPM), ]
+
+dge.short.pure.sequin <- dge.short.pure[grepl("^R", rownames(dge.short.pure)), ] %>% 
+  calcNormFactors() %>% 
+  estimateDisp()
+dispersion.short.sequin <- data.frame(
+  AveLogCPM = dge.short.pure.sequin$AveLogCPM,
+  common.dispersion = dge.short.pure.sequin$common.dispersion,
+  trended.dispersion = dge.short.pure.sequin$trended.dispersion,
+  tagwise.dispersion = dge.short.pure.sequin$tagwise.dispersion
+)
+rownames(dispersion.short.sequin) <- rownames(dge.short.pure.sequin)
+dispersion.short.sequin <- dispersion.short.sequin[order(dispersion.short.sequin$AveLogCPM), ]
+
+plot.bcv.short.sep <- 
+  ggplot() +
+  stat_binhex(data =dispersion.short.human,
+              aes(x = AveLogCPM, y = sqrt(tagwise.dispersion)), bins = 100) +
+  scale_fill_viridis(option = "magma") +
+  geom_line(data = dispersion.short.human,
+            aes(x = AveLogCPM, y = sqrt(common.dispersion), 
+                colour = "Common", linetype = "Human")) +
+  geom_line(data = dispersion.short.human,
+            aes(x = AveLogCPM, y = sqrt(trended.dispersion), 
+                colour = "Trend", linetype = "Human")) +
+  geom_point(data = dispersion.short.sequin,
+             aes(x = AveLogCPM, y = sqrt(tagwise.dispersion),
+                 colour = "Tagwise_sequins")) +
+  geom_line(data = dispersion.short.sequin,
+            aes(x = AveLogCPM, y = sqrt(common.dispersion), 
+                colour = "Common", linetype = "Sequin")) +
+  geom_line(data = dispersion.short.sequin,
+            aes(x = AveLogCPM, y = sqrt(trended.dispersion), 
+                colour = "Trend", linetype = "Sequin")) +
+  scale_colour_manual(name = "BCV",
+                      breaks = c("Common", "Trend", "Tagwise_sequins"),
+                      values = c("Common" = "red", "Trend" = "blue", "Tagwise_sequins" = "green")) +
+  scale_y_continuous(limits = c(0, 0.75)) +
+  scale_linetype_manual(name = "Source",
+                        breaks = c("Human", "Sequin"),
+                        values = c("Human" = 1, "Sequin" = 2)) +
+  theme_bw() +
+  labs(x = "Average log CPM", y = "Bioligical coefficient of variation",
+       fill = "Tagwise BCV\ncount",
+       title = "Illumina short-read BCV") +
+  theme(text = element_text(size = 16))
+### PDF ----
+pdf("plots/bcv2.pdf", height = 5, width = 16)
+cowplot::plot_grid(plot.bcv.long.sep, plot.bcv.short.sep)
 dev.off()
