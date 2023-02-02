@@ -706,3 +706,9 @@ plot.bcv.short.sep <-
 pdf("plots/bcv2.pdf", height = 5, width = 16)
 cowplot::plot_grid(plot.bcv.long.sep, plot.bcv.short.sep)
 dev.off()
+
+### Below just for debug ----
+ggplot(dispersion.short.human[sqrt(dispersion.short.human$tagwise.dispersion) > 0.2,], aes(x = AveLogCPM, y = sqrt(tagwise.dispersion))) +
+  stat_binhex()
+
+smoothScatter(dispersion.short.human$AveLogCPM[sqrt(dispersion.short.human$tagwise.dispersion) > 0.2], sqrt(dispersion.short.human$tagwise.dispersion)[sqrt(dispersion.short.human$tagwise.dispersion) > 0.2])

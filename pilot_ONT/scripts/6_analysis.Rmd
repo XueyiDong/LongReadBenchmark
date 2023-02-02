@@ -88,6 +88,16 @@ plotMDS(lcpm,
         col = col[c(rep(1:5, 2), rep(2:4, 2))], 
         cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5)
 dev.off()
+pdf("MDS_pilot_rep1.pdf", height = 5, width = 8)
+plotMDS(lcpm[, c(1:5, 11:13)],
+        pch = rep(c(1, 2), c(5, 3)),
+        col = col[c(1:5, 2:4)],
+        cex.main = 1.5, cex.lab = 1.5, cex = 1.5)
+legend("bottomright", c("000", "025", "050", "075", "100", "lab-derived samples", "in silico mixture"), 
+        text.col = c(col, "black", "black"), cex = 1.25, bty = "n",
+       pch = c(rep(NA, 5), 1, 2))
+dev.off()
+
 ```
 ```{r}
 human.gene <- grep("^ENST", rownames(x))
