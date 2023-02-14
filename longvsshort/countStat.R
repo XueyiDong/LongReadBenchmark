@@ -62,6 +62,7 @@ gene.counts.long <- featureCounts(files = bam.long, annot.ext = gene.anno,
 saveRDS(gene.counts.long, "counts/gene.counts.long.RDS")
 gene.counts.short <- featureCounts(files = bam.short, annot.ext = gene.anno,
                                    allowMultiOverlap = T,
+                                   isPairedEnd = TRUE,
                                    read2pos = 5,
                                    nthreads = 16)
 saveRDS(gene.counts.short, "counts/gene.counts.short.RDS")
@@ -74,6 +75,7 @@ exon.counts.long <- featureCounts(files = bam.long, annot.ext = exons.anno,
 saveRDS(exon.counts.long, "counts/exon.counts.long.RDS")
 exon.counts.short <- featureCounts(files = bam.short, annot.ext = exons.anno,
                                    allowMultiOverlap = T,
+                                   isPairedEnd = TRUE,
                                    read2pos = 5,
                                    nthreads = 16)
 saveRDS(exon.counts.short, "counts/exon.counts.short.RDS")
@@ -86,6 +88,7 @@ intron.counts.long <- featureCounts(files = bam.long, annot.ext = introns.anno,
 saveRDS(intron.counts.long, "counts/intron.counts.long.RDS")
 intron.counts.short <- featureCounts(files = bam.short, annot.ext = introns.anno,
                                    allowMultiOverlap = T,
+                                   isPairedEnd = TRUE,
                                    read2pos = 5,
                                    nthreads = 16)
 saveRDS(intron.counts.short, "counts/intron.counts.short.RDS")
@@ -98,6 +101,7 @@ intergenic.counts.long <- featureCounts(files = bam.long, annot.ext = intergenic
 saveRDS(intergenic.counts.long, "counts/intergenic.counts.long.RDS")
 intergenic.counts.short <- featureCounts(files = bam.short, annot.ext = intergenic.anno,
                                    allowMultiOverlap = T,
+                                   isPairedEnd = TRUE,
                                    read2pos = 5,
                                    nthreads = 16)
 saveRDS(intergenic.counts.short, "counts/intergenic.counts.short.RDS")
