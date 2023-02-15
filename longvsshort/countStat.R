@@ -58,50 +58,58 @@ gene.counts.long <- featureCounts(files = bam.long, annot.ext = gene.anno,
                                   allowMultiOverlap = T,
                                   isLongRead = T,
                                   read2pos = 5,
-                                  nthreads = 16)
+                                  nthreads = 16,
+                                  primaryOnly = TRUE)
 saveRDS(gene.counts.long, "counts/gene.counts.long.RDS")
 gene.counts.short <- featureCounts(files = bam.short, annot.ext = gene.anno,
                                    allowMultiOverlap = T,
                                    isPairedEnd = TRUE,
                                    read2pos = 5,
-                                   nthreads = 16)
+                                   nthreads = 16,
+                                   primaryOnly = TRUE)
 saveRDS(gene.counts.short, "counts/gene.counts.short.RDS")
 # exon counts
 exon.counts.long <- featureCounts(files = bam.long, annot.ext = exons.anno, 
                                   allowMultiOverlap = T,
                                   isLongRead = T,
                                   read2pos = 5,
-                                  nthreads = 16)
+                                  nthreads = 16,
+                                  primaryOnly = TRUE)
 saveRDS(exon.counts.long, "counts/exon.counts.long.RDS")
 exon.counts.short <- featureCounts(files = bam.short, annot.ext = exons.anno,
                                    allowMultiOverlap = T,
                                    isPairedEnd = TRUE,
                                    read2pos = 5,
-                                   nthreads = 16)
+                                   nthreads = 16,
+                                   primaryOnly = TRUE)
 saveRDS(exon.counts.short, "counts/exon.counts.short.RDS")
 # intron counts
 intron.counts.long <- featureCounts(files = bam.long, annot.ext = introns.anno, 
                                   allowMultiOverlap = T,
                                   isLongRead = T,
                                   read2pos = 5,
-                                  nthreads = 16)
+                                  nthreads = 16,
+                                  primaryOnly = TRUE)
 saveRDS(intron.counts.long, "counts/intron.counts.long.RDS")
 intron.counts.short <- featureCounts(files = bam.short, annot.ext = introns.anno,
                                    allowMultiOverlap = T,
                                    isPairedEnd = TRUE,
                                    read2pos = 5,
-                                   nthreads = 16)
+                                   nthreads = 16,
+                                   primaryOnly = TRUE)
 saveRDS(intron.counts.short, "counts/intron.counts.short.RDS")
 #intergenic counts
 intergenic.counts.long <- featureCounts(files = bam.long, annot.ext = intergenic.anno, 
                                   allowMultiOverlap = T,
                                   isLongRead = T,
                                   read2pos = 5,
-                                  nthreads = 16)
+                                  nthreads = 16,
+                                  primaryOnly = TRUE)
 saveRDS(intergenic.counts.long, "counts/intergenic.counts.long.RDS")
 intergenic.counts.short <- featureCounts(files = bam.short, annot.ext = intergenic.anno,
                                    allowMultiOverlap = T,
                                    isPairedEnd = TRUE,
                                    read2pos = 5,
-                                   nthreads = 16)
+                                   nthreads = 16,
+                                   primaryOnly = TRUE)
 saveRDS(intergenic.counts.short, "counts/intergenic.counts.short.RDS")

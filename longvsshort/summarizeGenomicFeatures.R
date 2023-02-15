@@ -44,24 +44,40 @@ samples <- data.frame(
   group = rep(c("H1975", "HCC827"), each= 3),
   sample = c("H1975-1", "H1975-2", "H1975-3", "HCC827-1", "HCC827-2", "HCC827-5")
 )
+samples.long <- samples.short <- samples
 
 # Calculate count number
-samples$Total.Reads.long <- colSums(exon.counts.long$stat[,-1])
-samples$Unmapped.reads.long <- unlist(exon.counts.long$stat[2, -1])
-samples$Mapped.long <- samples$Total.Reads.long - samples$Unmapped.reads.long
+samples.long$Total.Reads <- colSums(exon.counts.long$stat[,-1])
+samples.long$Unmapped.reads <- unlist(exon.counts.long$stat[2, -1])
+samples.long$Mapped <- samples.long$Total.Reads - samples.long$Unmapped.reads
 
-samples$subread.gene.long <- colSums(gene.counts.long$counts)
-samples$subread.exon.long <- colSums(exon.counts.long$counts)
-samples$subread.intron.long <- colSums(intron.counts.long$counts)
-samples$subread.intergenic.long <- colSums(intergenic.counts.long$counts)
+samples.long$subread.gene <- colSums(gene.counts.long$counts)
+samples.long$subread.exon <- colSums(exon.counts.long$counts)
+samples.long$subread.intron <- colSums(intron.counts.long$counts)
+samples.long$subread.intergenic <- colSums(intergenic.counts.long$counts)
 
-samples$Total.Reads.short <- colSums(exon.counts.short$stat[,-1])
-samples$Unmapped.reads.short <- unlist(exon.counts.short$stat[2, -1])
-samples$Mapped.short <- samples$Total.Reads.short - samples$Unmapped.reads.short
+samples.short$Total.Reads <- colSums(exon.counts.short$stat[,-1])
+samples.short$Unmapped.reads <- unlist(exon.counts.short$stat[2, -1])
+samples.short$Mapped <- samples.short$Total.Reads - samples.short$Unmapped.reads
 
-samples$subread.gene.short <- colSums(gene.counts.short$counts)
-samples$subread.exon.short <- colSums(exon.counts.short$counts)
-samples$subread.intron.short <- colSums(intron.counts.short$counts)
-samples$subread.intergenic.short <- colSums(intergenic.counts.short$counts)
+samples.short$subread.gene <- colSums(gene.counts.short$counts)
+samples.short$subread.exon <- colSums(exon.counts.short$counts)
+samples.short$subread.intron <- colSums(intron.counts.short$counts)
+samples.short$subread.intergenic <- colSums(intergenic.counts.short$counts)
+
+samples.long <- data.table::melt(samples.long, id.vars = c("group", "sample"),
+                                 variable.name = "Category")
+samples.short <- data.table::melt(samples.short, id.vars = c("group", "sample"),
+                                 variable.name = "Category")
+samples.long$Dataset <- "ONT"
+samples.short$Dataset <- "Illumina"
+samples <- rbind(samples.long, samples.short)
 
 write.csv(samples, file = "counts/features.mapping.summary.csv")
+
+library(ggplot2)
+ggplot(samples, aes(x=sample, y=value, fill=Category)) +
+  geom_bar(stat = "identity") +
+  facet_grid(cols = vars(Dataset))
+### TO DO:
+### rerun this script; check count number, especially intergenic; change plotting categories
