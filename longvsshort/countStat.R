@@ -1,18 +1,6 @@
 library(ggplot2)
 library(Rsubread)
 
-# fc.long <- readRDS("../ONT/counts_ONT.RDS")
-# fc.short <- readRDS("../illumina/counts.RDS")
-# 
-# rownames(fc.long$stat) <- fc.long$stat[,1]
-# fc.long$stat <- fc.long$stat[,-1]
-# fc.long$stat
-# 
-# rownames(fc.short$stat) <- fc.short$stat[,1]
-# fc.short$stat <- fc.short$stat[,-1]
-# fc.short$stat
-
-# Use RNA mixology methods -------------------
 
 source("src/helper.functions.R")
 library(Rsubread)

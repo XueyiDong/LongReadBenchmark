@@ -79,5 +79,3 @@ library(ggplot2)
 ggplot(samples, aes(x=sample, y=value, fill=Category)) +
   geom_bar(stat = "identity") +
   facet_grid(cols = vars(Dataset))
-### TO DO:
-### rerun this script; check count number, especially intergenic; change plotting categories
