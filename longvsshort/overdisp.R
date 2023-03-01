@@ -5,10 +5,10 @@ library(viridis)
 DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
 
 s <- catchSalmon(file.path(DIR, "ONT/salmon_bs", list.files(file.path(DIR, "/ONT/salmon_bs"))))
-dge <- DGEList(counts=s$counts/s$annotation$Overdispersion, genes=s$annotation)
+dge <- DGEList(counts=s$counts, genes=s$annotation)
 
 s.short <- catchSalmon(file.path(DIR, "illumina/salmon_bs", list.files(file.path(DIR, "illumina/salmon_bs"))))
-dge.short <- DGEList(counts = s.short$counts/s.short$annotation$Overdispersion, genes = s.short$annotation)
+dge.short <- DGEList(counts = s.short$counts, genes = s.short$annotation)
 
 # long vs short scatter plot ----
 m <- match(rownames(dge.short), rownames(dge))
