@@ -10,9 +10,9 @@ library(viridis)
 DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
 # load DGE lists
 # s <- catchSalmon(file.path(DIR, "ONT/salmon_bs", list.files(file.path(DIR, "/ONT/salmon_bs"))))
-# dge <- DGEList(counts=s$counts/s$annotation$Overdispersion, genes=s$annotation)
+# dge <- DGEList(counts=s$counts, genes=s$annotation)
 # s.short <- catchSalmon(file.path(DIR, "illumina/salmon_bs", list.files(file.path(DIR, "illumina/salmon_bs"))))
-# dge.short <- DGEList(counts = s.short$counts/s.short$annotation$Overdispersion, genes = s.short$annotation)
+# dge.short <- DGEList(counts = s.short$counts, genes = s.short$annotation)
 
 dge <- readRDS("dge.rds")
 dge.short <- readRDS("dge.short.rds")
@@ -26,7 +26,7 @@ read.stat <- data.frame(
                31073747, 34059318, 27974052, 31329213, 134000622, 30331521),
   mapped_reads = c(41054341, 35939259, 36437436, 46878103, 40629774, 36962945,
                    28999906, 31495290, 26126733, 29046678, 125097661, 26408681),
-  read_counts = c(dge$samples$lib.size[1:6], dge.short$samples$lib.size[1:6]),
+  # read_counts = c(dge$samples$lib.size[1:6], dge.short$samples$lib.size[1:6]),
   dataset = rep(c("ONT", "Illumina"), c(6,6))
 )
 
@@ -36,7 +36,7 @@ pdf("plots/readNum.pdf", height = 6, width = 6)
 ggplot(read.stat, aes(x=variable, y=value, fill=sample, label = value))+
   geom_bar(stat="identity") +
   facet_grid(cols=vars(dataset)) +
-  geom_text(aes(label = label_number_si()(value)), size = 4, colour = "white", position = position_stack(vjust = 0.5)) +
+  geom_text(aes(label = label_number_si()(value)), size = 3, colour = "white", position = position_stack(vjust = 0.5)) +
   ylab("Number") +
   xlab("Category") +
   theme_bw() +
