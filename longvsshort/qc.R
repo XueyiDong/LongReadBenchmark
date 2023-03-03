@@ -173,6 +173,27 @@ ggplot(biotype_sum.all, aes(x=sample, y=total_count, fill=factor(biotype, levels
   labs(fill = "Transcript biotype", x = "Sample", y = "Proportion of count")
 dev.off()
 
+# count distribution by biotype-----
+dge.human$genes$counts <- rowSums(dge.human$counts[, 1:6])
+dge.short.human$genes$counts <- rowSums(dge.short.human$counts[, 1:6])
+dge.human$genes$dataset <- "ONT"
+dge.short.human$genes$dataset <- "Illumina"
+genes <- rbind(dge.human$genes, dge.short.human$genes)
+genes <- genes[genes$counts>0, ]
+genes <- na.omit(genes)
+# library(ggridges)
+pdf("plots/biotype_count.pdf", height = 4, width = 8)
+ggplot(genes, aes(x=biotype, y=counts, fill=factor(biotype, levels=ord$Group.1))) +
+  geom_violin() +
+  geom_boxplot(width = 0.2, outlier.colour = NA, alpha = 0) +
+  facet_grid(cols = vars(dataset)) +
+  labs(x = "Transcript biotype", y = "Total count") +
+  scale_fill_brewer(palette = "Set3") +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16), legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
 # long vs short quantification------
 # long CPM vs short TPM
 # filter
