@@ -253,9 +253,11 @@ cpm <- cpm(dge.all[, 1:6])
 tpm <- tpm3(dge.all$counts[, 7:12], dge.short$genes$Length[match(rownames(dge.all), rownames(dge.short))])
 quant.all <- cbind(cpm, tpm)
 cormat2 <- cor(quant.all, method = "spearman")
+breaksList <- seq(0, 1, by = 0.01)
 pdf("plots/corHeatmap.pdf", height = 8, width = 9)
 pheatmap(cormat2,
-         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+         breaks = breaksList,
          cluster_cols = FALSE,
          cluster_rows = FALSE,
          show_colnames = FALSE,
@@ -281,7 +283,8 @@ quant.all.sel <- cbind(cpm.sel[match(rownames(tpm.sel), rownames(cpm.sel)), ], t
 cormat3 <- cor(quant.all.sel, method = "spearman")
 pdf("plots/corHeatmapCoding.pdf", height = 7, width = 8)
 pheatmap(cormat3,
-         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+         breaks = breaksList,
          cluster_cols = FALSE,
          cluster_rows = FALSE,
          show_colnames = FALSE,
@@ -307,7 +310,8 @@ quant.all.sel <- cbind(cpm.sel[match(rownames(tpm.sel), rownames(cpm.sel)), ], t
 cormat3 <- cor(quant.all.sel, method = "spearman")
 pdf("plots/corHeatmapOther.pdf", height = 8, width = 9)
 pheatmap(cormat3,
-         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+         breaks = breaksList,
          cluster_cols = FALSE,
          cluster_rows = FALSE,
          show_colnames = FALSE,
@@ -327,7 +331,8 @@ dev.off()
 cormat4 <- cor(quant.all[grepl("^R", rownames(quant.all)),], method = "spearman")
 pdf("plots/corHeatmapSequin.pdf", height = 8, width = 9)
 pheatmap(cormat4,
-         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+         breaks = breaksList,
          cluster_cols = FALSE,
          cluster_rows = FALSE,
          show_colnames = FALSE,
@@ -348,7 +353,8 @@ dev.off()
 cormat.tx1 <- cor(quant.all[dge.all$genes$nTranscript==1,], method = "spearman")
 pdf("plots/corHeatmaptx1.pdf", height = 8, width = 9)
 pheatmap(cormat.tx1,
-         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+         breaks = breaksList,
          cluster_cols = FALSE,
          cluster_rows = FALSE,
          show_colnames = FALSE,
@@ -368,8 +374,8 @@ dev.off()
 cormat.tx2_5 <- cor(quant.all[dge.all$genes$nTranscript>=2 & dge.all$genes$nTranscript <= 5,], method = "spearman")
 pdf("plots/corHeatmaptx2_5.pdf", height = 8, width = 9)
 pheatmap(cormat.tx2_5,
-         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
-         cluster_cols = FALSE,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+         breaks = breaksList,
          cluster_rows = FALSE,
          show_colnames = FALSE,
          show_rownames = FALSE,
@@ -388,7 +394,8 @@ dev.off()
 cormat.tx5 <- cor(quant.all[dge.all$genes$nTranscript > 5,], method = "spearman")
 pdf("plots/corHeatmaptx5.pdf", height = 8, width = 9)
 pheatmap(cormat.tx5,
-         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(100),
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+         breaks = breaksList,
          cluster_cols = FALSE,
          cluster_rows = FALSE,
          show_colnames = FALSE,
