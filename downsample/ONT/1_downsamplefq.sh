@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --time=4:00:00
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=50G
+#SBATCH --mem=80G
 #SBATCH --job-name=downsample
 #SBATCH --mail-user=dong.x@wehi.edu.au
 #SBATCH --mail-type=END,FAIL

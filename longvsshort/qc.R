@@ -369,11 +369,53 @@ pheatmap(cormat4,
 )
 dev.off()
 
-## by number of tx-------
-### 1----
-cormat.tx1 <- cor(quant.all[dge.all$genes$nTranscript==1,], method = "spearman")
-pdf("plots/corHeatmaptx1.pdf", height = 8, width = 9)
-pheatmap(cormat.tx1,
+### by expression quantile -----
+# High: top 1/3. Median: 1/3~2/3. Low: bottom 1/3.
+#### low ----
+cutoffs = quantile(rowSums(quant.all), probs = c(1/3, 2/3))
+cormat.low <- cor(quant.all[rowSums(quant.all) <= cutoffs[1], ], method = "spearman")
+pdf("plots/corHeatmapLowExpr.pdf", height = 8, width = 9)
+pheatmap(cormat.low,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+         breaks = breaksList,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE,
+         number_color = "black",
+         fontsize = 16,
+         fontsize_number = 12
+)
+dev.off()
+#### Median ----
+cormat.med <- cor(quant.all[rowSums(quant.all) > cutoffs[1] & rowSums(quant.all) <= cutoffs[2], ], method = "spearman")
+pdf("plots/corHeatmapMedExpr.pdf", height = 8, width = 9)
+pheatmap(cormat.med,
+         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+         breaks = breaksList,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE,
+         number_color = "black",
+         fontsize = 16,
+         fontsize_number = 12
+)
+dev.off()
+#### High ----
+cormat.high <- cor(quant.all[rowSums(quant.all) > cutoffs[2], ], method = "spearman")
+pdf("plots/corHeatmapHighExpr.pdf", height = 8, width = 9)
+pheatmap(cormat.high,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
          breaks = breaksList,
          cluster_cols = FALSE,
@@ -391,46 +433,68 @@ pheatmap(cormat.tx1,
 )
 dev.off()
 
-### 2 - 5----
-cormat.tx2_5 <- cor(quant.all[dge.all$genes$nTranscript>=2 & dge.all$genes$nTranscript <= 5,], method = "spearman")
-pdf("plots/corHeatmaptx2_5.pdf", height = 8, width = 9)
-pheatmap(cormat.tx2_5,
-         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
-         breaks = breaksList,
-         cluster_rows = FALSE,
-         show_colnames = FALSE,
-         show_rownames = FALSE,
-         annotation_col = anno,
-         annotation_row = anno,
-         annotation_colors = anno_colours,
-         scale = "none",
-         display_numbers = TRUE,
-         number_color = "black",
-         fontsize = 16,
-         fontsize_number = 12
-)
-dev.off()
-
-### > 5----
-cormat.tx5 <- cor(quant.all[dge.all$genes$nTranscript > 5,], method = "spearman")
-pdf("plots/corHeatmaptx5.pdf", height = 8, width = 9)
-pheatmap(cormat.tx5,
-         color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
-         breaks = breaksList,
-         cluster_cols = FALSE,
-         cluster_rows = FALSE,
-         show_colnames = FALSE,
-         show_rownames = FALSE,
-         annotation_col = anno,
-         annotation_row = anno,
-         annotation_colors = anno_colours,
-         scale = "none",
-         display_numbers = TRUE,
-         number_color = "black",
-         fontsize = 16,
-         fontsize_number = 12
-)
-dev.off()
+# ## by number of tx-------
+# ### 1----
+# cormat.tx1 <- cor(quant.all[dge.all$genes$nTranscript==1,], method = "spearman")
+# pdf("plots/corHeatmaptx1.pdf", height = 8, width = 9)
+# pheatmap(cormat.tx1,
+#          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+#          breaks = breaksList,
+#          cluster_cols = FALSE,
+#          cluster_rows = FALSE,
+#          show_colnames = FALSE,
+#          show_rownames = FALSE,
+#          annotation_col = anno,
+#          annotation_row = anno,
+#          annotation_colors = anno_colours,
+#          scale = "none",
+#          display_numbers = TRUE,
+#          number_color = "black",
+#          fontsize = 16,
+#          fontsize_number = 12
+# )
+# dev.off()
+# 
+# ### 2 - 5----
+# cormat.tx2_5 <- cor(quant.all[dge.all$genes$nTranscript>=2 & dge.all$genes$nTranscript <= 5,], method = "spearman")
+# pdf("plots/corHeatmaptx2_5.pdf", height = 8, width = 9)
+# pheatmap(cormat.tx2_5,
+#          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+#          breaks = breaksList,
+#          cluster_rows = FALSE,
+#          show_colnames = FALSE,
+#          show_rownames = FALSE,
+#          annotation_col = anno,
+#          annotation_row = anno,
+#          annotation_colors = anno_colours,
+#          scale = "none",
+#          display_numbers = TRUE,
+#          number_color = "black",
+#          fontsize = 16,
+#          fontsize_number = 12
+# )
+# dev.off()
+# 
+# ### > 5----
+# cormat.tx5 <- cor(quant.all[dge.all$genes$nTranscript > 5,], method = "spearman")
+# pdf("plots/corHeatmaptx5.pdf", height = 8, width = 9)
+# pheatmap(cormat.tx5,
+#          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
+#          breaks = breaksList,
+#          cluster_cols = FALSE,
+#          cluster_rows = FALSE,
+#          show_colnames = FALSE,
+#          show_rownames = FALSE,
+#          annotation_col = anno,
+#          annotation_row = anno,
+#          annotation_colors = anno_colours,
+#          scale = "none",
+#          display_numbers = TRUE,
+#          number_color = "black",
+#          fontsize = 16,
+#          fontsize_number = 12
+# )
+# dev.off()
 
 # length bias plot--------------------
 dge.pure$genes$totalCount <- rowSums(dge.pure$counts)
