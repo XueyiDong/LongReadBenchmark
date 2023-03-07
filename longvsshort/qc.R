@@ -243,8 +243,16 @@ m <- match(rownames(dge.short), rownames(dge))
 table(is.na(m))
 dge.all <- DGEList(counts = cbind(dge$counts[m, 1:6], dge.short$counts[, 1:6]))
 dge.all$samples$group <- rep(c("H1975_long", "HCC827_long", "H1975_short", "HCC827_short"), c(3, 3, 3, 3))
+# check filtering strategies
 filt <- filterByExpr(dge.all)
-dge.all <- dge.all[filt,]
+table(filt)
+filt.long <- filterByExpr(dge[, 1:6], group = rep(c("H1975", "HCC827"), each = 3))
+filt.short <- filterByExpr(dge.short[, 1:6], group = rep(c("H1975", "HCC827"), each = 3))
+filt2 <- filt.long[m] | filt.short
+table(filt2)
+table(filt == filt2)
+# use the union of transcripts passed filtering in long and short read data
+dge.all <- dge.all[filt2,]
 dge.all$genes <- dge.short$genes[match(rownames(dge.all), rownames(dge.short)),]
 cormat <- cor(dge.all$counts, method = "spearman")
 library(pheatmap)
@@ -371,9 +379,12 @@ dev.off()
 
 ### by expression quantile -----
 # High: top 1/3. Median: 1/3~2/3. Low: bottom 1/3.
+# Use total count rather than total TPM to calculate cutoffs.
 #### low ----
-cutoffs = quantile(rowSums(quant.all), probs = c(1/3, 2/3))
-cormat.low <- cor(quant.all[rowSums(quant.all) <= cutoffs[1], ], method = "spearman")
+cutoffs = quantile(rowSums(dge.all$counts), probs = c(1/3, 2/3))
+summary(rowSums(dge.all$counts))
+cutoffs
+cormat.low <- cor(quant.all[rowSums(dge.all$counts) <= cutoffs[1], ], method = "spearman")
 pdf("plots/corHeatmapLowExpr.pdf", height = 8, width = 9)
 pheatmap(cormat.low,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
@@ -393,7 +404,7 @@ pheatmap(cormat.low,
 )
 dev.off()
 #### Median ----
-cormat.med <- cor(quant.all[rowSums(quant.all) > cutoffs[1] & rowSums(quant.all) <= cutoffs[2], ], method = "spearman")
+cormat.med <- cor(quant.all[rowSums(dge.all$counts) > cutoffs[1] & rowSums(quant.all) <= cutoffs[2], ], method = "spearman")
 pdf("plots/corHeatmapMedExpr.pdf", height = 8, width = 9)
 pheatmap(cormat.med,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
@@ -413,7 +424,7 @@ pheatmap(cormat.med,
 )
 dev.off()
 #### High ----
-cormat.high <- cor(quant.all[rowSums(quant.all) > cutoffs[2], ], method = "spearman")
+cormat.high <- cor(quant.all[rowSums(dge.all$counts) > cutoffs[2], ], method = "spearman")
 pdf("plots/corHeatmapHighExpr.pdf", height = 8, width = 9)
 pheatmap(cormat.high,
          color = colorRampPalette(brewer.pal(n = 7, name = "PuBuGn"))(length(breaksList)),
@@ -432,8 +443,36 @@ pheatmap(cormat.high,
          fontsize_number = 12
 )
 dev.off()
-
-# ## by number of tx-------
+#### the formation of biotype in each expression category ----
+biotype.expr <- data.frame(
+ transcript = names(biotype),
+ biotype = biotype
+)
+biotype.expr$biotype[grepl("pseudogene$", biotype.expr$biotype)] <- "pseudogene"
+biotype.expr$biotype[grepl("^TR", biotype.expr$biotype)] <- "IG_or_TR_gene"
+biotype.expr$biotype[grepl("^IG", biotype.expr$biotype)] <- "IG_or_TR_gene"
+biotype.expr$biotype[biotype.expr$biotype %in% c("miRNA", "misc_RNA", 
+                                                                   "piRNA", "rRNA", "siRNA",
+                                                                   "snRNA", "snoRNA", "scaRNA",
+                                                                   "tRNA", "vault_RNA", "scRNA",
+                                                                   "sRNA", "Mt_rRNA", "Mt_tRNA",
+                                                                   "ribozyme"
+)] <- "ncRNA"
+biotype.expr$total_count <- rowSums(dge.all$counts)[match(biotype.expr$transcript, substr(rownames(dge.all), 1, 15))]
+biotype.expr <- na.omit(biotype.expr)
+biotype.expr$expression_level[biotype.expr$total_count <= cutoffs[1]] <- "low"
+biotype.expr$expression_level[biotype.expr$total_count > cutoffs[1] & biotype.expr$total_count <= cutoffs[2]] <- "medium"
+biotype.expr$expression_level[biotype.expr$total_count > cutoffs[2]] <- "high"
+biotype.expr$expression_level <- factor(biotype.expr$expression_level, levels = c("low", "medium", "high"))
+pdf("plots/biotypeByExprGrp.pdf", height = 4, width = 8)
+ggplot(biotype.expr, aes(fill = factor(biotype, levels=ord$Group.1), x = expression_level)) +
+  geom_bar(position = "stack") +
+  scale_fill_brewer(palette = "Set3") +
+  labs(x = "Expression level group", y = "Number of transcripts", fill = "Transcript biotype") +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+dev.off()
+### by number of tx-------
 # ### 1----
 # cormat.tx1 <- cor(quant.all[dge.all$genes$nTranscript==1,], method = "spearman")
 # pdf("plots/corHeatmaptx1.pdf", height = 8, width = 9)
