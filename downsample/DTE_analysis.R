@@ -31,6 +31,7 @@ samples_ONT$group[samples_ONT$sample %in% paste0("barcode0", 1:3)] <- "H1975"
 samples_ONT$group[samples_ONT$sample %in% paste0("barcode0", 4:6)] <- "HCC827"
 # samples_ONT$group[grep("H", colnames(counts_ONT_pure))] <- strsplit2(colnames(counts_ONT_pure)[grep("H", colnames(counts_ONT_pure))], "\\-")[,1]
 # rownames(samples_ONT) <- colnames(counts_ONT_pure)
+samples_ONT$libsize[nchar(samples_ONT$libsize) == 2] <- paste0("0", samples_ONT$libsize[nchar(samples_ONT$libsize) == 2])
 # Organize Illumina sample information
 samples_Illumina <- as.data.frame(strsplit2(colnames(counts_Illumina_pure), "_"))
 samples_Illumina[!(samples_Illumina[, 4] == ""), 3] <- samples_Illumina[!(samples_Illumina[, 4] == ""), 4]
@@ -38,6 +39,7 @@ samples_Illumina <- samples_Illumina[, c(1, 3)]
 colnames(samples_Illumina) <- c("sample", "libsize")
 samples_Illumina$group <- strsplit2(samples_Illumina$sample, "-")[,1]
 rownames(samples_Illumina) <- colnames(counts_Illumina_pure)
+samples_Illumina$libsize[nchar(samples_Illumina$libsize) == 2] <- paste0("0", samples_Illumina$libsize[nchar(samples_Illumina$libsize) == 2])
 # For each library size: make a DGEList object, preprocess data, separate human and sequins transcripts, do DE analysis H1975 vs HCC827
 # make ONT DGEList and filter out lowly expressed transcripts for each library size
 x_ONT <- lapply(unique(samples_ONT$libsize), function(x){
@@ -59,6 +61,7 @@ x_Illumina <- lapply(unique(samples_Illumina$libsize), function(x){
 names(x_Illumina) <- paste0("Illumina_", unique(samples_Illumina$libsize))
 # combine lists
 x <- append(x_ONT, x_Illumina)
+x <- x[order(names(x))]
 # separate human and sequin transcripts and normalize
 x_human <- lapply(x, function(x){
   human <- grepl("^ENST", rownames(x))
@@ -75,7 +78,7 @@ pdf("plots/MDS_human_all.pdf", height = 4, width = 15)
 par(mfrow = c(2, 7))
 for(i in 1:length(x_human)){
   cpm.human <- cpm(x_human[[i]], log = TRUE)
-  plotMDS(cpm.human, main = names(x_human)[[i]],
+  plotMDS(cpm.human, main = names(x_human)[i],
           pch = 1,
           col = rep(c("red", "blue"), each = 3))
 }
@@ -85,25 +88,49 @@ pdf("plots/MDS_sequin_all.pdf", height = 4, width = 15)
 par(mfrow = c(2, 7))
 for(i in 1:length(x_sequin)){
   cpm.sequin <- cpm(x_sequin[[i]], log = TRUE)
-  plotMDS(cpm.sequin, main = names(x_sequin)[[i]],
+  plotMDS(cpm.sequin, main = names(x_sequin)[i],
           pch = 1,
           col = rep(c("red", "blue"),each = 3))
 }
 dev.off()
-# DE analysis. We keep the topTags output.
-tt_human <- lapply(x_human, function(x){
+# DE analysis using edgeR quasiLikelihood
+qlres_human <- lapply(x_human, function(x){
   design <- model.matrix(~x$samples$group)
   x <- estimateDisp(x, design)
   qlfit <- glmQLFit(x, design)
   res <- glmQLFTest(qlfit)
-  return(as.data.frame(topTags(res, n = Inf)))
+  return(res)
 })
-tt_sequin<- lapply(x_sequin, function(x){
+qlres_sequin <- lapply(x_sequin, function(x){
   design <- model.matrix(~x$samples$group)
   x <- estimateDisp(x, design)
   qlfit <- glmQLFit(x, design)
   res <- glmQLFTest(qlfit)
-  return(as.data.frame(topTags(res, n = Inf)))
+  return(res)
+})
+# MD plots
+pdf("plots/MD_human.pdf", height = 4, width = 15)
+par(mfrow = c(2, 7))
+for(i in 1:length(qlres_human)){
+  plotMD(qlres_human[[i]], status = decideTestsDGE(qlres_human[[i]]),
+         values = c(1, -1), col = c("red", "blue"),
+         main = names(qlres_human)[i])
+}
+dev.off()
+pdf("plots/MD_sequin.pdf", height = 4, width = 15)
+par(mfrow = c(2, 7))
+for(i in 1:length(qlres_sequin)){
+  plotMD(qlres_sequin[[i]], status = decideTestsDGE(qlres_sequin[[i]]),
+         values = c(1, -1), col = c("red", "blue"),
+         main = names(qlres_sequin)[i])
+}
+dev.off()
+# topTags output
+tt_human <- lapply(qlres_human, function(x){
+  return(as.data.frame(topTags(x, n = Inf)))
+})
+tt_sequin<- lapply(qlres_sequin, function(x){
+  return(as.data.frame(topTags(x, n = Inf)))
 })
 # extract DE transcripts
 DE_human <- lapply(tt_human, function(x){
@@ -119,7 +146,7 @@ res_human <- data.frame(
   dataset = strsplit2(names(power_human), "_")[, 1],
   libsize = strsplit2(names(power_human), "_")[, 2]
 )
-res_human$libsize = factor(res_human$libsize, levels = c(paste0(c(1, 3, 5, 10, 15, 20), "M"), "full"))
+res_human$libsize = factor(res_human$libsize, levels = c(paste0(c("01", "03", "05", "10", "15", "20"), "M"), "full"))
 pdf("plots/power_human.pdf", height = 5, width = 8)
 ggplot(res_human, aes(x = libsize, y = power, colour = dataset, group = dataset)) +
   geom_line() +
@@ -136,7 +163,7 @@ res_sequin <- data.frame(
   dataset = strsplit2(names(power_sequin), "_")[, 1],
   libsize = strsplit2(names(power_sequin), "_")[, 2]
 )
-res_sequin$libsize <- factor(res_sequin$libsize, levels = c(paste0(c(1, 3, 5, 10, 15, 20), "M"), "full"))
+res_sequin$libsize <- factor(res_sequin$libsize, levels = c(paste0(c("01", "03", "05", "10", "15", "20"), "M"), "full"))
 pdf("plots/power_sequin.pdf", height = 5, width = 8)
 ggplot(res_sequin, aes(x = libsize, y = power, colour = dataset, group = dataset)) +
   geom_line() +
