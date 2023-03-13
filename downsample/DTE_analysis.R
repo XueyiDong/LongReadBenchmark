@@ -3,15 +3,16 @@
 
 library(edgeR)
 library(limma)
+library(ggplot2)
+library(UpSetR)
 # Read in ONT counts
 counts_ONT <- readRDS("./ONT/counts.RDS")
 counts_ONT_full <- readRDS("../ONT/counts_ONT_full.RDS")
 names(counts_ONT_full) <- paste0(names(counts_ONT_full), ".full")
 # check whether row names match
 all(rownames(counts_ONT) == rownames(counts_ONT_full))
-# doesn't match. need to match row names before merging
-m <- match(rownames(counts_ONT_full), rownames(counts_ONT))
-counts_ONT <- cbind(counts_ONT[m, ], counts_ONT_full)
+# All match. combine counts from full and downsampled samples
+counts_ONT <- cbind(counts_ONT, counts_ONT_full)
 # Read in Illumina counts
 counts_Illumina <- readRDS("./Illumina/counts.RDS")
 counts_Illumina_full <- readRDS("../illumina/counts_Illumina_full.RDS")
@@ -28,8 +29,8 @@ samples_ONT<- as.data.frame(strsplit2(colnames(counts_ONT_pure), "\\."))
 colnames(samples_ONT) <- c("sample", "libsize")
 samples_ONT$group[samples_ONT$sample %in% paste0("barcode0", 1:3)] <- "H1975"
 samples_ONT$group[samples_ONT$sample %in% paste0("barcode0", 4:6)] <- "HCC827"
-samples_ONT$group[grep("H", colnames(counts_ONT_pure))] <- strsplit2(colnames(counts_ONT_pure)[grep("H", colnames(counts_ONT_pure))], "\\-")[,1]
-rownames(samples_ONT) <- colnames(counts_ONT_pure)
+# samples_ONT$group[grep("H", colnames(counts_ONT_pure))] <- strsplit2(colnames(counts_ONT_pure)[grep("H", colnames(counts_ONT_pure))], "\\-")[,1]
+# rownames(samples_ONT) <- colnames(counts_ONT_pure)
 # Organize Illumina sample information
 samples_Illumina <- as.data.frame(strsplit2(colnames(counts_Illumina_pure), "_"))
 samples_Illumina[!(samples_Illumina[, 4] == ""), 3] <- samples_Illumina[!(samples_Illumina[, 4] == ""), 4]
@@ -111,3 +112,141 @@ DE_human <- lapply(tt_human, function(x){
 DE_sequin <- lapply(tt_sequin, function(x){
   rownames(x)[x$FDR < 0.05]
 })
+# Plot power for human
+power_human <- sapply(DE_human, length, simplify = TRUE)
+res_human <- data.frame(
+  power = power_human,
+  dataset = strsplit2(names(power_human), "_")[, 1],
+  libsize = strsplit2(names(power_human), "_")[, 2]
+)
+res_human$libsize = factor(res_human$libsize, levels = c(paste0(c(1, 3, 5, 10, 15, 20), "M"), "full"))
+pdf("plots/power_human.pdf", height = 5, width = 8)
+ggplot(res_human, aes(x = libsize, y = power, colour = dataset, group = dataset)) +
+  geom_line() +
+  geom_point() +
+  scale_colour_manual(values = c("#FCB344", "#438DAC")) +
+  labs(x = "Number of reads", y = "Number of DE transcripts", colour = "Dataset") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
+# Plot power for sequins
+power_sequin <- sapply(DE_sequin, length, simplify = TRUE)
+res_sequin <- data.frame(
+  power = power_sequin,
+  dataset = strsplit2(names(power_sequin), "_")[, 1],
+  libsize = strsplit2(names(power_sequin), "_")[, 2]
+)
+res_sequin$libsize <- factor(res_sequin$libsize, levels = c(paste0(c(1, 3, 5, 10, 15, 20), "M"), "full"))
+pdf("plots/power_sequin.pdf", height = 5, width = 8)
+ggplot(res_sequin, aes(x = libsize, y = power, colour = dataset, group = dataset)) +
+  geom_line() +
+  geom_point() +
+  scale_colour_manual(values = c("#FCB344", "#438DAC")) +
+  labs(x = "Number of reads", y = "Number of DE transcripts", colour = "Dataset") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
+# upset plot
+pdf("plots/upset_human_ONT.pdf", height = 5, width = 12)
+upset(fromList(DE_human[1:7]), nsets = 7, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5))
+dev.off()
+pdf("plots/upset_human_Illumina.pdf", height = 5, width = 12)
+upset(fromList(DE_human[8:14]), nsets = 7, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5))
+dev.off()
+pdf("plots/upset_human.pdf", height = 7, width = 15)
+upset(fromList(DE_human), nsets = 14, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5))
+dev.off()
+pdf("plots/upset_sequin_ONT.pdf", height = 5, width = 12)
+upset(fromList(DE_sequin[1:7]), nsets = 7, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5))
+dev.off()
+pdf("plots/upset_sequin_Illumina.pdf", height = 5, width = 12)
+upset(fromList(DE_sequin[8:14]), nsets = 7, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5))
+dev.off()
+pdf("plots/upset_sequin.pdf", height = 7, width = 15)
+upset(fromList(DE_sequin), nsets = 14, order.by = "freq",
+      text.scale = c(1.5, 1.5, 1.5, 1.2, 1.2, 1.5))
+dev.off()
+# calculate and plot sequins FDR and TPR
+anno <- read.table("/wehisan/home/allstaff/d/dong.x/annotation/sequins/rnasequin_isoforms_2.4.tsv", header = TRUE, stringsAsFactors = FALSE)
+anno$logFC <- log(anno$MIX_B / anno$MIX_A)
+trueDE <- anno$NAME[anno$logFC != 0]
+FDR_sequin <- sapply(DE_sequin, function(x){
+  FD = sum(!(x %in% trueDE))
+  FD / length(x)
+})
+res_sequin$FDR <- FDR_sequin
+pdf("plots/FDR_sequin.pdf", height = 5, width = 8)
+ggplot(res_sequin, aes(x = libsize, y = FDR, colour = dataset, group = dataset)) +
+  geom_line() +
+  geom_point() +
+  scale_colour_manual(values = c("#FCB344", "#438DAC")) +
+  labs(x = "Number of reads", y = "False discovery rate", colour = "Dataset") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
+# sequins TPR
+TPR_sequin <- sapply(DE_sequin, function(x){
+  TP = sum(x %in% trueDE)
+  TP / length(trueDE)
+})
+res_sequin$TPR <- TPR_sequin
+pdf("plots/TPR_sequin.pdf", height = 5, width = 8)
+ggplot(res_sequin, aes(x = libsize, y = TPR, colour = dataset, group = dataset)) +
+  geom_line() +
+  geom_point() +
+  scale_colour_manual(values = c("#FCB344", "#438DAC")) +
+  labs(x = "Number of reads", y = "True positive rate", colour = "Dataset") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
+# calculate recovery method 1: treat the union of DE from full dataset as ground truth
+DE_full_all <- union(DE_human$Illumina_full, DE_human$ONT_full)
+recovery_human <- sapply(DE_human, function(x){
+  sum(x %in% DE_full_all) / length(DE_full_all)
+})
+res_human$recovery <- recovery_human
+pdf("plots/recovery_union_human.pdf", height = 5, width = 8)
+ggplot(res_human, aes(x = libsize, y = recovery, colour = dataset, group = dataset)) +
+  geom_line() +
+  geom_point() +
+  scale_colour_manual(values = c("#FCB344", "#438DAC")) +
+  labs(x = "Number of reads", y = "Recovery rate", colour = "Dataset") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
+# calculate recovery rate method 2: use the intersect of DE from full datasets as ground truth
+DE_full_intersect <- intersect(DE_human$Illumina_full, DE_human$ONT_full)
+recovery_human_2 <- sapply(DE_human, function(x){
+  sum(x %in% DE_full_intersect) / length(DE_full_intersect)
+})
+res_human$recovery2 <- recovery_human_2
+pdf("plots/recovery_intersect_human.pdf", height = 5, width = 8)
+ggplot(res_human, aes(x = libsize, y = recovery2, colour = dataset, group = dataset)) +
+  geom_line() +
+  geom_point() +
+  scale_colour_manual(values = c("#FCB344", "#438DAC")) +
+  labs(x = "Number of reads", y = "Recovery rate", colour = "Dataset") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
+# calculate recovery rate method 3: for each dataset, compare to the DE from its full dataset
+res_human$recovery3[res_human$dataset == "ONT"] <- sapply(DE_human[res_human$dataset == "ONT"], function(x){
+  sum(x %in% DE_human$ONT_full) / length(DE_human$ONT_full)
+})
+res_human$recovery3[res_human$dataset == "Illumina"] <- sapply(DE_human[res_human$dataset == "Illumina"], function(x){
+  sum(x %in% DE_human$Illumina_full) / length(DE_human$Illumina_full)
+})
+pdf("plots/recovery_by_dataset_human.pdf", height = 5, width = 8)
+ggplot(res_human, aes(x = libsize, y = recovery3, colour = dataset, group = dataset)) +
+  geom_line() +
+  geom_point() +
+  scale_colour_manual(values = c("#FCB344", "#438DAC")) +
+  labs(x = "Number of reads", y = "Recovery rate", colour = "Dataset") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
