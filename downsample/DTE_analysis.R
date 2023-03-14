@@ -79,6 +79,8 @@ par(mfrow = c(2, 7))
 for(i in 1:length(x_human)){
   cpm.human <- cpm(x_human[[i]], log = TRUE)
   plotMDS(cpm.human, main = names(x_human)[i],
+          xlim = c(-3.4, 3.4),
+          ylim = c(-3.6, 4.1),
           pch = 1,
           col = rep(c("red", "blue"), each = 3))
 }
@@ -89,6 +91,8 @@ par(mfrow = c(2, 7))
 for(i in 1:length(x_sequin)){
   cpm.sequin <- cpm(x_sequin[[i]], log = TRUE)
   plotMDS(cpm.sequin, main = names(x_sequin)[i],
+          xlim = c(-1.4, 1.4),
+          ylim = c(-0.36, 0.39),
           pch = 1,
           col = rep(c("red", "blue"),each = 3))
 }
@@ -274,6 +278,35 @@ ggplot(res_human, aes(x = libsize, y = recovery3, colour = dataset, group = data
   geom_point() +
   scale_colour_manual(values = c("#FCB344", "#438DAC")) +
   labs(x = "Number of reads", y = "Recovery rate", colour = "Dataset") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
+# calculate inconsistency and make bar plot of consistency and inconsistency
+res_human$consistent[res_human$dataset == "ONT"] <- sapply(DE_human[res_human$dataset == "ONT"], function(x){
+  sum(x %in% DE_human$ONT_full)
+})
+res_human$consistent[res_human$dataset == "Illumina"] <- sapply(DE_human[res_human$dataset == "Illumina"], function(x){
+  sum(x %in% DE_human$Illumina_full)
+})
+res_human$inconsistent[res_human$dataset == "ONT"] <- sapply(DE_human[res_human$dataset == "ONT"], function(x){
+  sum(!(x %in% DE_human$ONT_full))
+})
+res_human$inconsistent[res_human$dataset == "Illumina"] <- sapply(DE_human[res_human$dataset == "Illumina"], function(x){
+  sum(!(x %in% DE_human$Illumina_full))
+})
+res_human_DE <- data.table::melt(res_human,
+                                 id = c(2, 3), measure = c(7, 8))
+pdf("plots/DE_bar.pdf", height = 5, width = 10)
+ggplot(res_human_DE, aes(x = libsize, y = ifelse(variable=="consistent", value, -value), 
+                         fill = variable)) +
+  geom_bar(stat = "identity") +
+  facet_grid(cols = vars(dataset)) +
+  scale_y_continuous(labels = abs, expand = expansion(mult = c(0.1, 0.1))) +
+  labs(x = "Number of reads", y = "Number of DE transcripts",
+       fill = "Category") +
+  geom_text(aes(label = value,
+            vjust = ifelse(variable=="consistent", -0.5, 1))) +
+  scale_fill_manual(values = c("powderblue", "rosybrown2")) +
   theme_bw() +
   theme(text = element_text(size = 20))
 dev.off()
