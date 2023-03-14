@@ -281,7 +281,23 @@ ggplot(res_human, aes(x = libsize, y = recovery3, colour = dataset, group = data
   theme_bw() +
   theme(text = element_text(size = 20))
 dev.off()
-# calculate inconsistency and make bar plot of consistency and inconsistency
+# calculate inconsistency rate
+res_human$incocsistency_rate[res_human$dataset == "ONT"] <- sapply(DE_human[res_human$dataset == "ONT"], function(x){
+  sum(!(x %in% DE_human$ONT_full)) / length(x)
+})
+res_human$incocsistency_rate[res_human$dataset == "Illumina"] <- sapply(DE_human[res_human$dataset == "Illumina"], function(x){
+  sum(!(x %in% DE_human$Illumina_full)) / length(x)
+})
+pdf("plots/inconsistency_human.pdf", height = 5, width = 8)
+ggplot(res_human, aes(x = libsize, y = incocsistency_rate, colour = dataset, group = dataset)) +
+  geom_line() +
+  geom_point() +
+  scale_colour_manual(values = c("#FCB344", "#438DAC")) +
+  labs(x = "Number of reads", y = "Inconsistency rate", colour = "Dataset") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
+# make bar plot of consistency and inconsistency
 res_human$consistent[res_human$dataset == "ONT"] <- sapply(DE_human[res_human$dataset == "ONT"], function(x){
   sum(x %in% DE_human$ONT_full)
 })
@@ -295,7 +311,7 @@ res_human$inconsistent[res_human$dataset == "Illumina"] <- sapply(DE_human[res_h
   sum(!(x %in% DE_human$Illumina_full))
 })
 res_human_DE <- data.table::melt(res_human,
-                                 id = c(2, 3), measure = c(7, 8))
+                                 id = c(2, 3), measure = c(8, 9))
 pdf("plots/DE_bar.pdf", height = 5, width = 10)
 ggplot(res_human_DE, aes(x = libsize, y = ifelse(variable=="consistent", value, -value), 
                          fill = variable)) +
@@ -307,6 +323,48 @@ ggplot(res_human_DE, aes(x = libsize, y = ifelse(variable=="consistent", value, 
   geom_text(aes(label = value,
             vjust = ifelse(variable=="consistent", -0.5, 1))) +
   scale_fill_manual(values = c("powderblue", "rosybrown2")) +
+  theme_bw() +
+  theme(text = element_text(size = 18))
+dev.off()
+# Calculate and plot number of inconsistent DE in top N DE
+FD_human_Illumina <- lapply(tt_human[which(res_human$dataset == "Illumina")], function(x){
+  sapply(1:sum(x$FDR < 0.05), function(y){
+    sum(!(rownames(x)[1:y] %in% DE_human$Illumina_full))
+  }, simplify = TRUE)
+})
+FD_human_ONT <- lapply(tt_human[which(res_human$dataset == "ONT")], function(x){
+  sapply(1:sum(x$FDR < 0.05), function(y){
+    sum(!(rownames(x)[1:y] %in% DE_human$ONT_full))
+  }, simplify = TRUE)
+})
+FD <-append(FD_human_Illumina, FD_human_ONT)
+FD <- lapply(FD, function(x){
+  data.frame(
+    topN = 1:length(x),
+    inconsistant = x
+  )
+})
+for(i in 1:length(FD)){
+  FD[[i]]$dataset = names(FD)[i]
+}
+FD <- Reduce(rbind, FD)
+FD$libsize <- strsplit2(FD$dataset, "_")[, 2]
+FD$data_type <- strsplit2(FD$dataset, "_")[, 1]
+pdf("plots/inconsistent_curve.pdf", height = 5, width = 8)
+ggplot(FD[FD$libsize != "full",], aes(x = topN, y = inconsistant, colour = dataset, group=dataset)) +
+  geom_line() +
+  labs(x = "Transcripts chosen", y = "Inconsistent DE transcripts") +
+  scale_colour_manual(values = c("#FCDB6D", "#E8BE5A", "#D4A147", "#C18434", "#AD6721", "#994A0E",
+                                          "#BFD6DF", "#9BBBC9", "#76A1B3", "#51869C", "#2D6C86", "#085170")) +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+dev.off()
+pdf("plots/inconsistent_curve_restricted.pdf", height = 5, width = 8)
+ggplot(FD[FD$libsize != "full" & FD$topN <= min(power_human),], aes(x = topN, y = inconsistant, colour = dataset, group=dataset)) +
+  geom_line() +
+  labs(x = "Transcripts chosen", y = "Inconsistent DE transcripts") +
+  scale_colour_manual(values = c("#FCDB6D", "#E8BE5A", "#D4A147", "#C18434", "#AD6721", "#994A0E",
+                                          "#BFD6DF", "#9BBBC9", "#76A1B3", "#51869C", "#2D6C86", "#085170")) +
   theme_bw() +
   theme(text = element_text(size = 20))
 dev.off()
