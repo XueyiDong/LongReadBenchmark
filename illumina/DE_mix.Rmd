@@ -724,8 +724,11 @@ annoData$exp <-annoData$MIX_A
 annoData$exp[annoData$variable %in% c("HCC827-1_S12", "HCC827-2_S13", "HCC827-5-repeat_S14")] <- annoData$MIX_B[annoData$variable %in% c("HCC827-1_S12", "HCC827-2_S13", "HCC827-5-repeat_S14")]
 colnames(annoData)[5] <- "sample"
 cpmablm <- lm(log(annoData$exp)~annoData$value)
-eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2,
-                 list(r2 = format(summary(cpmablm)$r.squared, digits = 3)))))
+conf <- confintr::ci_rsquared(cpmablm)
+eq <- as.character(as.expression(substitute(italic(r)^2~"="~r2~"("*int1*"-"*int2*")",
+                 list(r2 = format(summary(cpmablm)$r.squared, digits = 3),
+                      int1 = format(conf$interval[1], digits = 3),
+                      int2 = format(conf$interval[2], digits = 3)))))
 library(scales)
 library(MetBrewer)
 pdf(file.path(OUT, "sequinCPMvsAbundance.pdf"), height = 5, width = 8)
@@ -742,7 +745,7 @@ p <- ggplot(na.omit(annoData), aes(x=exp, y=value, colour=sample)) +
                         c(1, 2, 3, 1, 2, 5),
                         sep = "-"), )+
   theme(text = element_text(size = 20)) +
-  annotate(geom="text", x = 0.1, y = 11, label = eq, parse = TRUE, size = 6) 
+  annotate(geom="text", x = 0.5, y = 11, label = eq, parse = TRUE, size = 6) 
   # annotate(geom="text", x=300, y=160000, label=paste0("Pearson's r=", round(cor(annoData$exp, annoData$value, use = "complete.obs"), 2)), size=8) 
 plot(p)
 dev.off()
