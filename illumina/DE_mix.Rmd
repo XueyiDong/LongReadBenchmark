@@ -750,6 +750,32 @@ p <- ggplot(na.omit(annoData), aes(x=exp, y=value, colour=sample)) +
 plot(p)
 dev.off()
 saveRDS(p, "sequinCPMvsAbundancePlot.RDS")
+
+# remove outlier sample
+cpmablm2 <- lm(log(annoData$exp[annoData$sample != "HCC827-2_S13_merged"])~annoData$value[annoData$sample != "HCC827-2_S13_merged"])
+conf2 <- confintr::ci_rsquared(cpmablm2)
+eq2 <- as.character(as.expression(substitute(italic(r)^2~"="~r2~"("*int1*"-"*int2*")",
+                 list(r2 = format(summary(cpmablm2)$r.squared, digits = 3),
+                      int1 = format(conf2$interval[1], digits = 3),
+                      int2 = format(conf2$interval[2], digits = 3)))))
+pdf(file.path(OUT, "sequinCPMvsAbundanceNoOutlier.pdf"), height = 5, width = 8)
+ggplot(na.omit(annoData[annoData$sample != "HCC827-2_S13_merged", ]), aes(x=exp, y=value, colour=sample)) +
+  geom_point() +
+  theme_bw() +
+  scale_x_continuous(trans = "log10", labels = comma) +
+  # scale_y_continuous(trans = "log10", labels=comma, limits=c(0.5, 180000)) +
+  labs(x = "Expected abundance", y = "log TPM") +
+  scale_colour_manual(values = met.brewer("Troy", 6), 
+                      name = "Sample", 
+                      labels = paste(
+                        rep(c("H1975", "HCC827"), c(3,2)),
+                        c(1, 2, 3, 1, 5),
+                        sep = "-"),
+                      )+
+  theme(text = element_text(size = 20)) +
+  annotate(geom="text", x = 0.5, y = 11, label = eq2, parse = TRUE, size = 6) 
+  # annotate(geom="text", x=300, y=160000, label=paste0("Pearson's r=", round(cor(annoData$exp, annoData$value, use = "complete.obs"), 2)), size=8) 
+dev.off()
 ```
 
 ## Session information
