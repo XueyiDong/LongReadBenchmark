@@ -765,11 +765,11 @@ plot.bcv.long.sep <-
                 colour = "Trend", linetype = "Sequin")) +
   scale_colour_manual(name = "BCV",
                       breaks = c("Common", "Trend", "Tagwise_sequins"),
-                      values = c("Common" = "red", "Trend" = "blue", "Tagwise_sequins" = "green")) +
+                      values = c("Common" = "red", "Trend" = "blue", "Tagwise_sequins" = "seagreen")) +
   scale_linetype_manual(name = "Source",
                         breaks = c("Human", "Sequin"),
                         values = c("Human" = 1, "Sequin" = 2)) +
-  scale_y_continuous(limits = c(0, 0.75)) +
+  scale_y_continuous(limits = range(c(sqrt(dispersion.human$tagwise.dispersion), sqrt(dispersion.sequin$tagwise.dispersion)))) +
   theme_bw() +
   labs(x = "Average log CPM", y = "Bioligical coefficient of variation",
        fill = "Tagwise BCV\ncount",
@@ -823,8 +823,8 @@ plot.bcv.short.sep <-
                 colour = "Trend", linetype = "Sequin")) +
   scale_colour_manual(name = "BCV",
                       breaks = c("Common", "Trend", "Tagwise_sequins"),
-                      values = c("Common" = "red", "Trend" = "blue", "Tagwise_sequins" = "green")) +
-  scale_y_continuous(limits = c(0, 0.75)) +
+                      values = c("Common" = "red", "Trend" = "blue", "Tagwise_sequins" = "seagreen")) +
+  scale_y_continuous(limits = range(c(sqrt(dispersion.short.human$tagwise.dispersion), sqrt(dispersion.short.sequin$tagwise.dispersion)))) +
   scale_linetype_manual(name = "Source",
                         breaks = c("Human", "Sequin"),
                         values = c("Human" = 1, "Sequin" = 2)) +
@@ -837,7 +837,11 @@ plot.bcv.short.sep <-
 ## Combined plot ----
 # ggplot
 pdf("plots/bcv2.pdf", height = 5, width = 16)
-cowplot::plot_grid(plot.bcv.long.sep, plot.bcv.short.sep)
+cowplot::plot_grid(plot.bcv.long.sep, 
+                   plot.bcv.short.sep,
+                   labels = c("a", "b"),
+                   label_size = 24
+                   )
 dev.off()
 # base R plot
 pdf("plots/bcv_base.pdf", height = 5, width = 16)
