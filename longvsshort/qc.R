@@ -833,13 +833,44 @@ plot.bcv.short.sep <-
        fill = "Tagwise BCV\ncount",
        title = "Illumina short-read BCV") +
   theme(text = element_text(size = 16))
-### PDF ----
+
+## Combined plot ----
+# ggplot
 pdf("plots/bcv2.pdf", height = 5, width = 16)
 cowplot::plot_grid(plot.bcv.long.sep, plot.bcv.short.sep)
 dev.off()
+# base R plot
+pdf("plots/bcv_base.pdf", height = 5, width = 16)
+par(mfrow = c(1, 2))
+plotBCV(dge.pure.human,
+        ylim = range(c(sqrt(dispersion.human$tagwise.dispersion), sqrt(dispersion.sequin$tagwise.dispersion))),
+        main = "ONT long-read BCV")
+points(dispersion.sequin$AveLogCPM, sqrt(dispersion.sequin$common.dispersion),
+       pch = 16, cex = .5, col = "seagreen")
+abline(h = sqrt(dispersion.sequin$common.dispersion), col = "red", lwd = 2, lty = 2)
+lines(dispersion.sequin$AveLogCPM, sqrt(dispersion.sequin$trended.dispersion), col = "blue", lwd = 2, lty = 2)
+legend("topright", legend = c("Tagwise human", "Common human", "Trend human", 
+                              "Tagwise sequin", "Common sequin", "Trend sequin"),
+       lty = c(-1, 1, 1, -1, 2, 2),
+       pch = c(16, -1, -1, 16, -1, -1),
+       pt.cex = c(.2, 1, 1, .5, 1, 1),
+       lwd = 2,
+       col = c("black", "red", "blue", "seagreen", "red", "blue"),
+       bg = "white")
 
-### Below just for debug ----
-ggplot(dispersion.short.human[sqrt(dispersion.short.human$tagwise.dispersion) > 0.2,], aes(x = AveLogCPM, y = sqrt(tagwise.dispersion))) +
-  stat_binhex()
-
-smoothScatter(dispersion.short.human$AveLogCPM[sqrt(dispersion.short.human$tagwise.dispersion) > 0.2], sqrt(dispersion.short.human$tagwise.dispersion)[sqrt(dispersion.short.human$tagwise.dispersion) > 0.2])
+plotBCV(dge.short.pure.human,
+        ylim = range(c(sqrt(dispersion.short.human$tagwise.dispersion), sqrt(dispersion.short.sequin$tagwise.dispersion))),
+        main = "Illumina short-read BCV")
+points(dispersion.short.sequin$AveLogCPM, sqrt(dispersion.short.sequin$common.dispersion),
+       pch = 16, cex = .5, col = "seagreen")
+abline(h = sqrt(dispersion.short.sequin$common.dispersion), col = "red", lwd = 2, lty = 2)
+lines(dispersion.short.sequin$AveLogCPM, sqrt(dispersion.short.sequin$trended.dispersion), col = "blue", lwd = 2, lty = 2)
+legend("topright", legend = c("Tagwise human", "Common human", "Trend human", 
+                              "Tagwise sequin", "Common sequin", "Trend sequin"),
+       lty = c(-1, 1, 1, -1, 2, 2),
+       pch = c(16, -1, -1, 16, -1, -1),
+       pt.cex = c(.2, 1, 1, .5, 1, 1),
+       lwd = 2,
+       col = c("black", "red", "blue", "seagreen", "red", "blue"),
+       bg = "white")
+dev.off()
