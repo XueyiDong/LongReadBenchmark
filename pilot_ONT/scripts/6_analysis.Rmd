@@ -45,7 +45,7 @@ colnames(x) <- strsplit2(colnames(x), "/")[,11]
 dim(x)
 
 x$samples$rep <- rep(c("rep1", "rep2", "rep1", "rep2"), c(5, 5, 3, 3))
-x$samples$prep <- c(rep(c("000", "025", "050", "075", "100"), 2), 
+x$samples$prop <- c(rep(c("000", "025", "050", "075", "100"), 2), 
                     rep(c("025", "050", "075"), 2))
 x$samples$source <- c(rep("seq", 10), rep("mix", 6))
 x$samples$group <- paste(x$samples$source, x$samples$prop, sep="_")
@@ -100,34 +100,70 @@ legend("bottomleft", c("000", "025", "050", "075", "100", "lab-derived samples",
 dev.off()
 
 ```
+
+## Count correlation
+
+heatmap
 ```{r}
-human.gene <- grep("^ENST", rownames(x))
-sequin.gene <- grep("^R", rownames(x))
-cpm.human <- cpm(x[human.gene, ], log=TRUE)
-cpm.sequin <- cpm(x[sequin.gene, ], log=TRUE)
+cormat <- cor(x$counts[, c(1:5, 11:13)], method = "spearman")
+library(pheatmap)
+anno <- x$samples[c(1:5, 11:13), c("prop", "source")]
+colnames(anno) <- c("mix_proportion", "source")
+anno$source <- ifelse(anno$source == "seq", "lab-derived", "in-silico mixture")
+anno_colours = list(
+  mix_proportion = c(`000` = col[1], `025` = col[2], `050` = col[3], `075` = col[4], `100` = col[5]),
+  source = c(`lab-derived` = "salmon", `in-silico mixture` = "seagreen2")
+)
+pheatmap(cormat,
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         show_colnames = FALSE,
+         show_rownames = FALSE,
+         annotation_col = anno,
+         annotation_row = anno,
+         annotation_colors = anno_colours,
+         scale = "none",
+         display_numbers = TRUE)
 
-plotMDS(cpm.human, 
-        # pch = rep(c(1, 2), c(10, 6)),
-        col = col[c(rep(1:5, 2), rep(2:4, 2))], 
-        cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5,
-        main = "human")
-# legend("bottomleft", c("000", "025", "050", "075", "100", "lab-derived samples", "in silico mixture"),
-#         text.col = c(col, "black", "black"), cex = 1.25, bty = "n",
-#        pch = c(rep(NA, 5), 1, 2))
+```
 
-plotMDS(cpm.sequin, 
-        # pch = rep(c(1, 2), c(10, 6)),
-        col = col[c(rep(1:5, 2), rep(2:4, 2))], 
-        cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5,
-        main = "sequin")
-plotMDS(cpm.sequin, 
-        pch = rep(c(1, 2), c(10, 6)),
-        col = col[c(rep(1:5, 2), rep(2:4, 2))], 
-        cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex = 1.5,
-        main = "sequin")
-# legend("bottomleft", c("000", "025", "050", "075", "100", "lab-derived samples", "in silico mixture"),
-#         text.col = c(col, "black", "black"), cex = 1.25, bty = "n",
-#        pch = c(rep(NA, 5), 1, 2))
+```{r}
+p25 <- ggplot(as.data.frame(x$counts), aes(x=barcode02_pass, y=`rep1-025`)) +
+  stat_bin_hex(bins = 100) +
+  annotate(geom = "text", x = 50, y = 30000,
+           label = paste0("Spearman's rho =", round(cor(x$counts[,2], x$counts[, 11], method = "spearman"), 3))) +
+  labs(x = "lab-derived sample", y = "in silico mixture", title = "Sample 025") +
+  scale_fill_viridis() +
+  scale_x_continuous(trans = "log10") +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+
+p50 <- ggplot(as.data.frame(x$counts), aes(x=barcode03_pass, y=`rep1-050`)) +
+  stat_bin_hex(bins = 100) +
+  annotate(geom = "text", x = 50, y = 30000,
+           label = paste0("Spearman's rho =", round(cor(x$counts[,3], x$counts[, 12], method = "spearman"), 3))) +
+  labs(x = "lab-derived sample", y = "in silico mixture", title = "Sample 050") +
+  scale_fill_viridis() +
+  scale_x_continuous(trans = "log10") +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+
+p75 <- ggplot(as.data.frame(x$counts), aes(x=barcode03_pass, y=`rep1-075`)) +
+  stat_bin_hex(bins = 100) +
+  annotate(geom = "text", x = 50, y = 30000,
+           label = paste0("Spearman's rho =", round(cor(x$counts[,4], x$counts[, 13], method = "spearman"), 3))) +
+  labs(x = "lab-derived sample", y = "in silico mixture", title = "Sample 075") +
+  scale_fill_viridis() +
+  scale_x_continuous(trans = "log10") +
+  scale_y_continuous(trans = "log10") +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+
+pdf("countCor.pdf", height = 6, width = 16)
+cowplot::plot_grid(p25, p50, p75, ncol = 3)
+dev.off()
 ```
 
 
