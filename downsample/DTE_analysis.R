@@ -83,6 +83,9 @@ for(i in 1:length(x_human)){
           ylim = c(-3.6, 4.1),
           pch = 1,
           col = rep(c("red", "blue"), each = 3))
+  if(i == 1){
+    legend("topleft", c("H1975", "HCC827"), pch = 1, col = c("red", "blue"))
+  }
 }
 dev.off()
 # make MDS plots for sequin transcripts
@@ -289,7 +292,7 @@ res_human$incocsistency_rate[res_human$dataset == "Illumina"] <- sapply(DE_human
   sum(!(x %in% DE_human$Illumina_full)) / length(x)
 })
 pdf("plots/inconsistency_human.pdf", height = 5, width = 8)
-ggplot(res_human, aes(x = libsize, y = incocsistency_rate, colour = dataset, group = dataset)) +
+ggplot(res_human[res_human$libsize != "full", ], aes(x = libsize, y = incocsistency_rate, colour = dataset, group = dataset)) +
   geom_line() +
   geom_point() +
   scale_colour_manual(values = c("#FCB344", "#438DAC")) +

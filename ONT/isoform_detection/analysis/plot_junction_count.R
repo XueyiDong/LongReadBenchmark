@@ -93,19 +93,20 @@ junc_df$Tool <- rep(c("bambu", "FLAIR", "FLAMES", "Cupcake", "StringTie2", "TALO
 # plot percentage of novel junctions supported by Illumina
 # defind >10 counts as supported
 junc_df$supported_by_Illumina <- junc_df$total_coverage_unique > 10
-pdf("NovelJuncIlluminaSupport.pdf", height = 5, width = 8)
+pdf("NovelJuncIlluminaSupport2.pdf", height = 5, width = 5)
 junc_df %>% 
-  filter(junction_category == "novel") %>% 
-  count(Tool = factor(Tool), supported_by_Illumina = factor(supported_by_Illumina)) %>% 
+  dplyr::filter(junction_category == "novel") %>% 
+  dplyr::count(Tool = factor(Tool), supported_by_Illumina = factor(supported_by_Illumina)) %>% 
   plyr::ddply(., .(Tool), transform, pct = n / sum(n)) %>% 
   # mutate(pct = prop.table(n)) %>% 
   ggplot(aes(x = Tool, y = n, fill = supported_by_Illumina, label = scales::percent(pct))) +
   geom_bar(stat = "identity") +
-  geom_text(position = position_stack(vjust = 0.5)) +
+  geom_text(position = position_stack(vjust = 0.5), size = 4) +
   scale_fill_manual(values = c("#A8D1D1", "#FD8A8A")) +
   labs(y = "Novel junctions", fill = "Supported by Illumina\n(counts > 10)") +
   theme_bw()+
-  theme(text = element_text(size = 15))
+  theme(text = element_text(size = 15), legend.position = "bottom", 
+        axis.text.x = element_text(angle = 30, hjust = 1))
 dev.off()
 
 
