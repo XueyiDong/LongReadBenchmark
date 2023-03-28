@@ -114,3 +114,63 @@ legend("bottomleft", c("000", "025", "050", "075", "100", "lab-derived samples",
 dev.off()
 ```
 
+# Mixture model analysis
+
+```{r}
+Expr000 <- rowMeans(lcpm[, x$samples$prop == "000"])
+Expr100 <- rowMeans(lcpm[, x$samples$prop == "100"])
+
+# in silico mixture
+Expr <- lcpm[, 1:9]
+out <- fitmixture(Expr, mixprop=rep(c(0.25, 0.5, 0.75),3))
+# Plot true vs estimated log-ratios
+pdf("mixModelInSilico.pdf", height = 5, width = 8)
+plot(Expr100-Expr000, out$M, xlim=c(-8,8), ylim=c(-8,8), pch=16, cex=0.4,
+    xlab="logFC (100 vs 0)", ylab="Estimated logFC (100 vs 0)", main="Illumina - in silico mixture")
+abline(a=0, b=1, col="red", lty=2, lwd=2)
+rho <- cor(Expr100-Expr000, out$M, method = "spearman")
+legend("topleft", legend=paste("Spearman cor = ", round(rho, digits=2)), bty="n")
+dev.off()
+
+# 1 sample
+TrueY1 <- lcpm[, 10]
+TrueY2 <- lcpm[, 14]
+Expr <- lcpm[, 1:3]
+out <- fitmixture(Expr, mixprop=rep(c(0.25, 0.5, 0.75),1))
+# Plot true vs estimated log-ratios
+pdf("mixModelInSilico1Sample.pdf", height = 5, width = 8)
+plot(TrueY2 - TrueY1, out$M, xlim=c(-8,8), ylim=c(-8,8), pch=16, cex=0.4,
+    xlab="logFC (100 vs 0)", ylab="Estimated logFC (100 vs 0)", main="Illumina - in silico mixture (1 sample)")
+abline(a=0, b=1, col="red", lty=2, lwd=2)
+rho <- cor(TrueY2-TrueY1, out$M, method = "spearman")
+legend("topleft", legend=paste("Spearman cor = ", round(rho, digits=2)), bty="n")
+dev.off()
+
+### Lab-derived
+Expr <- lcpm[, c(11:13,16:18,21:23)]
+out <- fitmixture(Expr, mixprop=rep(c(0.25, 0.5, 0.75),3))
+
+# Plot true vs estimated log-ratios
+pdf("mixModelLabMix.pdf", height = 5, width = 8)
+plot(Expr100- Expr000, out$M, xlim=c(-8,8), ylim=c(-8,8), pch=16, cex=0.4,
+    xlab="logFC (100 vs 0)", ylab="Estimated logFC (100 vs 0)", main="Illumina - Lab-derived samples")
+abline(a=0, b=1, col="red", lty=2, lwd=2)
+rho <- cor(Expr100-Expr000, out$M, method = "spearman")
+legend("topleft", legend=paste("Spearman cor = ", round(rho, digits=2)), bty="n")
+dev.off()
+
+# 1 sample
+TrueY1 <- lcpm[, 10]
+TrueY2 <- lcpm[, 14]
+Expr <- lcpm[, 11:13]
+out <- fitmixture(Expr, mixprop=rep(c(0.25, 0.5, 0.75),1))
+# Plot true vs estimated log-ratios
+pdf("mixModelLabMix1sample.pdf", height = 5, width = 8)
+plot(TrueY2 - TrueY1, out$M, xlim=c(-8,8), ylim=c(-8,8), pch=16, cex=0.4,
+    xlab="logFC (100 vs 0)", ylab="Estimated logFC (100 vs 0)", main="Illumina - Lab-derived samples (1 sample)")
+abline(a=0, b=1, col="red", lty=2, lwd=2)
+rho <- cor(TrueY2-TrueY1, out$M, method = "spearman")
+legend("topleft", legend=paste("Spearman cor = ", round(rho, digits=2)), bty="n")
+dev.off()
+```
+

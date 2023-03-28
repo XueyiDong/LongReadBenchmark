@@ -166,4 +166,35 @@ cowplot::plot_grid(p25, p50, p75, ncol = 3)
 dev.off()
 ```
 
+# mixture model analysis
+```{r}
+Expr000 <- lcpm[,1]
+Expr100 <- lcpm[,5]
+
+### in silico mixture
+Expr <- lcpm[, 11:13]
+out <- fitmixture(Expr, mixprop=c(0.25, 0.5, 0.75))
+
+# Plot true vs estimated log-ratios
+pdf("mixModelInSilico.pdf", height = 5, width = 8)
+plot(Expr100-Expr000, out$M, xlim=c(-8,8), ylim=c(-8,8), pch=16, cex=0.4,
+    xlab="logFC (100 vs 0)", ylab="Estimated logFC (100 vs 0)", main="ONT - in silico mixture")
+abline(a=0, b=1, col="red", lty=2, lwd=2)
+rho <- cor(Expr100-Expr000, out$M, method = "spearman")
+legend("topleft", legend=paste("Spearman cor = ", round(rho, digits=2)), bty="n")
+dev.off()
+
+### Lab-derived
+Expr <- lcpm[, 2:4]
+out <- fitmixture(Expr, mixprop=c(0.25, 0.5, 0.75))
+
+# Plot true vs estimated log-ratios
+pdf("mixModelLabMix.pdf", height = 5, width = 8)
+plot(Expr100-Expr000, out$M, xlim=c(-8,8), ylim=c(-8,8), pch=16, cex=0.4,
+    xlab="logFC (100 vs 0)", ylab="Estimated logFC (100 vs 0)", main="ONT - Lab-derived samples")
+abline(a=0, b=1, col="red", lty=2, lwd=2)
+rho <- cor(Expr100-Expr000, out$M, method = "spearman")
+legend("topleft", legend=paste("Spearman cor = ", round(rho, digits=2)), bty="n")
+dev.off()
+```
 
