@@ -166,6 +166,22 @@ cowplot::plot_grid(p25, p50, p75, ncol = 3)
 dev.off()
 ```
 
+base R plot
+```{r}
+### ONT
+title <- paste0("ONT - (", c("025","050","075"), " sample)")
+pdf("countCor.pdf", height = 4, width = 12)
+par(mfrow=c(1,3))
+for(i in 2:4){
+    plot(lcpm[,i], lcpm[,i+9], pch=16, cex=0.4,
+        xlab="Lab-mixed log-CPM", ylab="In Silico mixed log-CPM", main=title[i-1])
+    rho <- cor(lcpm[,i], lcpm[,i+9], method = "spearman")
+    legend("topleft", legend=paste("Cor = ", round(rho, digits=2)), bty="n")
+}
+dev.off()
+```
+
+
 # mixture model analysis
 ```{r}
 Expr000 <- lcpm[,1]

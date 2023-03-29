@@ -114,6 +114,23 @@ legend("bottomleft", c("000", "025", "050", "075", "100", "lab-derived samples",
 dev.off()
 ```
 
+# Count correlation
+```{r}
+title <- paste0("Illumina - (", rep(c("025","050","075"),3), " Rep", rep(1:3, each=3),")")
+pdf("countCor.pdf", height = 12, width = 12)
+par(mfcol=c(3,3))
+i <- 1
+for(j in c(11:13,16:18,21:23)){
+    plot(lcpm[,i], lcpm[,j], pch=16, cex=0.4,
+        xlab="Lab-mixed log-CPM", ylab="In Silico mixed log-CPM", main=title[i])
+    rho <- cor(lcpm[,i], lcpm[,j], method = "spearman")
+    legend("topleft", legend=paste("Cor = ", round(rho, digits=4)), bty="n")
+    i <- i+1
+}
+dev.off()
+```
+
+
 # Mixture model analysis
 
 ```{r}
