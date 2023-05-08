@@ -17,7 +17,7 @@ isoClass_bambu$method <- "bambu"
 isoClass_flair$method <- "FLAIR"
 isoClass_flames$method <- "FLAMES"
 isoClass_flames$isoform <- str_remove_all(isoClass_flames$isoform, "transcript:")
-isoClass_sqanti$method <- "SQANTI3"
+isoClass_sqanti$method <- "Cupcake"
 isoClass_stringtie$method <- "StringTie2"
 isoClass_talon$method <- "TALON"
 
@@ -52,6 +52,14 @@ plot_isoformClass <- ggplot(isoClass, aes(x = method, fill=structural_category))
   scale_fill_manual(values = col.category) +
   scale_y_continuous(labels = scales::comma)
 
+my.labels <- c("bambu",
+               "Cupcake+\nSalmon",
+               "FLAIR", 
+               "FLAMES",
+               "StringTie2+\nSalmon",
+               "TALON")
+
+
 plot_isoformCount <- isoClass %>% dplyr::count(method, structural_category, wt = count, name = "count") %>% 
   ggplot() +
   geom_bar(aes(x=method, y=count, fill=structural_category), position = position_stack(reverse = TRUE), stat = "identity") +
@@ -59,11 +67,12 @@ plot_isoformCount <- isoClass %>% dplyr::count(method, structural_category, wt =
   theme_bw() +
   theme(text = element_text(size = 20), legend.position = "bottom") +
   scale_fill_manual(values = col.category) +
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))+
+  scale_x_discrete(labels= my.labels)
 
 leg <- plot_grid(NULL,get_legend(plot_isoformCount), rel_widths = c(2.5,1))
 isoform_cc <- plot_grid(plot_isoformClass, plot_isoformCount + theme(legend.position = "none"), leg, nrow=2,rel_heights = c(1, 0.2))
 
-#pdf(here("plots","isoform_ClassAndCount.pdf"), height = 5, width = 16)
+pdf(here("plots","isoform_ClassAndCount_new.pdf"), height = 5, width = 16)
 isoform_cc
-#dev.off()
+dev.off()
