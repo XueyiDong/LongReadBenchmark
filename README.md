@@ -3,16 +3,16 @@
 This repository contains the code used to perform the analysis and generate the figures in this preprint:
 
 **Benchmarking long-read RNA-sequencing analysis tools using in silico mixtures**
-Xueyi Dong, Mei R. M. Du, Quentin Gouil, Luyi Tian, Pedro L. Baldoni, Gordon K. Smyth, Shanika L. Amarasinghe, Charity W. Law, Matthew E. Ritchie
+Xueyi Dong, Mei R. M. Du, Quentin Gouil, Luyi Tian, Jafar S. Jabbari, Rory Bowden, Pedro L. Baldoni, Yunshun Chen, Gordon K. Smyth, Shanika L. Amarasinghe, Charity W. Law, Matthew E. Ritchie
 bioRxiv 2022.07.22.501076; doi: [https://doi.org/10.1101/2022.07.22.501076](https://doi.org/10.1101/2022.07.22.501076)
 
 ![Experimental design](ExpeDesign.png)
 
 ## Data Availability
 
-Our RNA-seq data are available from Gene Expression Omnibus (GEO) under accession number [GSE172421](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE172421). 
+Our RNA-seq data are available from Gene Expression Omnibus (GEO) under accession number [GSE172421](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE172421) (main benchmarking dataset) and [GSE227000](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE227000) (lab-based mixture of replicate 1). 
 
-Please cite [our preprint](https://doi.org/10.1101/2022.07.22.501076) if you use our data in your studies.
+Please cite [our preprint](https://doi.org/10.1101/2022.07.22.501076) if you use our data and/or scripts in your studies.
 
 ## Index
 
