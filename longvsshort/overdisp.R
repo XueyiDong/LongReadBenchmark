@@ -62,7 +62,7 @@ pdf("plots/overdispBoxNew.pdf", height = 4, width = 8)
 p.ovd <- ggplot(overdisp2, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
   geom_boxplot(varwidth = TRUE, alpha=0.4, outlier.shape = NA) +
   geom_text(data = sample_sizes, aes(x = nTxGroup, y = max_y, colour = Data, label = paste0("n = ", n)),
-            vjust = -0.5, hjust = ifelse(sample_sizes$Data == "ONT", -0.2, 1.2)) +
+            vjust = -0.1, hjust = ifelse(sample_sizes$Data == "ONT", 0.1, 0.9)) +
   # geom_violin(alpha=0) +
   # geom_jitter() +
   labs(x = "Number of transcripts per gene", y = "Assignment ambiguity") +
@@ -104,12 +104,12 @@ overdisp2.sequin <- data.frame(
   AveExpr = c(rowSums(dge$counts)[m], rowSums(dge.short$counts)[m2]),
   numberTranscript = c(dge$genes$nTranscript[m], dge.short$genes$nTranscript[m2])
 )
-sample_sizes <- overdisp2.sequin %>% group_by(numberTranscript, Data) %>% summarise(n = n(), max_y = max(Overdispersion))
+sample_sizes.sequin <- overdisp2.sequin %>% group_by(numberTranscript, Data) %>% summarise(n = n(), max_y = max(Overdispersion))
 pdf("plots/overdispBoxSequinNew.pdf", height = 4, width = 4)
 p.ovd.se <- ggplot(overdisp2.sequin, aes(x=as.character(numberTranscript), y=Overdispersion, fill=Data, colour=Data)) +
   geom_boxplot(varwidth = TRUE, alpha=0.4) +
-  geom_text(data = sample_sizes, aes(x = numberTranscript, y = max_y, colour = Data, label = paste0("n = ", n)),
-            vjust = -0.5, hjust = ifelse(sample_sizes$Data == "ONT", -0.2, 1.2)) +
+  geom_text(data = sample_sizes.sequin, aes(x = numberTranscript, y = max_y, colour = Data, label = n),
+            vjust = -0.1, hjust = ifelse(sample_sizes.sequin$Data == "ONT", 0, 1)) +
   labs(x = "Number of transcripts per gene", y = "Assignment ambiguity") +
   scale_y_continuous(trans = "log10") +
   theme_bw()+
@@ -131,8 +131,11 @@ overdisp2.human <- data.frame(
 )
 maxnum <- max(overdisp2.human$numberTranscript)
 overdisp2.human$nTxGroup <- Hmisc::cut2(overdisp2.human$numberTranscript, cuts = c(1, 2, 6, 11, 21, 51, maxnum))
+sample_sizes.human <- overdisp2.human %>% group_by(nTxGroup, Data) %>% summarise(n = n(), max_y = max(Overdispersion))
 p.ovd.hu <- ggplot(overdisp2.human, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
   geom_boxplot(varwidth = TRUE, alpha=0.4, outlier.shape = NA) +
+  geom_text(data = sample_sizes.human, aes(x = nTxGroup, y = max_y, colour = Data, label = n),
+            vjust = -0.1, hjust = ifelse(sample_sizes.human$Data == "ONT", 0.1, 0.9)) +
   labs(x = "Number of transcripts per gene", y = "Assignment ambiguity") +
   scale_y_continuous(trans = "log10") +
   theme_bw()+
