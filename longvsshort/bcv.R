@@ -218,3 +218,25 @@ ggplot(tagwise, aes(x=group, y=sqrt(tagwise.dispersion), fill=group))  +
   labs(y = "Biological coefficient of variation") +
   theme_bw()
 dev.off()
+
+common <- lapply(append(dge.group, dge.short.group), function(x){
+  tmp <- data.frame(
+    common.dispersion = x$common.dispersion,
+    group = x$samples$group[1])
+  return(tmp)
+})
+common <- Reduce(rbind, common)
+common$dataset <- rep(c("ONT", "Illumina"), each = 5)
+common$type <- rep(rep(c("pure RNA samples", "in silico mixture"), c(2, 3)), 2)
+common$group <- factor(common$group, levels = c("000", "025", "050", "075", "100"))
+pdf("plots/commonBCV.pdf", height = 4, width= 6)
+ggplot(common, aes(x = group, y = sqrt(common.dispersion), colour = group, shape = dataset)) +
+  geom_point(size = 5) +
+  labs(y = "common BCV")+
+  scale_colour_manual(values = col[o]) +
+  scale_y_continuous(limits = c(0, NA)) +
+  theme_bw() +
+  theme(text = element_text(size = 16))
+dev.off()
+
+  
