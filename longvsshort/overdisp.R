@@ -2,6 +2,7 @@ library(edgeR)
 library(ggplot2)
 library(viridis)
 library(dplyr)
+library(scattermore)
 
 DIR="/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark"
 
@@ -105,11 +106,13 @@ overdisp2.sequin <- data.frame(
   numberTranscript = c(dge$genes$nTranscript[m], dge.short$genes$nTranscript[m2])
 )
 sample_sizes.sequin <- overdisp2.sequin %>% group_by(numberTranscript, Data) %>% summarise(n = n(), max_y = max(Overdispersion))
-pdf("plots/overdispBoxSequinNew.pdf", height = 4, width = 4)
+# pdf("plots/overdispBoxSequinNew.pdf", height = 4, width = 4)
 p.ovd.se <- ggplot(overdisp2.sequin, aes(x=as.character(numberTranscript), y=Overdispersion, fill=Data, colour=Data)) +
-  geom_boxplot(varwidth = TRUE, alpha=0.4) +
+  geom_point( position = position_jitterdodge(), size = .5, alpha = .6) +
+  geom_boxplot(varwidth = TRUE, alpha=0, outlier.shape = NA) +
+  # geom_violin(alpha = .4, colour="black") +
   geom_text(data = sample_sizes.sequin, aes(x = numberTranscript, y = max_y, colour = Data, label = n),
-            vjust = -0.1, hjust = ifelse(sample_sizes.sequin$Data == "ONT", 0, 1)) +
+            vjust = 0, hjust = ifelse(sample_sizes.sequin$Data == "ONT", -0.1, 1.1)) +
   labs(x = "Number of transcripts per gene", y = "Assignment ambiguity") +
   scale_y_continuous(trans = "log10") +
   theme_bw()+
@@ -118,7 +121,7 @@ p.ovd.se <- ggplot(overdisp2.sequin, aes(x=as.character(numberTranscript), y=Ove
   scale_fill_manual(values = c("#FCB344", "#438DAC")) +
   scale_colour_manual(values = c("#FCB344", "#438DAC"))
 plot(p.ovd.se)
-dev.off()
+# dev.off()
 
 # human overdisp ----
 overdisp2.human <- data.frame(
@@ -133,9 +136,11 @@ maxnum <- max(overdisp2.human$numberTranscript)
 overdisp2.human$nTxGroup <- Hmisc::cut2(overdisp2.human$numberTranscript, cuts = c(1, 2, 6, 11, 21, 51, maxnum))
 sample_sizes.human <- overdisp2.human %>% group_by(nTxGroup, Data) %>% summarise(n = n(), max_y = max(Overdispersion))
 p.ovd.hu <- ggplot(overdisp2.human, aes(x=nTxGroup, y=Overdispersion, fill=Data, colour=Data)) +
-  geom_boxplot(varwidth = TRUE, alpha=0.4, outlier.shape = NA) +
+  geom_scattermore(position = position_jitterdodge(), alpha = .4, pixels = c(1200, 800)) +
+  geom_boxplot(varwidth = TRUE, alpha=0, outlier.shape = NA) +
+  # geom_violin(alpha = .4, colour="black") +
   geom_text(data = sample_sizes.human, aes(x = nTxGroup, y = max_y, colour = Data, label = n),
-            vjust = -0.1, hjust = ifelse(sample_sizes.human$Data == "ONT", 0.1, 0.9)) +
+            vjust = 0.2, hjust = ifelse(sample_sizes.human$Data == "ONT", 0, 1)) +
   labs(x = "Number of transcripts per gene", y = "Assignment ambiguity") +
   scale_y_continuous(trans = "log10") +
   theme_bw()+
@@ -148,7 +153,8 @@ plot(p.ovd.hu)
 
 # plot overdispersion together ----
 library(cowplot)
-pdf("plots/overdispBoxAll2.pdf", height = 4, width = 8)
+pdf("plots/overdispBoxAll3.pdf", height = 4, width = 8)
+# pdf("plots/overdispViolinNew.pdf", height = 4, width = 8)
 plot_grid(p.ovd.hu +
             ggtitle("Human transcripts") +
             geom_hline(yintercept = 10^layer_scales(p.ovd.se)$y$get_limits()[2],
