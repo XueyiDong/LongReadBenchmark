@@ -18,7 +18,7 @@ barcode03.sorted <- c(0.0,0.09268871925360475,0.12764489680520213,0.145490528696
 coverage <- data.frame(
   percentile = rep(1:100, 12),
   dataset = rep(c("ONT", "Illumina"), each = 600),
-  sample = rep(rep(c(paste0("H1975-", 1:3), paste0("HCC827-", c(1, 2, 5))), each = 100), 2),
+  sample = rep(rep(c(paste0("H1975-", 1:3), paste0("HCC827-", c(1, 2, 3))), each = 100), 2),
   coverage = c(barcode01.sorted, barcode02.sorted, barcode03.sorted, barcode04.sorted, barcode05.sorted, barcode06.sorted,
                H1975_1_S9.sorted, H1975_2_S10.sorted, H1975_3_S11.sorted, HCC827_1_S12.sorted, HCC827_2_S13_merged.sorted, HCC827_5_repeat_S14.sorted)
 )
