@@ -16,15 +16,19 @@ Please cite [our preprint](https://doi.org/10.1101/2022.07.22.501076) if you use
 
 ## Index
 
-### Pilot study
+### Pilot *in silico* mixture experiment
 
-All scripts are available at [pilot](pilot)
+All scripts are available at [pilot](pilot) (Illumina) and [pilot_ONT/scripts](pilot_ONT/scripts) (ONT)
 
-### *In silico* mixture
+### Generate *in silico* mixture samples and preprocess
 
 ONT: [ONT/mix_prepare](ONT/mix_prepare)
 
 Illumina: [illumina/mix_prepare](illumina/mix_prepare)
+
+### Generate downsampled samples and preprocess
+
+Scripts are available at [downsample](downsample)
 
 ### Mapping and quantification
 
@@ -42,7 +46,7 @@ General: [longvsshort/overdisp.R](longvsshort/overdisp.R), [longvsshort/qc.R](lo
 
 Scripts to run softwares: [ONT/isoform_detection/methods](ONT/isoform_detection/methods)
 
-Results comparison: [ONT/isoform_detection/analysis](ONT/isoform_detection/analysis)
+Analysis of results: [ONT/isoform_detection/analysis](ONT/isoform_detection/analysis)
 
 ### Differential transcript expression
 
