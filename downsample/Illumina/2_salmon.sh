@@ -6,8 +6,6 @@
 #SBATCH --mail-user=dong.x@wehi.edu.au
 #SBATCH --mail-type=END,FAIL
 
-# cd /stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/illumina/
-# mkdir -p salmon_bs
 
 
 module load stornext
