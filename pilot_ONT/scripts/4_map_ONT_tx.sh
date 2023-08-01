@@ -5,7 +5,7 @@
 #SBATCH --mail-user=dong.x@wehi.edu.au
 #SBATCH --mail-type=BEGIN,END,FAIL
 
-# cd /stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/long_read_benchmark/ONT/transcriptome_mapping
+
 outdir=/vast/scratch/users/dong.x/long_read_benchmark/pilot_ONT/bam_tx
 unixhome=/wehisan/home/allstaff/d/dong.x
 ref=/stornext/General/data/user_managed/grpu_mritchie_1/XueyiDong/annotation/HumanSequins/gencode.v33.sequins.transcripts.fa

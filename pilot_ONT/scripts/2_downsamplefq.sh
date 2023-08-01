@@ -12,7 +12,6 @@ cd /vast/scratch/users/dong.x/long_read_benchmark/pilot_ONT/
 mkdir -p fq_subsample
 
 
-# unixhome=/wehisan/home/allstaff/d/dong.xFQ=/stornext/Projects/promethion/promethion_access/lab_ritchie/transcr_bench/long_term/transcr_bench/guppy_4_rebasecall_Oct20/barcode01-06
 fq=/stornext/Projects/promethion/promethion_access/lab_ritchie/Xueyi_cellLine_mixture/long_term/fastq/H1_1-HC_5/20221107_1451_2D_PAK15503_0f50058f/guppy6.2.1_sup_prom
 
 export PATH=$PATH:/wehisan/home/allstaff/d/dong.x/Programs/seqtk
