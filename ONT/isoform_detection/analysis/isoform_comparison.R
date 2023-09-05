@@ -3,7 +3,6 @@
 
 library(tidyverse)
 library(ggpubr)
-library(ggforce)
 library(here)
 
 setwd(here("plots","isoform_gffcompare"))
@@ -41,16 +40,21 @@ stringtie_sub <- stringtie[str_detect(stringtie$V5, "-"),]
 talon_sub <- talon[str_detect(talon$V5, "-"),]
 
 # summarise data
-summary <- data.frame(Method = c("bambu", "FLAIR", "FLAMES","SQANTI3", "StringTie2", "TALON"), 
-                      match = c(nrow(bambu_match), nrow(flair_match), nrow(flames_match), nrow(sqanti_match), nrow(stringtie_match), nrow(talon_match)),
-                      full = c(nrow(bambu_full), nrow(flair_full), nrow(flames_full), nrow(sqanti_full), nrow(stringtie_full), nrow(talon_full)),
-                      sub = c(nrow(bambu_sub), nrow(flair_sub), nrow(flames_sub), nrow(sqanti_sub), nrow(stringtie_sub), nrow(talon_sub)))
+summary <- data.frame(Method = c("bambu", "Cupcake", "FLAIR", "FLAMES","StringTie2", "TALON"), 
+                      match = c(nrow(bambu_match), nrow(sqanti_match), nrow(flair_match), nrow(flames_match), nrow(stringtie_match), nrow(talon_match)),
+                      full = c(nrow(bambu_full), nrow(sqanti_full),nrow(flair_full), nrow(flames_full),  nrow(stringtie_full), nrow(talon_full)),
+                      sub = c(nrow(bambu_sub), nrow(sqanti_sub), nrow(flair_sub), nrow(flames_sub), nrow(stringtie_sub), nrow(talon_sub)))
+
+# code to swap facet_zoom panels
+install.packages("https://cran.r-project.org/src/contrib/Archive/ggforce/ggforce_0.3.4.tar.gz")
+library(ggforce)
+devtools::source_url("https://raw.githubusercontent.com/bobverity/antimalarial_resistance_DRC/d4abd04934368dff6de6edf9725f792ba47f0969/figureS3_COI/mip_mccoil-master/analysis/facet_zoom.R")
 
 # bar plot
 colnames(summary)[2:4] <- c("exact matches", "full dataset only", "downsampled dataset only")
 data <- pivot_longer(summary, colnames(summary)[2:4], names_to = "Category",values_to="Count")
-data$Category <- factor(data$Category, levels=colnames(summary)[2:4])
 
+data$Category <- factor(data$Category, levels=colnames(summary)[2:4])
 iso_compare <- ggbarplot(data, "Method", "Count", 
                          fill = "Category", color = "Category", 
                          position = position_stack(reverse=TRUE),
@@ -58,7 +62,7 @@ iso_compare <- ggbarplot(data, "Method", "Count",
   viridis::scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.75, option = "F", alpha = 0.8) +
   viridis::scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.75, option = "F", alpha = 0.8) +
   scale_x_discrete(expand=c(0,0)) +
-  facet_zoom(ylim=c(0,299999) ,zoom.size=1.3) +
+  facet_zoom2(ylim=c(0,299999) ,zoom.size=1.3) +
   scale_y_continuous(breaks = function(x) pretty(x, n = 5), labels = scales::comma, expand=c(0,0)) +
   theme(legend.position = "bottom", legend.text=element_text(size=15), 
         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=15), axis.text.y = element_text(size=15), 

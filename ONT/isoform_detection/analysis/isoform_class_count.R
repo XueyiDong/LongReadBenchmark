@@ -46,7 +46,6 @@ col.category <- brewer.pal(nlevels(isoClass$structural_category), "Set1")
 plot_isoformClass <- ggplot(isoClass, aes(x = method, fill=structural_category)) + 
   geom_bar(position = position_stack(reverse = TRUE)) +
   theme_bw() +
-  geom_hline(yintercept = 164, linetype="dashed") +
   labs(y = "Number of transcripts", x = "Method", fill = "Structural category") +
   theme(text = element_text(size = 20), legend.position = "none") +
   scale_fill_manual(values = col.category) +
@@ -73,6 +72,6 @@ plot_isoformCount <- isoClass %>% dplyr::count(method, structural_category, wt =
 leg <- plot_grid(NULL,get_legend(plot_isoformCount), rel_widths = c(2.5,1))
 isoform_cc <- plot_grid(plot_isoformClass, plot_isoformCount + theme(legend.position = "none"), leg, nrow=2,rel_heights = c(1, 0.2))
 
-pdf(here("plots","isoform_ClassAndCount_new.pdf"), height = 5, width = 16)
+# pdf(here("plots","isoform_ClassAndCount_new.pdf"), height = 5, width = 16)
 isoform_cc
-dev.off()
+# dev.off()

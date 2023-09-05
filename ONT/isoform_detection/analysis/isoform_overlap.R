@@ -1,6 +1,6 @@
 # Plot overlap of regions with common isoform coordinates
 # Author: Mei Du
-
+setwd("/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark")
 library(Biostrings)
 library(rtracklayer)
 library(IRanges)
@@ -11,13 +11,13 @@ library(tidyverse)
 library(here)
 
 # load genome
-gen <- readDNAStringSet(here("references","genome_rnasequin_decoychr_2.4.fa"))
+gen <- readDNAStringSet("/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/references/genome_rnasequin_decoychr_2.4.fa")
 gen_len <- width(gen)
 names(gen_len) <- sub(" .*","",names(gen))
 gen_bin <- Repitools::genomeBlocks(gen_len, width=2000) # make 2kb bins
 
 # load annotations
-annot_loc <- here("plots","readcount_cor","ONT_annotations")
+annot_loc <- "/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/plots/readcount_cor/ONT_annotations"
 bambu_annot <- import(paste0(annot_loc, "/ONT_extended_annotations_edited.gtf")) %>% .[.$type=="transcript",]
 flair_annot <- import(paste0(annot_loc,"/flair.collapse.isoforms.gtf")) %>% .[.$type=="transcript",]
 flames_annot <- import(paste0(annot_loc,"/isoform_annotated.filtered_flames.gff3")) %>% .[.$type=="transcript",]
@@ -27,7 +27,7 @@ stringtie_annot <- import(paste0(annot_loc,"/ONT_stringtie_merged_edited.gtf")) 
 talon_annot <- import(paste0(annot_loc, "/ONT_filtered_annot_talon.gtf")) %>% .[.$type=="transcript",]
 
 # load counts
-load(here("plots","readcount_cor", "counts", "ont_counts_filtered.RData"))
+load("/stornext/General/data/user_managed/grpu_mritchie_1/Mei/long_read_benchmark/plots/readcount_cor/counts/ont_counts_filtered.RData")
 
 # filter annotations
 bambu_annot_filtered <- bambu_annot[bambu_annot$transcript_id %in% ont_bambu_counts$TXNAME,]
@@ -47,14 +47,14 @@ talon_overlap <- queryHits(findOverlaps(gen_bin, talon_annot_filtered))
 
 # binary matrix
 overlap <- list(bambu = bambu_overlap,
+                Cupcake = sqanti_overlap,
                 FLAIR = flair_overlap,
                 FLAMES = flames_overlap,
-                SQANTI3 = sqanti_overlap,
                 StringTie2 = stringtie_overlap,
                 TALON = talon_overlap)
 
 # plot
-tool <- c("bambu","FLAIR","FLAMES","SQANTI3","StringTie2","TALON")
+tool <- c("bambu","Cupcake","FLAIR","FLAMES","StringTie2","TALON")
 bin_mat <- fromList(overlap)
 upset <- ComplexUpset::upset(bin_mat[,order(ncol(bin_mat):1)], 
                              tool[order(length(tool):1)], 
