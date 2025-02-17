@@ -14,6 +14,10 @@ Our RNA-seq data are available from Gene Expression Omnibus (GEO) under accessio
 
 Please cite [our paper](https://doi.org/10.1038/s41592-023-02026-3) if you use our data and/or scripts in your studies.
 
+### Sequin annotations
+
+We've uploaded the sequin annotation files onto GitHub. Please see [XueyiDong/LongReadRNA/sequins/annotations](https://github.com/XueyiDong/LongReadRNA/tree/master/sequins/annotations).
+
 ## Index
 
 ### Pilot *in silico* mixture experiment
